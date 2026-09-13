@@ -8,11 +8,12 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, or_
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 
+# Подключение к БД
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./byd_service.db")
-if DATABASE_URL.startswith("postgres://"):
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-if DATABASE_URL.startswith("sqlite"):
+if DATABASE_URL and DATABASE_URL.startswith("sqlite"):
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
     engine = create_engine(DATABASE_URL)
@@ -20,6 +21,7 @@ else:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+# Авторизация
 security = HTTPBasic(auto_error=False)
 ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "byd2026")
@@ -32,7 +34,10 @@ def check_is_admin(credentials: HTTPBasicCredentials = Depends(security)) -> boo
     return user_ok and pass_ok
 
 def require_admin(credentials: HTTPBasicCredentials = Depends(security)):
-    if not check_is_admin(credentials):
+    if not credentials or not (
+        secrets.compare_digest(credentials.username, ADMIN_USER) and
+        secrets.compare_digest(credentials.password, ADMIN_PASSWORD)
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Удаление доступно только администратору",
@@ -40,6 +45,7 @@ def require_admin(credentials: HTTPBasicCredentials = Depends(security)):
         )
     return credentials.username
 
+# Модели БД
 class Client(Base):
     __tablename__ = "clients"
     id = Column(Integer, primary_key=True, index=True)
