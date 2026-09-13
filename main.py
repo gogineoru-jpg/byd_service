@@ -41,11 +41,17 @@ USERS = {
         "name": "Шохрух (Мастер-приёмщик)",
         "is_admin": False
     },
+    "master4": {
+        "password": os.environ.get("MASTER4_PASS", "byd104"),
+        "name": "Ориф (Филиал Савковский)",
+        "is_admin": False
+    },
     "admin": {
         "password": os.environ.get("ADMIN_PASSWORD", "byd2026"),
         "name": "Администратор",
         "is_admin": True
     }
+}
 }
 
 def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
