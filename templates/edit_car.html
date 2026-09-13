@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BYD help - Редактирование записи</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fs-4" href="/">
+                <i class="bi bi-ev-front me-2 text-danger"></i><span class="text-danger fw-bold">BYD</span> <span class="fst-italic">help</span>
+            </a>
+            <a href="/" class="btn btn-outline-light btn-sm"><i class="bi bi-arrow-left me-1"></i> Отмена</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 700px;">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="card-title mb-0 fw-bold"><i class="bi bi-pencil-square text-danger me-2"></i> Редактировать данные автомобиля и клиента</h5>
+            </div>
+            <div class="card-body p-4">
+                <form action="/update-car/{{ car.id }}" method="post">
+                    <h6 class="text-uppercase text-muted fw-bold mb-3 small">Информация о клиенте</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label font-weight-bold">ФИО Клиента / Владельца</label>
+                            <input type="text" name="full_name" class="form-control" value="{{ car.owner.full_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Номер телефона</label>
+                            <input type="text" name="phone" class="form-control" value="{{ car.owner.phone }}" required>
+                        </div>
+                    </div>
+
+                    <h6 class="text-uppercase text-muted fw-bold mb-3 small">Информация об авто</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Марка / Модель</label>
+                            <input type="text" name="brand_model" class="form-control" value="{{ car.brand_model }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Год выпуска</label>
+                            <input type="number" name="manufacture_year" class="form-control" value="{{ car.manufacture_year }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Гос. номер</label>
+                            <input type="text" name="plate_number" class="form-control text-uppercase" value="{{ car.plate_number }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">VIN-код</label>
+                            <input type="text" name="vin_code" class="form-control text-uppercase" value="{{ car.vin_code }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Тип двигателя / АКБ</label>
+                            <input type="text" name="engine_type" class="form-control" value="{{ car.engine_type or '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Пробег (км)</label>
+                            <input type="number" name="mileage" class="form-control" value="{{ car.mileage }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Состояние батареи SOH (%)</label>
+                            <input type="number" step="0.1" name="soh_percent" class="form-control" value="{{ car.soh_percent }}">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top">
+                        <a href="/" class="btn btn-secondary">Отмена</a>
+                        <button type="submit" class="btn btn-danger px-4 fw-bold"><i class="bi bi-check-lg me-1"></i> Сохранить изменения</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
