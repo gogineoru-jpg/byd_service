@@ -29,7 +29,7 @@
             
             <div class="d-flex gap-2">
                 {% if not is_admin %}
-                    <a href="/admin" class="btn btn-outline-dark btn-sm"><i class="bi bi-key me-1"></i> Вход для админа</a>
+                    <a href="/admin" class="btn btn-outline-dark btn-sm"><i class="bi bi-key me-1"></i> Войти как админ</a>
                 {% else %}
                     <form action="/delete-car/{{ car.id }}" method="post" onsubmit="return confirm('Вы уверены, что хотите полностью удалить этот заказ-наряд?');" class="d-inline">
                         <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash me-1"></i> Удалить заказ-наряд</button>
