@@ -7,118 +7,72 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        body { background: #f8f9fa; font-family: Arial, sans-serif; }
-        .act-box { background: #fff; border: 2px solid #222; padding: 25px; margin-top: 20px; border-radius: 8px; }
-        
+        body { background: #f8f9fa; font-family: Arial, sans-serif; font-size: 13px; }
+        .act-box { background: #fff; border: 2px solid #222; padding: 25px; margin-top: 15px; border-radius: 8px; }
         .logo-red { color: #dc3545; font-weight: 900; letter-spacing: 2px; }
         .logo-help { color: #111; font-weight: 400; font-style: italic; }
-
+        
         @media print {
-            @page { margin: 0; }
-            body { background: #fff; padding: 15mm; }
+            @page { margin: 10mm; size: portrait; }
+            body { background: #fff; padding: 0; font-size: 12px; }
             .no-print { display: none !important; }
-            .act-box { border: 1px solid #000; box-shadow: none; margin-top: 0; padding: 0; }
+            .act-box { border: none; box-shadow: none; margin-top: 0; padding: 0; }
         }
     </style>
 </head>
 <body class="p-3">
-    <!-- Кнопки управления (не видны при печати) -->
-    <div class="container no-print mb-4" style="max-width: 800px;">
+
+    <!-- Кнопки управления (скрыты при печати) -->
+    <div class="container no-print mb-3" style="max-width: 850px;">
         <div class="d-flex justify-content-between align-items-center">
             <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> На главную</a>
-            
-            <div class="d-flex gap-2 align-items-center">
-                <span class="badge bg-dark me-2"><i class="bi bi-person-fill text-danger me-1"></i> Вы вошли как: {{ current_user.display_name }}</span>
-                {% if not current_user.is_admin %}
-                    <a href="/admin" class="btn btn-outline-dark btn-sm"><i class="bi bi-key me-1"></i> Вход для админа</a>
-                {% else %}
-                    <form action="/delete-car/{{ car.id }}" method="post" onsubmit="return confirm('Вы уверены, что хотите полностью удалить этот заказ-наряд?');" class="d-inline">
-                        <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash me-1"></i> Удалить заказ-наряд</button>
-                    </form>
-                {% endif %}
-
-                <button onclick="window.print()" class="btn btn-success btn-sm"><i class="bi bi-printer me-1"></i> Распечатать Заказ-наряд</button>
+            <div>
+                <a href="/inspection/{{ car.id }}" class="btn btn-outline-dark btn-sm me-2"><i class="bi bi-clipboard-check me-1"></i> Акт приёма (схема кузова)</a>
+                <button onclick="window.print()" class="btn btn-danger btn-sm fw-bold"><i class="bi bi-printer me-1"></i> Распечатать Заказ-наряд</button>
             </div>
-        </div>
-
-        <!-- Форма добавления работы -->
-        <div class="card mt-3 p-3 shadow-sm border-danger">
-            <h6 class="fw-bold text-danger mb-2"><i class="bi bi-plus-circle me-1"></i> Добавить выполненную работу или запчасть</h6>
-            <form action="/add-work/{{ car.id }}" method="post" class="row g-2 align-items-center">
-                <div class="col-12 col-md-7">
-                    <input type="text" name="description" class="form-control form-control-sm" placeholder="Описание работы (например: Замена масла, Диагностика)" required>
-                </div>
-                <div class="col-12 col-md-3">
-                    <input type="number" step="0.01" name="price" class="form-control form-control-sm" placeholder="Цена (сум / руб)" required>
-                </div>
-                <div class="col-12 col-md-2 d-grid">
-                    <button type="submit" class="btn btn-danger btn-sm">Добавить</button>
-                </div>
-            </form>
         </div>
     </div>
 
-    <!-- Печатный Акт -->
-    <div class="container act-box" style="max-width: 800px;">
+    <div class="container act-box" style="max-width: 850px;">
+        <!-- Шапка -->
         <div class="text-center mb-3">
             <h2 class="mb-0"><span class="logo-red">BYD</span> <span class="logo-help">help</span></h2>
-            <h5 class="fw-bold text-uppercase mt-1 mb-1">АКТ ВЫПОЛНЕННЫХ РАБОТ / ЗАКАЗ-НАРЯД</h5>
+            <h5 class="fw-bold text-uppercase mt-1 mb-0">АКТ ВЫПОЛНЕННЫХ РАБОТ / ЗАКАЗ-НАРЯД</h5>
             <p class="text-dark fw-bold small mb-0">Сервисный центр электромобилей | Тел: +998 (95) 881-63-93</p>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-3 px-1 border-bottom pb-2">
-            <span class="small text-muted">Документ №: <strong>BYD-HELP-{{ car.id }}</strong></span>
-            <span class="fw-bold text-dark">Дата и время: <span id="current-datetime" class="text-danger"></span></span>
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+            <span class="fs-6">Заказ-наряд №: <strong>BYD-{{ car.id }}</strong></span>
+            <span class="fw-bold text-dark">Дата: <span id="current-date" class="text-danger"></span></span>
         </div>
 
-        <h6 class="fw-bold mb-2">1. Данные владельца / Заказчика</h6>
-        <table class="table table-bordered table-sm mb-4">
-            <tr>
-                <th style="width: 30%;">ФИО владельца:</th>
-                <td>{{ car.owner.full_name }}</td>
-            </tr>
-            <tr>
-                <th>Номер телефона:</th>
-                <td>{{ car.owner.phone }}</td>
-            </tr>
-        </table>
+        <!-- Данные владельца и авто -->
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <table class="table table-bordered table-sm mb-0">
+                    <tr><th style="width: 35%;">Владелец (ФИО):</th><td>{{ car.owner.full_name }}</td></tr>
+                    <tr><th>Номер телефона:</th><td>{{ car.owner.phone }}</td></tr>
+                    <tr><th>Мастер-приёмщик:</th><td class="fw-bold text-danger">{{ car.created_by or 'Мастер-приёмщик' }}</td></tr>
+                </table>
+            </div>
+            <div class="col-6">
+                <table class="table table-bordered table-sm mb-0">
+                    <tr><th style="width: 35%;">Марка / Модель:</th><td>{{ car.brand_model }} ({{ car.manufacture_year }})</td></tr>
+                    <tr><th>Гос. номер / VIN:</th><td><strong>{{ car.plate_number }}</strong> / <span class="font-monospace small">{{ car.vin_code }}</span></td></tr>
+                    <tr><th>Пробег / SOH:</th><td>{{ car.mileage }} км / SOH: {{ car.soh_percent }}%</td></tr>
+                </table>
+            </div>
+        </div>
 
-        <h6 class="fw-bold mb-2">2. Данные транспортного средства</h6>
-        <table class="table table-bordered table-sm mb-4">
-            <tr>
-                <th style="width: 25%;">Марка / Модель:</th>
-                <td>{{ car.brand_model }}</td>
-                <th style="width: 20%;">Год выпуска:</th>
-                <td>{{ car.manufacture_year }}</td>
-            </tr>
-            <tr>
-                <th>Гос. номер:</th>
-                <td class="fw-bold">{{ car.plate_number }}</td>
-                <th>Пробег:</th>
-                <td>{{ car.mileage }} км</td>
-            </tr>
-            <tr>
-                <th>VIN-код:</th>
-                <td class="font-monospace">{{ car.vin_code }}</td>
-                <th>SOH (АКБ):</th>
-                <td class="fw-bold">{{ car.soh_percent }}%</td>
-            </tr>
-            <tr>
-                <th>Тип двигателя:</th>
-                <td>{{ car.engine_type }}</td>
-                <th>Принял мастер:</th>
-                <td class="fw-bold text-danger">{{ car.created_by or 'Мастер-приёмщик' }}</td>
-            </tr>
-        </table>
-
-        <h6 class="fw-bold mb-2">3. Выполненные работы и материальные затраты</h6>
-        <table class="table table-bordered table-sm align-middle mb-3">
+        <!-- 1. РАЗДЕЛ: ВЫПОЛНЕННЫЕ РАБОТЫ -->
+        <h6 class="fw-bold text-uppercase mb-2"><i class="bi bi-tools text-danger me-1"></i> 1. Выполненные работы / Услуги</h6>
+        <table class="table table-bordered table-sm align-middle mb-2">
             <thead class="table-light">
                 <tr>
-                    <th style="width: 50px;">№</th>
-                    <th>Наименование работ / запчастей</th>
-                    <th style="width: 150px;" class="text-end">Стоимость</th>
-                    {% if current_user.is_admin %}<th style="width: 40px;" class="no-print"></th>{% endif %}
+                    <th style="width: 5%;">№</th>
+                    <th>Наименование выполненных работ</th>
+                    <th style="width: 25%;" class="text-end">Стоимость (сум)</th>
+                    <th style="width: 5%;" class="no-print"></th>
                 </tr>
             </thead>
             <tbody>
@@ -127,60 +81,139 @@
                     <tr>
                         <td class="text-center">{{ loop.index }}</td>
                         <td>{{ work.description }}</td>
-                        <td class="text-end fw-bold">{{ "{:,.2f}".format(work.price) }}</td>
-                        {% if current_user.is_admin %}
-                        <td class="no-print text-center">
+                        <td class="text-end fw-bold">{{ "{:,.0f}".format(work.price).replace(",", " ") }}</td>
+                        <td class="text-center no-print">
+                            {% if current_user.is_admin %}
                             <form action="/delete-work/{{ work.id }}" method="post" style="display:inline;">
-                                <button type="submit" class="btn btn-outline-danger btn-sm p-0 px-1" title="Удалить работу"><i class="bi bi-x"></i></button>
+                                <button type="submit" class="btn btn-link text-danger p-0" title="Удалить"><i class="bi bi-x-circle"></i></button>
                             </form>
+                            {% endif %}
                         </td>
-                        {% endif %}
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="{% if current_user.is_admin %}4{% else %}3{% endif %}" class="text-center text-muted py-3">Работы ещё не добавлены</td>
+                        <td colspan="4" class="text-center text-muted py-2">Работы ещё не добавлены</td>
                     </tr>
                 {% endif %}
             </tbody>
-            <tfoot>
-                <tr class="table-light">
-                    <th colspan="2" class="text-end fs-6">ИТОГО К ОПЛАТЕ:</th>
-                    <th class="text-end fs-6 fw-bold text-danger">{{ "{:,.2f}".format(total_sum) }}</th>
-                    {% if current_user.is_admin %}<th class="no-print"></th>{% endif %}
-                </tr>
-            </tfoot>
         </table>
 
-        <h6 class="fw-bold mt-4 mb-3">4. Подписи сторон</h6>
-        <p class="small text-muted mb-4">Работы выполнены в полном объеме, качеством работ и комплектацией заказчик претензий не имеет.</p>
-        <div class="row mt-4 pt-2">
+        <!-- Форма добавления работы (не видна при печати) -->
+        <div class="card bg-light p-2 mb-3 no-print border-dashed">
+            <form action="/add-work/{{ car.id }}" method="post" class="row g-2 align-items-center">
+                <div class="col-7">
+                    <input type="text" name="description" class="form-control form-control-sm" placeholder="+ Добавить наименование работы..." required>
+                </div>
+                <div class="col-3">
+                    <input type="number" step="any" name="price" class="form-control form-control-sm" placeholder="Цена работы (сум)" required>
+                </div>
+                <div class="col-2">
+                    <button type="submit" class="btn btn-danger btn-sm w-100"><i class="bi bi-plus-lg me-1"></i> Работа</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 2. РАЗДЕЛ: ЗАПАСНЫЕ ЧАСТИ И МАТЕРИАЛЫ -->
+        <h6 class="fw-bold text-uppercase mb-2"><i class="bi bi-box-seam text-danger me-1"></i> 2. Запасные части и материалы</h6>
+        <table class="table table-bordered table-sm align-middle mb-2">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 5%;">№</th>
+                    <th>Наименование запчасти / расходника</th>
+                    <th style="width: 12%;" class="text-center">Кол-во</th>
+                    <th style="width: 20%;" class="text-end">Цена ед. (сум)</th>
+                    <th style="width: 20%;" class="text-end">Сумма (сум)</th>
+                    <th style="width: 5%;" class="no-print"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if car.parts %}
+                    {% for part in car.parts %}
+                    <tr>
+                        <td class="text-center">{{ loop.index }}</td>
+                        <td>{{ part.name }}</td>
+                        <td class="text-center fw-bold">{{ part.quantity }} шт.</td>
+                        <td class="text-end">{{ "{:,.0f}".format(part.price).replace(",", " ") }}</td>
+                        <td class="text-end fw-bold">{{ "{:,.0f}".format(part.price * part.quantity).replace(",", " ") }}</td>
+                        <td class="text-center no-print">
+                            {% if current_user.is_admin %}
+                            <form action="/delete-part/{{ part.id }}" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-link text-danger p-0" title="Удалить"><i class="bi bi-x-circle"></i></button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-2">Запчасти не использовались</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <!-- Форма добавления запчасти (не видна при печати) -->
+        <div class="card bg-light p-2 mb-3 no-print border-dashed">
+            <form action="/add-part/{{ car.id }}" method="post" class="row g-2 align-items-center">
+                <div class="col-5">
+                    <input type="text" name="name" class="form-control form-control-sm" placeholder="+ Название запчасти / масла..." required>
+                </div>
+                <div class="col-2">
+                    <input type="number" name="quantity" class="form-control form-control-sm" value="1" min="1" placeholder="Кол-во" required>
+                </div>
+                <div class="col-3">
+                    <input type="number" step="any" name="price" class="form-control form-control-sm" placeholder="Цена за шт. (сум)" required>
+                </div>
+                <div class="col-2">
+                    <button type="submit" class="btn btn-dark btn-sm w-100"><i class="bi bi-plus-lg me-1"></i> Деталь</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ИТОГОВЫЙ РАСЧЁТ -->
+        <div class="row justify-content-end mb-3">
             <div class="col-6">
-                <p class="mb-4">Заказчик (Клиент):</p>
-                <p>___________________ / {{ car.owner.full_name }}</p>
+                <table class="table table-bordered table-sm mb-0">
+                    <tr>
+                        <th>Итого за работы:</th>
+                        <td class="text-end fw-bold">{{ "{:,.0f}".format(works_sum).replace(",", " ") }} сум</td>
+                    </tr>
+                    <tr>
+                        <th>Итого за запчасти:</th>
+                        <td class="text-end fw-bold">{{ "{:,.0f}".format(parts_sum).replace(",", " ") }} сум</td>
+                    </tr>
+                    <tr class="table-dark fs-6">
+                        <th class="text-uppercase">ОБЩАЯ СУММА К ОПЛАТЕ:</th>
+                        <td class="text-end fw-bold text-danger bg-dark">{{ "{:,.0f}".format(total_sum).replace(",", " ") }} сум</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Гарантийные обязательства -->
+        <div class="p-2 border rounded bg-light mb-3" style="font-size: 11px;">
+            <p class="mb-1"><strong>Гарантия на выполненные работы:</strong> 30 дней или 1 000 км пробега (в зависимости от того, что наступит ранее).</p>
+            <p class="mb-0">Работы выполнены в полном объеме, качество проверено. Претензий к объему, качеству и срокам выполнения работ Заказчик не имеет.</p>
+        </div>
+
+        <!-- Подписи -->
+        <div class="row pt-3">
+            <div class="col-6">
+                <p class="mb-4">Работу сдал (Исполнитель):<br>BYD help</p>
+                <p>___________________ / {{ car.created_by or 'Мастер-приёмщик' }}</p>
             </div>
             <div class="col-6 text-end">
-                <p class="mb-1">Исполнитель (BYD help):</p>
-                <p class="small text-muted mb-3">Тел: +998 (95) 881-63-93</p>
-                <p>___________________ / {{ car.created_by or 'Мастер-приёмщик' }}</p>
+                <p class="mb-4">Работу принял (Заказчик):<br>Клиент</p>
+                <p>___________________ / {{ car.owner.full_name }}</p>
             </div>
         </div>
     </div>
 
     <script>
-        function updateDateTime() {
-            const now = new Date();
-            const options = { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-            };
-            document.getElementById('current-datetime').textContent = now.toLocaleString('ru-RU', options);
-        }
-        updateDateTime();
+        const now = new Date();
+        const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString('ru-RU', options);
     </script>
 </body>
 </html>
