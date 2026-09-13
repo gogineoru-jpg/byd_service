@@ -55,7 +55,7 @@
                                 <th>Модель</th>
                                 <th>Гос. номер</th>
                                 <th>VIN-код</th>
-                                <th>SOH (АКБ)</th>
+                                <th>Принял мастер</th>
                                 <th class="text-end">Действия</th>
                             </tr>
                         </thead>
@@ -68,7 +68,7 @@
                                     <td>{{ car.brand_model }} ({{ car.manufacture_year }})</td>
                                     <td><span class="badge bg-secondary fs-6">{{ car.plate_number }}</span></td>
                                     <td class="font-monospace small">{{ car.vin_code }}</td>
-                                    <td><span class="badge bg-info text-dark">{{ car.soh_percent }}%</span></td>
+                                    <td><span class="badge bg-light text-dark border">{{ car.created_by or 'Мастер-приёмщик' }}</span></td>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-1">
                                             <a href="/act/{{ car.id }}" class="btn btn-outline-danger btn-sm"><i class="bi bi-file-earmark-text me-1"></i> Акт / Заказ-наряд</a>
