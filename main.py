@@ -74,7 +74,7 @@ class WorkItem(Base):
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="BYD Service CRM")
+app = FastAPI(title="BYD help CRM")
 templates = Jinja2Templates(directory="templates")
 
 def get_db():
@@ -165,7 +165,6 @@ def delete_work(work_id: int, db: Session = Depends(get_db), admin: str = Depend
         db.commit()
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
 
-# УДАЛЕНИЕ ЗАКАЗ-НАРЯДА ЦЕЛИКОМ (Только для админа)
 @app.post("/delete-car/{car_id}")
 def delete_car(car_id: int, db: Session = Depends(get_db), admin: str = Depends(require_admin)):
     car = db.query(Car).filter(Car.id == car_id).first()
