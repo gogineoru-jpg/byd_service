@@ -43,12 +43,16 @@
 
     <!-- Печатный Акт -->
     <div class="container act-box" style="max-width: 800px;">
-        <div class="text-center mb-4">
+        <div class="text-center mb-3">
             <h3 class="fw-bold text-uppercase mb-1">АКТ ВЫПОЛНЕННЫХ РАБОТ / ЗАКАЗ-НАРЯД</h3>
             <p class="text-muted mb-0">Сервисный центр BYD Service</p>
         </div>
 
-        <hr>
+        <!-- Автоматическая дата и время -->
+        <div class="d-flex justify-content-between align-items-center mb-3 px-1 border-bottom pb-2">
+            <span class="small text-muted">Документ №: <strong>BYD-{{ car.id }}</strong></span>
+            <span class="fw-bold text-dark">Дата и время оформления: <span id="current-datetime" class="text-primary"></span></span>
+        </div>
 
         <h6 class="fw-bold mb-2">1. Данные владельца / Заказчика</h6>
         <table class="table table-bordered table-sm mb-4">
@@ -140,5 +144,22 @@
             </div>
         </div>
     </div>
+
+    <!-- Скрипт автоматической подстановки даты и времени -->
+    <script>
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('current-datetime').textContent = now.toLocaleString('ru-RU', options);
+        }
+        updateDateTime();
+    </script>
 </body>
 </html>
