@@ -22,23 +22,42 @@ Base = declarative_base()
 
 security = HTTPBasic()
 
-# Настройки доступа
-STAFF_USER = os.environ.get("STAFF_USER", "staff")
-STAFF_PASSWORD = os.environ.get("STAFF_PASSWORD", "byd123")
-
-ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "byd2026")
+# Список пользователей: Логин -> { Пароль, Имя мастера для акта, Админ ли }
+USERS = {
+    "master1": {
+        "password": os.environ.get("MASTER1_PASS", "byd101"),
+        "name": "Abdulaziz (Мастер-приёмщик)",
+        "is_admin": False
+    },
+    "master2": {
+        "password": os.environ.get("MASTER2_PASS", "byd102"),
+        "name": "Rovshan (Мастер-приёмщик)",
+        "is_admin": False
+    },
+    "master3": {
+        "password": os.environ.get("MASTER3_PASS", "byd103"),
+        "name": "SHoxruh (Мастер-приёмщик)",
+        "is_admin": False
+    },
+    "admin": {
+        "password": os.environ.get("ADMIN_PASSWORD", "byd2026"),
+        "name": "Администратор",
+        "is_admin": True
+    }
+}
 
 def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
-    is_admin_user = secrets.compare_digest(credentials.username, ADMIN_USER)
-    is_admin_pass = secrets.compare_digest(credentials.password, ADMIN_PASSWORD)
-    if is_admin_user and is_admin_pass:
-        return {"username": credentials.username, "is_admin": True}
-
-    is_staff_user = secrets.compare_digest(credentials.username, STAFF_USER)
-    is_staff_pass = secrets.compare_digest(credentials.password, STAFF_PASSWORD)
-    if is_staff_user and is_staff_pass:
-        return {"username": credentials.username, "is_admin": False}
+    username = credentials.username
+    password = credentials.password
+    
+    if username in USERS:
+        user_info = USERS[username]
+        if secrets.compare_digest(password, user_info["password"]):
+            return {
+                "username": username,
+                "display_name": user_info["name"],
+                "is_admin": user_info["is_admin"]
+            }
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -114,11 +133,11 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
             )
         )
     cars = query.all()
-    return templates.TemplateResponse(request=request, name="index.html", context={"cars": cars, "search": search, "is_admin": user["is_admin"]})
+    return templates.TemplateResponse(request=request, name="index.html", context={"cars": cars, "search": search, "current_user": user})
 
 @app.get("/new-entry", response_class=HTMLResponse)
 def new_entry_page(request: Request, user: dict = Depends(get_current_user)):
-    return templates.TemplateResponse(request=request, name="new_entry.html")
+    return templates.TemplateResponse(request=request, name="new_entry.html", context={"current_user": user})
 
 @app.post("/create-entry")
 def create_entry(
@@ -193,7 +212,7 @@ def print_act(request: Request, car_id: int, db: Session = Depends(get_db), user
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
     total_sum = sum(w.price for w in car.works)
-    return templates.TemplateResponse(request=request, name="act_print.html", context={"car": car, "total_sum": total_sum, "is_admin": user["is_admin"]})
+    return templates.TemplateResponse(request=request, name="act_print.html", context={"car": car, "total_sum": total_sum, "current_user": user})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
