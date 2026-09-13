@@ -1,1 +1,179 @@
 
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BYD help - Акт приёма-передачи {{ car.plate_number }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background: #f8f9fa; font-family: Arial, sans-serif; font-size: 13px; }
+        .act-box { background: #fff; border: 2px solid #222; padding: 20px; margin-top: 15px; border-radius: 8px; }
+        .logo-red { color: #dc3545; font-weight: 900; letter-spacing: 2px; }
+        .logo-help { color: #111; font-weight: 400; font-style: italic; }
+        
+        .car-schema-box {
+            border: 1px dashed #666;
+            border-radius: 6px;
+            padding: 10px;
+            background: #fafafa;
+        }
+
+        @media print {
+            @page { margin: 8mm; size: portrait; }
+            body { background: #fff; padding: 0; font-size: 12px; }
+            .no-print { display: none !important; }
+            .act-box { border: 1px solid #000; box-shadow: none; margin-top: 0; padding: 0; }
+        }
+    </style>
+</head>
+<body class="p-3">
+    <!-- Кнопки управления (не видны при печати) -->
+    <div class="container no-print mb-3" style="max-width: 850px;">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="/act/{{ car.id }}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Назад к Заказ-наряду</a>
+            <button onclick="window.print()" class="btn btn-danger btn-sm fw-bold"><i class="bi bi-printer me-1"></i> Распечатать Акт приёма-передачи</button>
+        </div>
+    </div>
+
+    <div class="container act-box" style="max-width: 850px;">
+        <!-- Шапка -->
+        <div class="text-center mb-2">
+            <h3 class="mb-0"><span class="logo-red">BYD</span> <span class="logo-help">help</span></h3>
+            <h6 class="fw-bold text-uppercase mt-1 mb-0">АКТ ПРИЁМА-ПЕРЕДАЧИ И ОСМОТРА ТРАНСПОРТНОГО СРЕДСТВА</h6>
+            <p class="text-dark fw-bold small mb-0">Сервисный центр электромобилей | Тел: +998 (95) 881-63-93</p>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-1">
+            <span class="small">Акт приёма №: <strong>BYD-INSP-{{ car.id }}</strong></span>
+            <span class="fw-bold text-dark">Дата: <span id="current-datetime" class="text-danger"></span></span>
+        </div>
+
+        <!-- Данные о Клиенте и Автомобиле -->
+        <div class="row g-2 mb-2">
+            <div class="col-6">
+                <table class="table table-bordered table-sm mb-0">
+                    <tr><th style="width: 35%;">Владелец (ФИО):</th><td>{{ car.owner.full_name }}</td></tr>
+                    <tr><th>Телефон:</th><td>{{ car.owner.phone }}</td></tr>
+                    <tr><th>Принял мастер:</th><td class="fw-bold text-danger">{{ car.created_by or 'Мастер-приёмщик' }}</td></tr>
+                </table>
+            </div>
+            <div class="col-6">
+                <table class="table table-bordered table-sm mb-0">
+                    <tr><th style="width: 35%;">Марка / Модель:</th><td>{{ car.brand_model }} ({{ car.manufacture_year }})</td></tr>
+                    <tr><th>Гос. номер / VIN:</th><td><strong>{{ car.plate_number }}</strong> / <span class="font-monospace small">{{ car.vin_code }}</span></td></tr>
+                    <tr><th>Пробег / SOH:</th><td>{{ car.mileage }} км / SOH: {{ car.soh_percent }}%</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Схема осмотра кузова -->
+        <h6 class="fw-bold mb-1 text-uppercase border-bottom pb-1">1. Схема повреждений кузова и остекления</h6>
+        <p class="small text-muted mb-2">Обозначения: <strong>Ц</strong> — Царапина, <strong>В</strong> — Вмятина, <strong>Т</strong> — Трещина, <strong>С</strong> — Скол, <strong>Х</strong> — Повреждение / Отсутствует</p>
+        
+        <div class="car-schema-box text-center mb-3">
+            <svg viewBox="0 0 800 280" width="100%" height="220" xmlns="http://www.w3.org/2000/svg" style="max-height: 240px;">
+                <!-- Вид Слева -->
+                <g transform="translate(20, 20)">
+                    <text x="110" y="15" font-size="12" font-weight="bold" fill="#333">Вид СЛЕВА</text>
+                    <rect x="10" y="55" width="200" height="45" rx="10" fill="none" stroke="#222" stroke-width="2"/>
+                    <path d="M 30 55 L 70 25 L 140 25 L 180 55 Z" fill="none" stroke="#222" stroke-width="2"/>
+                    <circle cx="50" cy="100" r="16" fill="none" stroke="#222" stroke-width="3"/>
+                    <circle cx="170" cy="100" r="16" fill="none" stroke="#222" stroke-width="3"/>
+                    <line x1="105" y1="25" x2="105" y2="100" stroke="#aaa" stroke-dasharray="3,3"/>
+                </g>
+
+                <!-- Вид Справа -->
+                <g transform="translate(260, 20)">
+                    <text x="105" y="15" font-size="12" font-weight="bold" fill="#333">Вид СПРАВА</text>
+                    <rect x="10" y="55" width="200" height="45" rx="10" fill="none" stroke="#222" stroke-width="2"/>
+                    <path d="M 30 55 L 70 25 L 140 25 L 180 55 Z" fill="none" stroke="#222" stroke-width="2"/>
+                    <circle cx="50" cy="100" r="16" fill="none" stroke="#222" stroke-width="3"/>
+                    <circle cx="170" cy="100" r="16" fill="none" stroke="#222" stroke-width="3"/>
+                    <line x1="105" y1="25" x2="105" y2="100" stroke="#aaa" stroke-dasharray="3,3"/>
+                </g>
+
+                <!-- Вид Сверху -->
+                <g transform="translate(500, 10)">
+                    <text x="120" y="15" font-size="12" font-weight="bold" fill="#333">Вид СВЕРХУ</text>
+                    <rect x="60" y="30" width="160" height="90" rx="20" fill="none" stroke="#222" stroke-width="2"/>
+                    <line x1="100" y1="30" x2="100" y2="120" stroke="#222" stroke-width="1.5"/>
+                    <line x1="180" y1="30" x2="180" y2="120" stroke="#222" stroke-width="1.5"/>
+                    <rect x="110" y="40" width="60" height="70" rx="5" fill="none" stroke="#888" stroke-dasharray="3,3"/>
+                </g>
+
+                <!-- Вид Спереди -->
+                <g transform="translate(100, 150)">
+                    <text x="60" y="15" font-size="12" font-weight="bold" fill="#333">СПЕРЕДИ</text>
+                    <rect x="20" y="25" width="140" height="60" rx="10" fill="none" stroke="#222" stroke-width="2"/>
+                    <path d="M 40 25 L 55 5 L 125 5 L 140 25 Z" fill="none" stroke="#222" stroke-width="2"/>
+                    <circle cx="40" cy="45" r="8" fill="none" stroke="#222" stroke-width="1.5"/>
+                    <circle cx="140" cy="45" r="8" fill="none" stroke="#222" stroke-width="1.5"/>
+                    <rect x="60" y="60" width="60" height="15" fill="none" stroke="#222" stroke-width="1"/>
+                </g>
+
+                <!-- Вид Сзади -->
+                <g transform="translate(420, 150)">
+                    <text x="65" y="15" font-size="12" font-weight="bold" fill="#333">СЗАДИ</text>
+                    <rect x="20" y="25" width="140" height="60" rx="10" fill="none" stroke="#222" stroke-width="2"/>
+                    <path d="M 40 25 L 55 5 L 125 5 L 140 25 Z" fill="none" stroke="#222" stroke-width="2"/>
+                    <rect x="30" y="35" width="25" height="10" fill="none" stroke="#222"/>
+                    <rect x="125" y="35" width="25" height="10" fill="none" stroke="#222"/>
+                    <rect x="60" y="60" width="60" height="15" fill="none" stroke="#222" stroke-width="1"/>
+                </g>
+            </svg>
+        </div>
+
+        <!-- Комплектация и состояние -->
+        <h6 class="fw-bold mb-1 text-uppercase border-bottom pb-1">2. Комплектация и состояние при приёме</h6>
+        <div class="row g-2 mb-3">
+            <div class="col-4">
+                <div class="form-check"><input class="form-check-input" type="checkbox" checked> <label class="form-check-label">Зарядный кабель / Адаптер</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" checked> <label class="form-check-label">Ключ от авто (____ шт.)</label></div>
+            </div>
+            <div class="col-4">
+                <div class="form-check"><input class="form-check-input" type="checkbox" checked> <label class="form-check-label">Запасное колесо / Ремкомплект</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" checked> <label class="form-check-label">Домкрат / Баллонный ключ</label></div>
+            </div>
+            <div class="col-4">
+                <div class="form-check"><input class="form-check-input" type="checkbox" checked> <label class="form-check-label">Коврики салона</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" checked> <label class="form-check-label">Ценные вещи отсутствуют</label></div>
+            </div>
+        </div>
+
+        <!-- Условия обслуживания и защиты сервиса -->
+        <h6 class="fw-bold mb-1 text-uppercase border-bottom pb-1">3. Соглашение об условиях выполнения работ</h6>
+        <div class="p-2 border rounded bg-light mb-3" style="font-size: 11px; line-height: 1.3;">
+            <p class="mb-1">1. Исполнитель не несет ответственности за ценные вещи и деньги, оставленные Заказчиком в салоне автомобиля.</p>
+            <p class="mb-1">2. Заказчик согласен на проведение диагностических работ и пробную поездку мастера при необходимости.</p>
+            <p class="mb-0 fw-bold text-dark">3. ПУНКТ О НЕПРЕДВИДЕННЫХ ОБСТОЯТЕЛЬСТВАХ И СРОКАХ: При возникновении непредвиденных обстоятельств (включая, но не ограничиваясь: выявление скрытых дефектов в процессе ремонта, задержка поставки необходимых запчастей, форс-мажорные обстоятельства), срок выполнения работ может быть продлен Исполнителем на период, необходимый для устранения данных причин. Заказчик уведомлен о возможных задержках и не имеет финансово-имущественных претензий к Исполнителю по срокам ремонта в случае наступления указанных обстоятельств.</p>
+        </div>
+
+        <!-- Подписи -->
+        <h6 class="fw-bold mb-2">4. Подписи сторон</h6>
+        <div class="row pt-2">
+            <div class="col-6">
+                <p class="mb-3">С условиями и повреждениями согласен.<br>Автомобиль сдал (Заказчик):</p>
+                <p>___________________ / {{ car.owner.full_name }}</p>
+            </div>
+            <div class="col-6 text-end">
+                <p class="mb-3">Автомобиль принял в сервис:<br>Исполнитель (BYD help):</p>
+                <p>___________________ / {{ car.created_by or 'Мастер-приёмщик' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                day: '2-digit', month: '2-digit', year: 'numeric', 
+                hour: '2-digit', minute: '2-digit'
+            };
+            document.getElementById('current-datetime').textContent = now.toLocaleString('ru-RU', options);
+        }
+        updateDateTime();
+    </script>
+</body>
+</html>
