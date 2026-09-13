@@ -117,18 +117,21 @@ class SparePart(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# Безопасное добавление новых колонок для миграции существующих данных
-try:
-    with engine.begin() as conn:
+# Автоматическая миграция структуры таблицы
+with engine.begin() as conn:
+    try:
         conn.execute(text("ALTER TABLE cars ADD COLUMN created_by VARCHAR DEFAULT 'Мастер-приёмщик';"))
-except Exception:
-    pass
-
-try:
-    with engine.begin() as conn:
+    except Exception:
+        pass
+    try:
         conn.execute(text("ALTER TABLE cars ADD COLUMN created_at TIMESTAMP;"))
-except Exception:
-    pass
+    except Exception:
+        pass
+    try:
+        # Присваиваем текущую дату всем ранее созданным машинам без даты
+        conn.execute(text("UPDATE cars SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL;"))
+    except Exception:
+        pass
 
 app = FastAPI(title="BYD help CRM")
 templates = Jinja2Templates(directory="templates")
@@ -166,7 +169,7 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
         elif car.created_at:
             date_str = str(car.created_at)[:10]
         else:
-            date_str = "Ранее зарегистрированные"
+            date_str = datetime.now().strftime("%d.%m.%Y")
         
         if date_str not in grouped_cars:
             grouped_cars[date_str] = []
@@ -191,13 +194,7 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
 
 @app.get("/new-entry", response_class=HTMLResponse)
 def new_entry_page(request: Request, user: dict = Depends(get_current_user)):
-    return templates.TemplateResponse(
-        "new_entry.html",
-        {
-            "request": request,
-            "current_user": user
-        }
-    )
+    return templates.TemplateResponse("new_entry.html", {"request": request, "current_user": user})
 
 @app.post("/create-entry")
 def create_entry(
@@ -249,14 +246,7 @@ def edit_car_page(request: Request, car_id: int, db: Session = Depends(get_db), 
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
-    return templates.TemplateResponse(
-        "edit_car.html",
-        {
-            "request": request,
-            "car": car,
-            "current_user": user
-        }
-    )
+    return templates.TemplateResponse("edit_car.html", {"request": request, "car": car, "current_user": user})
 
 @app.post("/update-car/{car_id}")
 def update_car(
@@ -372,14 +362,7 @@ def print_inspection(request: Request, car_id: int, db: Session = Depends(get_db
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
-    return templates.TemplateResponse(
-        "inspection_act.html",
-        {
-            "request": request,
-            "car": car,
-            "current_user": user
-        }
-    )
+    return templates.TemplateResponse("inspection_act.html", {"request": request, "car": car, "current_user": user})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
