@@ -1,11 +1,12 @@
 import os
 import uvicorn
 import secrets
+from datetime import datetime, date
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, or_, text
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, or_, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./byd_service.db")
@@ -92,6 +93,7 @@ class Car(Base):
     soh_percent = Column(Float, default=100.0)
     manufacture_year = Column(Integer, default=2023)
     created_by = Column(String, default="Мастер-приёмщик")
+    created_at = Column(DateTime, default=datetime.now)
     owner = relationship("Client", back_populates="cars")
     works = relationship("WorkItem", back_populates="car", cascade="all, delete-orphan")
     parts = relationship("SparePart", back_populates="car", cascade="all, delete-orphan")
@@ -118,6 +120,11 @@ Base.metadata.create_all(bind=engine)
 with engine.connect() as conn:
     try:
         conn.execute(text("ALTER TABLE cars ADD COLUMN created_by VARCHAR DEFAULT 'Мастер-приёмщик';"))
+        conn.commit()
+    except Exception:
+        pass
+    try:
+        conn.execute(text("ALTER TABLE cars ADD COLUMN created_at TIMESTAMP;"))
         conn.commit()
     except Exception:
         pass
@@ -150,7 +157,35 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
             )
         )
     cars = query.order_by(Car.id.desc()).all()
-    return templates.TemplateResponse(request=request, name="index.html", context={"cars": cars, "search": search, "current_user": user})
+
+    # Группировка автомобилей по дате создания
+    grouped_cars = {}
+    for car in cars:
+        if car.created_at:
+            date_str = car.created_at.strftime("%d.%m.%Y")
+        else:
+            date_str = "Ранее зарегистрированные"
+        
+        if date_str not in grouped_cars:
+            grouped_cars[date_str] = []
+        grouped_cars[date_str].append(car)
+
+    today_str = datetime.now().strftime("%d.%m.%Y")
+    today_count = len(grouped_cars.get(today_str, []))
+    total_count = len(cars)
+
+    return templates.TemplateResponse(
+        request=request, 
+        name="index.html", 
+        context={
+            "grouped_cars": grouped_cars, 
+            "search": search, 
+            "current_user": user,
+            "today_count": today_count,
+            "total_count": total_count,
+            "today_str": today_str
+        }
+    )
 
 @app.get("/new-entry", response_class=HTMLResponse)
 def new_entry_page(request: Request, user: dict = Depends(get_current_user)):
@@ -192,7 +227,8 @@ def create_entry(
         mileage=mileage,
         manufacture_year=manufacture_year,
         soh_percent=soh_percent,
-        created_by=user["display_name"]
+        created_by=user["display_name"],
+        created_at=datetime.now()
     )
     db.add(car)
     db.commit()
