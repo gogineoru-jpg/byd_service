@@ -57,11 +57,11 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db)):
             )
         )
     cars = query.all()
-    return templates.TemplateResponse("index.html", {"request": request, "cars": cars, "search": search})
+    return templates.TemplateResponse(request=request, name="index.html", context={"cars": cars, "search": search})
 
 @app.get("/new-entry", response_class=HTMLResponse)
 def new_entry_page(request: Request):
-    return templates.TemplateResponse("new_entry.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="new_entry.html")
 
 @app.post("/create-entry")
 def create_entry(
@@ -104,9 +104,8 @@ def print_act(request: Request, car_id: int, db: Session = Depends(get_db)):
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
-    return templates.TemplateResponse("act_print.html", {"request": request, "car": car})
+    return templates.TemplateResponse(request=request, name="act_print.html", context={"car": car})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
-    uvicorn.run("main:app", host="0.0.0.0", port=port) 
