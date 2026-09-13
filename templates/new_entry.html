@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BYD help - Новая приёмка</title>
+    <title>Новая приёмка - BYD help</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        .brand-red { color: #dc3545; font-weight: 800; letter-spacing: 1px; }
+        .brand-red { color: #dc3545; font-weight: 800; }
         .brand-help { color: #ffffff; font-weight: 400; font-style: italic; }
     </style>
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+    <nav class="navbar navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand fs-4" href="/">
                 <i class="bi bi-ev-front me-2 text-danger"></i><span class="brand-red">BYD</span> <span class="brand-help">help</span>
@@ -21,63 +21,73 @@
         </div>
     </nav>
 
-    <div class="container mb-5" style="max-width: 700px;">
-        <div class="card shadow-sm border-0">
+    <div class="container mb-5" style="max-width: 800px;">
+        <div class="card shadow border-0">
             <div class="card-header bg-dark text-white py-3">
-                <h5 class="card-title mb-0 fw-bold"><i class="bi bi-plus-circle text-danger me-2"></i> Регистрация приёмки автомобиля</h5>
+                <h5 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2 text-danger"></i> Регистрация нового автомобиля</h5>
             </div>
             <div class="card-body p-4">
                 <form action="/create-entry" method="post">
-                    <h6 class="fw-bold text-danger mb-3 border-bottom pb-2">1. Данные владельца</h6>
+                    <!-- Выбор филиала -->
+                    <div class="bg-light p-3 rounded mb-4 border border-danger">
+                        <label class="form-label fw-bold text-danger"><i class="bi bi-geo-alt-fill me-1"></i> Филиал обслуживания *</label>
+                        <select name="filial" class="form-select fw-bold" required>
+                            {% for f in filials %}
+                                <option value="{{ f }}">{{ f }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <h6 class="fw-bold text-uppercase text-muted border-bottom pb-2 mb-3">Данные владельца</h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label">ФИО Клиента *</label>
-                            <input type="text" name="full_name" class="form-control" placeholder="Иванов Иван Иванович" required>
+                            <label class="form-label fw-bold">ФИО Клиента *</label>
+                            <input type="text" name="full_name" class="form-control" required placeholder="Иван Иванов">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Номер телефона *</label>
-                            <input type="text" name="phone" class="form-control" placeholder="+998 90 123 45 67" required>
+                            <label class="form-label fw-bold">Номер телефона *</label>
+                            <input type="text" name="phone" class="form-control" required placeholder="+998 90 123 45 67">
                         </div>
                     </div>
 
-                    <h6 class="fw-bold text-danger mb-3 border-bottom pb-2">2. Данные автомобиля</h6>
-                    <div class="row g-3 mb-3">
+                    <h6 class="fw-bold text-uppercase text-muted border-bottom pb-2 mb-3">Данные электромобиля BYD</h6>
+                    <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label">Марка / Модель *</label>
+                            <label class="form-label fw-bold">Марка и Модель *</label>
                             <input type="text" name="brand_model" class="form-control" value="BYD Song Plus EV" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Год выпуска *</label>
-                            <input type="number" name="manufacture_year" class="form-control" value="2023" required>
+                            <label class="form-label fw-bold">Гос. Номер *</label>
+                            <input type="text" name="plate_number" class="form-control font-monospace" required placeholder="01 A 777 AA">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Гос. номер *</label>
-                            <input type="text" name="plate_number" class="form-control" placeholder="01 A 777 AA" required>
+                            <label class="form-label fw-bold">VIN-код *</label>
+                            <input type="text" name="vin_code" class="form-control font-monospace" required placeholder="LC0...">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">VIN-код *</label>
-                            <input type="text" name="vin_code" class="form-control" placeholder="LC0..." required>
+                            <label class="form-label fw-bold">Тип привода / Двигателя</label>
+                            <select name="engine_type" class="form-select">
+                                <option value="Электро (EV)">Электро (EV)</option>
+                                <option value="Гибрид (DM-i)">Гибрид (DM-i)</option>
+                                <option value="Гибрид (DM-p)">Гибрид (DM-p)</option>
+                            </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Пробег (км)</label>
+                            <label class="form-label fw-bold">Пробег (км)</label>
                             <input type="number" name="mileage" class="form-control" value="0">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">SOH АКБ (%)</label>
-                            <input type="number" step="0.1" name="soh_percent" class="form-control" value="100.0">
+                            <label class="form-label fw-bold">Год выпуска</label>
+                            <input type="number" name="manufacture_year" class="form-control" value="2023">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Тип двигателя</label>
-                            <select name="engine_type" class="form-select">
-                                <option value="Электро (EV)">Электро (EV)</option>
-                                <option value="Гибрид (DM-i / DM-p)">Гибрид (DM-i / DM-p)</option>
-                                <option value="Бензин">Бензин</option>
-                            </select>
+                            <label class="form-label fw-bold">SOH Батареи (%)</label>
+                            <input type="number" step="0.1" name="soh_percent" class="form-control" value="100.0">
                         </div>
                     </div>
 
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-danger btn-lg fw-bold"><i class="bi bi-check-lg me-1"></i> Зарегистрировать приёмку</button>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg fw-bold"><i class="bi bi-check-lg me-1"></i> Сохранить и открыть Акт Осмотра</button>
                     </div>
                 </form>
             </div>
