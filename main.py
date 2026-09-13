@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, or_
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, or_, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./byd_service.db")
@@ -22,21 +22,21 @@ Base = declarative_base()
 
 security = HTTPBasic()
 
-# Список пользователей: Логин -> { Пароль, Имя мастера для акта, Админ ли }
+# Список пользователей с реальными именами мастеров
 USERS = {
     "master1": {
         "password": os.environ.get("MASTER1_PASS", "byd101"),
-        "name": "Аbulaziz (Мастер-приёмщик)",
+        "name": "Абдулазиз (Мастер-приёмщик)",
         "is_admin": False
     },
     "master2": {
         "password": os.environ.get("MASTER2_PASS", "byd102"),
-        "name": "Rovshan (Мастер-приёмщик)",
+        "name": "Ровшан (Мастер-приёмщик)",
         "is_admin": False
     },
     "master3": {
         "password": os.environ.get("MASTER3_PASS", "byd103"),
-        "name": "SHoxruh (Мастер-приёмщик)",
+        "name": "Шохрух (Мастер-приёмщик)",
         "is_admin": False
     },
     "admin": {
@@ -92,7 +92,7 @@ class Car(Base):
     mileage = Column(Integer, default=0)
     soh_percent = Column(Float, default=100.0)
     manufacture_year = Column(Integer, default=2023)
-    created_by = Column(String, default="Мастер-приёмщик")  # Запоминаем кто создал заказ
+    created_by = Column(String, default="Мастер-приёмщик")
     owner = relationship("Client", back_populates="cars")
     works = relationship("WorkItem", back_populates="car", cascade="all, delete-orphan")
 
@@ -105,6 +105,14 @@ class WorkItem(Base):
     car = relationship("Car", back_populates="works")
 
 Base.metadata.create_all(bind=engine)
+
+# Автоматическая миграция базы данных
+with engine.connect() as conn:
+    try:
+        conn.execute(text("ALTER TABLE cars ADD COLUMN created_by VARCHAR DEFAULT 'Мастер-приёмщик';"))
+        conn.commit()
+    except Exception:
+        pass
 
 app = FastAPI(title="BYD help CRM")
 templates = Jinja2Templates(directory="templates")
@@ -170,7 +178,7 @@ def create_entry(
         mileage=mileage,
         manufacture_year=manufacture_year,
         soh_percent=soh_percent,
-        created_by=user["display_name"]  # Навсегда сохраняем мастера в заказ-наряд
+        created_by=user["display_name"]
     )
     db.add(car)
     db.commit()
