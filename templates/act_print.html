@@ -10,15 +10,9 @@
         body { background: #f8f9fa; font-family: Arial, sans-serif; }
         .act-box { background: #fff; border: 2px solid #333; padding: 25px; margin-top: 20px; border-radius: 8px; }
         
-        /* Спецификация для печати на А4 */
         @media print {
-            @page {
-                margin: 0; /* Скрывает адрес сайта, дату и шапку браузера */
-            }
-            body {
-                background: #fff;
-                padding: 15mm; /* Отступы от краев бумаги */
-            }
+            @page { margin: 0; }
+            body { background: #fff; padding: 15mm; }
             .no-print { display: none !important; }
             .act-box { border: 1px solid #000; box-shadow: none; margin-top: 0; padding: 0; }
         }
@@ -30,14 +24,20 @@
         <div class="d-flex justify-content-between align-items-center">
             <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> На главную</a>
             
-            {% if not is_admin %}
-                <a href="/admin" class="btn btn-outline-dark btn-sm"><i class="bi bi-key me-1"></i> Вход для админа</a>
-            {% endif %}
+            <div class="d-flex gap-2">
+                {% if not is_admin %}
+                    <a href="/admin" class="btn btn-outline-dark btn-sm"><i class="bi bi-key me-1"></i> Вход для админа</a>
+                {% else %}
+                    <form action="/delete-car/{{ car.id }}" method="post" onsubmit="return confirm('Вы уверены, что хотите полностью удалить этот заказ-наряд?');" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash me-1"></i> Удалить заказ-наряд</button>
+                    </form>
+                {% endif %}
 
-            <button onclick="window.print()" class="btn btn-success btn-sm"><i class="bi bi-printer me-1"></i> Распечатать Заказ-наряд</button>
+                <button onclick="window.print()" class="btn btn-success btn-sm"><i class="bi bi-printer me-1"></i> Распечатать Заказ-наряд</button>
+            </div>
         </div>
 
-        <!-- Форма добавления работы (ДОСТУПНА ВСЕМ СОТРДНИКАМ) -->
+        <!-- Форма добавления работы -->
         <div class="card mt-3 p-3 shadow-sm border-primary">
             <h6 class="fw-bold text-primary mb-2"><i class="bi bi-plus-circle me-1"></i> Добавить выполненную работу или запчасть</h6>
             <form action="/add-work/{{ car.id }}" method="post" class="row g-2 align-items-center">
@@ -124,7 +124,7 @@
                         {% if is_admin %}
                         <td class="no-print text-center">
                             <form action="/delete-work/{{ work.id }}" method="post" style="display:inline;">
-                                <button type="submit" class="btn btn-outline-danger btn-sm p-0 px-1" title="Удалить"><i class="bi bi-x"></i></button>
+                                <button type="submit" class="btn btn-outline-danger btn-sm p-0 px-1" title="Удалить работу"><i class="bi bi-x"></i></button>
                             </form>
                         </td>
                         {% endif %}
