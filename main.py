@@ -30,6 +30,15 @@ class Car(Base):
     soh_percent = Column(Float, default=100.0)
     manufacture_year = Column(Integer, default=2023)
     owner = relationship("Client", back_populates="cars")
+    works = relationship("WorkItem", back_populates="car", cascade="all, delete-orphan")
+
+class WorkItem(Base):
+    __tablename__ = "work_items"
+    id = Column(Integer, primary_key=True, index=True)
+    car_id = Column(Integer, ForeignKey("cars.id"))
+    description = Column(String, nullable=False)
+    price = Column(Float, default=0.0)
+    car = relationship("Car", back_populates="works")
 
 Base.metadata.create_all(bind=engine)
 
@@ -99,12 +108,34 @@ def create_entry(
 
     return RedirectResponse(url=f"/act/{car.id}", status_code=303)
 
+@app.post("/add-work/{car_id}")
+def add_work(
+    car_id: int,
+    description: str = Form(...),
+    price: float = Form(0.0),
+    db: Session = Depends(get_db)
+):
+    work = WorkItem(car_id=car_id, description=description, price=price)
+    db.add(work)
+    db.commit()
+    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+
+@app.post("/delete-work/{work_id}")
+def delete_work(work_id: int, db: Session = Depends(get_db)):
+    work = db.query(WorkItem).filter(WorkItem.id == work_id).first()
+    car_id = work.car_id if work else 1
+    if work:
+        db.delete(work)
+        db.commit()
+    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+
 @app.get("/act/{car_id}", response_class=HTMLResponse)
 def print_act(request: Request, car_id: int, db: Session = Depends(get_db)):
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
-    return templates.TemplateResponse(request=request, name="act_print.html", context={"car": car})
+    total_sum = sum(w.price for w in car.works)
+    return templates.TemplateResponse(request=request, name="act_print.html", context={"car": car, "total_sum": total_sum})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
