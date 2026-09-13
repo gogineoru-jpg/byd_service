@@ -9,10 +9,18 @@
     <style>
         body { background: #f8f9fa; font-family: Arial, sans-serif; }
         .act-box { background: #fff; border: 2px solid #333; padding: 25px; margin-top: 20px; border-radius: 8px; }
+        
+        /* Спецификация для печати на А4 */
         @media print {
+            @page {
+                margin: 0; /* Скрывает адрес сайта, дату и шапку браузера */
+            }
+            body {
+                background: #fff;
+                padding: 15mm; /* Отступы от краев бумаги */
+            }
             .no-print { display: none !important; }
-            body { background: #fff; padding: 0; }
-            .act-box { border: 1px solid #000; box-shadow: none; }
+            .act-box { border: 1px solid #000; box-shadow: none; margin-top: 0; padding: 0; }
         }
     </style>
 </head>
@@ -29,7 +37,7 @@
             <button onclick="window.print()" class="btn btn-success btn-sm"><i class="bi bi-printer me-1"></i> Распечатать Заказ-наряд</button>
         </div>
 
-        <!-- Форма добавления работы (ДОСТУПНА ВСЕМ) -->
+        <!-- Форма добавления работы (ДОСТУПНА ВСЕМ СОТРДНИКАМ) -->
         <div class="card mt-3 p-3 shadow-sm border-primary">
             <h6 class="fw-bold text-primary mb-2"><i class="bi bi-plus-circle me-1"></i> Добавить выполненную работу или запчасть</h6>
             <form action="/add-work/{{ car.id }}" method="post" class="row g-2 align-items-center">
