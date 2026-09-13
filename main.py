@@ -1,15 +1,44 @@
 import os
 import uvicorn
-from fastapi import FastAPI, Request, Form, Depends
+import secrets
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, or_
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 
-DATABASE_URL = "sqlite:///./byd_service.db"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./byd_service.db")
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+security = HTTPBasic(auto_error=False)
+ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "byd2026")
+
+def check_is_admin(credentials: HTTPBasicCredentials = Depends(security)) -> bool:
+    if not credentials:
+        return False
+    user_ok = secrets.compare_digest(credentials.username, ADMIN_USER)
+    pass_ok = secrets.compare_digest(credentials.password, ADMIN_PASSWORD)
+    return user_ok and pass_ok
+
+def require_admin(credentials: HTTPBasicCredentials = Depends(security)):
+    if not check_is_admin(credentials):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Удаление доступно только администратору",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
 
 class Client(Base):
     __tablename__ = "clients"
@@ -52,8 +81,12 @@ def get_db():
     finally:
         db.close()
 
+@app.get("/admin")
+def admin_login(admin: str = Depends(require_admin)):
+    return RedirectResponse(url="/", status_code=303)
+
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request, search: str = "", db: Session = Depends(get_db)):
+def index(request: Request, search: str = "", db: Session = Depends(get_db), is_admin: bool = Depends(check_is_admin)):
     query = db.query(Car).join(Client)
     if search:
         s = f"%{search}%"
@@ -66,7 +99,7 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db)):
             )
         )
     cars = query.all()
-    return templates.TemplateResponse(request=request, name="index.html", context={"cars": cars, "search": search})
+    return templates.TemplateResponse(request=request, name="index.html", context={"cars": cars, "search": search, "is_admin": is_admin})
 
 @app.get("/new-entry", response_class=HTMLResponse)
 def new_entry_page(request: Request):
@@ -121,7 +154,7 @@ def add_work(
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
 
 @app.post("/delete-work/{work_id}")
-def delete_work(work_id: int, db: Session = Depends(get_db)):
+def delete_work(work_id: int, db: Session = Depends(get_db), admin: str = Depends(require_admin)):
     work = db.query(WorkItem).filter(WorkItem.id == work_id).first()
     car_id = work.car_id if work else 1
     if work:
@@ -130,12 +163,12 @@ def delete_work(work_id: int, db: Session = Depends(get_db)):
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
 
 @app.get("/act/{car_id}", response_class=HTMLResponse)
-def print_act(request: Request, car_id: int, db: Session = Depends(get_db)):
+def print_act(request: Request, car_id: int, db: Session = Depends(get_db), is_admin: bool = Depends(check_is_admin)):
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
     total_sum = sum(w.price for w in car.works)
-    return templates.TemplateResponse(request=request, name="act_print.html", context={"car": car, "total_sum": total_sum})
+    return templates.TemplateResponse(request=request, name="act_print.html", context={"car": car, "total_sum": total_sum, "is_admin": is_admin})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
