@@ -26,7 +26,7 @@ security = HTTPBasic()
 USERS = {
     "master1": {
         "password": os.environ.get("MASTER1_PASS", "byd101"),
-        "name": "Abdulaziz (Мастер-приёмщик)",
+        "name": "Аbulaziz (Мастер-приёмщик)",
         "is_admin": False
     },
     "master2": {
