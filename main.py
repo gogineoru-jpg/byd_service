@@ -92,6 +92,7 @@ class Car(Base):
     mileage = Column(Integer, default=0)
     soh_percent = Column(Float, default=100.0)
     manufacture_year = Column(Integer, default=2023)
+    created_by = Column(String, default="Мастер-приёмщик")  # Запоминаем кто создал заказ
     owner = relationship("Client", back_populates="cars")
     works = relationship("WorkItem", back_populates="car", cascade="all, delete-orphan")
 
@@ -168,7 +169,8 @@ def create_entry(
         engine_type=engine_type,
         mileage=mileage,
         manufacture_year=manufacture_year,
-        soh_percent=soh_percent
+        soh_percent=soh_percent,
+        created_by=user["display_name"]  # Навсегда сохраняем мастера в заказ-наряд
     )
     db.add(car)
     db.commit()
