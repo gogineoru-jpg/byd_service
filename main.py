@@ -149,7 +149,7 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
                 Client.phone.ilike(s)
             )
         )
-    cars = query.all()
+    cars = query.order_by(Car.id.desc()).all()
     return templates.TemplateResponse(request=request, name="index.html", context={"cars": cars, "search": search, "current_user": user})
 
 @app.get("/new-entry", response_class=HTMLResponse)
@@ -170,12 +170,18 @@ def create_entry(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
+    plate_number = plate_number.strip().upper()
+    vin_code = vin_code.strip().upper()
+    
     client = db.query(Client).filter(Client.phone == phone).first()
     if not client:
         client = Client(full_name=full_name, phone=phone)
         db.add(client)
         db.commit()
         db.refresh(client)
+    else:
+        client.full_name = full_name
+        db.commit()
 
     car = Car(
         owner_id=client.id,
@@ -193,6 +199,47 @@ def create_entry(
     db.refresh(car)
 
     return RedirectResponse(url=f"/inspection/{car.id}", status_code=303)
+
+@app.get("/edit-car/{car_id}", response_class=HTMLResponse)
+def edit_car_page(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if not car:
+        return HTMLResponse(content="Запись не найдена", status_code=404)
+    return templates.TemplateResponse(request=request, name="edit_car.html", context={"car": car, "current_user": user})
+
+@app.post("/update-car/{car_id}")
+def update_car(
+    car_id: int,
+    full_name: str = Form(...),
+    phone: str = Form(...),
+    brand_model: str = Form(...),
+    plate_number: str = Form(...),
+    vin_code: str = Form(...),
+    engine_type: str = Form(...),
+    mileage: int = Form(0),
+    manufacture_year: int = Form(2023),
+    soh_percent: float = Form(100.0),
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if not car:
+        return HTMLResponse(content="Запись не найдена", status_code=404)
+    
+    car.brand_model = brand_model
+    car.plate_number = plate_number.strip().upper()
+    car.vin_code = vin_code.strip().upper()
+    car.engine_type = engine_type
+    car.mileage = mileage
+    car.manufacture_year = manufacture_year
+    car.soh_percent = soh_percent
+    
+    if car.owner:
+        car.owner.full_name = full_name
+        car.owner.phone = phone
+
+    db.commit()
+    return RedirectResponse(url="/", status_code=303)
 
 @app.post("/add-work/{car_id}")
 def add_work(
