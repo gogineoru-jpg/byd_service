@@ -22,7 +22,6 @@ Base = declarative_base()
 
 security = HTTPBasic()
 
-# Список пользователей с реальными именами мастеров
 USERS = {
     "master1": {
         "password": os.environ.get("MASTER1_PASS", "byd101"),
@@ -106,7 +105,6 @@ class WorkItem(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# Автоматическая миграция базы данных
 with engine.connect() as conn:
     try:
         conn.execute(text("ALTER TABLE cars ADD COLUMN created_by VARCHAR DEFAULT 'Мастер-приёмщик';"))
@@ -184,7 +182,7 @@ def create_entry(
     db.commit()
     db.refresh(car)
 
-    return RedirectResponse(url=f"/act/{car.id}", status_code=303)
+    return RedirectResponse(url=f"/inspection/{car.id}", status_code=303)
 
 @app.post("/add-work/{car_id}")
 def add_work(
@@ -223,6 +221,13 @@ def print_act(request: Request, car_id: int, db: Session = Depends(get_db), user
         return HTMLResponse(content="Запись не найдена", status_code=404)
     total_sum = sum(w.price for w in car.works)
     return templates.TemplateResponse(request=request, name="act_print.html", context={"car": car, "total_sum": total_sum, "current_user": user})
+
+@app.get("/inspection/{car_id}", response_class=HTMLResponse)
+def print_inspection(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if not car:
+        return HTMLResponse(content="Запись не найдена", status_code=404)
+    return templates.TemplateResponse(request=request, name="inspection_act.html", context={"car": car, "current_user": user})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
