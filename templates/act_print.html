@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BYD Service CRM - База авто</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: system-ui, -apple-system, sans-serif; }
+        .card-custom { border-radius: 12px; border: none; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <i class="bi bi-ev-front text-primary fs-4"></i>
+                <span>BYD Service CRM</span>
+            </a>
+            <a href="/new-entry" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
+                <i class="bi bi-plus-lg"></i> Новая приемка
+            </a>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Поиск -->
+        <div class="card card-custom p-3 mb-4">
+            <form action="/" method="get" class="row g-2">
+                <div class="col-12 col-md-10">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Поиск по гос. номеру, VIN, ФИО или телефону..." value="{{ search }}">
+                    </div>
+                </div>
+                <div class="col-12 col-md-2 d-grid">
+                    <button type="submit" class="btn btn-dark">Найти</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Таблица автомобилей -->
+        <div class="card card-custom p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-car-front me-2"></i>Реестр автомобилей</h5>
+                <span class="badge bg-secondary">Всего: {{ cars|length }}</span>
+            </div>
+
+            {% if cars %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Клиент</th>
+                            <th>Модель</th>
+                            <th>Гос. номер</th>
+                            <th>VIN</th>
+                            <th>Двигатель / Год</th>
+                            <th>Пробег</th>
+                            <th>SOH %</th>
+                            <th class="text-end">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in cars %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ car.owner.full_name }}</div>
+                                <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ car.owner.phone }}</small>
+                            </td>
+                            <td><span class="badge bg-primary-subtle text-primary border fw-bold">{{ car.brand_model }}</span></td>
+                            <td><span class="font-monospace fw-bold">{{ car.plate_number }}</span></td>
+                            <td><small class="font-monospace text-muted">{{ car.vin_code }}</small></td>
+                            <td>{{ car.engine_type }} <small class="text-muted">({{ car.manufacture_year }})</small></td>
+                            <td>{{ car.mileage }} км</td>
+                            <td>
+                                <span class="badge {% if car.soh_percent >= 80 %}bg-success{% elif car.soh_percent >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ car.soh_percent }}%
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="/act/{{ car.id }}" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-printer"></i> Акт приёмки
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                <p class="mb-2">Записи не найдены</p>
+                <a href="/new-entry" class="btn btn-outline-primary btn-sm">Добавить первую приемку</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
