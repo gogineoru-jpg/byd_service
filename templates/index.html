@@ -13,7 +13,7 @@
     </style>
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3 shadow-sm">
         <div class="container">
             <a class="navbar-brand fs-4" href="/">
                 <i class="bi bi-ev-front me-2 text-danger"></i><span class="brand-red">BYD</span> <span class="brand-help">help</span>
@@ -29,9 +29,23 @@
     </nav>
 
     <div class="container">
-        <!-- Главный информационный блок статистики -->
+        <!-- Кнопки выбора Филиала -->
+        <div class="card shadow-sm border-0 mb-3 bg-white">
+            <div class="card-body py-2 d-flex align-items-center flex-wrap gap-2">
+                <span class="fw-bold text-muted me-2"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Филиал:</span>
+                <a href="/?filial=all&search={{ search }}" class="btn btn-sm {% if current_filial == 'all' %}btn-dark fw-bold{% else %}btn-outline-dark{% endif %}">
+                    🏢 Все филиалы
+                </a>
+                {% for f in filials %}
+                <a href="/?filial={{ f }}&search={{ search }}" class="btn btn-sm {% if current_filial == f %}btn-danger fw-bold{% else %}btn-outline-secondary{% endif %}">
+                    📍 {{ f }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Статистика -->
         <div class="row g-3 mb-4">
-            <!-- Отдельное окно: Не выданные машины в сервисе -->
             <div class="col-md-6">
                 <div class="card shadow-sm border-0 border-start border-warning border-4 h-100">
                     <div class="card-body py-3">
@@ -45,18 +59,17 @@
                         <div class="d-flex gap-2 flex-wrap pt-2 border-top">
                             <span class="badge bg-info text-dark p-2 fs-7"><i class="bi bi-clock-history me-1"></i> Принято: {{ accepted_count }}</span>
                             <span class="badge bg-warning text-dark p-2 fs-7"><i class="bi bi-gear-fill me-1"></i> В работе: {{ in_progress_count }}</span>
-                            <span class="badge bg-success text-white p-2 fs-7"><i class="bi bi-check-circle-fill me-1"></i> Готово к выдаче: {{ ready_count }}</span>
+                            <span class="badge bg-success text-white p-2 fs-7"><i class="bi bi-check-circle-fill me-1"></i> Готово: {{ ready_count }}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Заказов за день -->
             <div class="col-md-3">
                 <div class="card shadow-sm border-0 border-start border-danger border-4 h-100">
                     <div class="card-body d-flex align-items-center justify-content-between py-3">
                         <div>
-                            <div class="text-uppercase text-muted fw-bold small">Принято за сегодня ({{ today_str }})</div>
+                            <div class="text-uppercase text-muted fw-bold small">За сегодня ({{ today_str }})</div>
                             <div class="fs-2 fw-bold text-danger">{{ today_count }}</div>
                         </div>
                         <i class="bi bi-calendar-check fs-1 text-danger opacity-50"></i>
@@ -64,12 +77,11 @@
                 </div>
             </div>
 
-            <!-- Всего за всё время -->
             <div class="col-md-3">
                 <div class="card shadow-sm border-0 border-start border-dark border-4 h-100">
                     <div class="card-body d-flex align-items-center justify-content-between py-3">
                         <div>
-                            <div class="text-uppercase text-muted fw-bold small">Всего в базе (за всё время)</div>
+                            <div class="text-uppercase text-muted fw-bold small">Всего записей</div>
                             <div class="fs-2 fw-bold text-dark">{{ total_count }}</div>
                         </div>
                         <i class="bi bi-car-front fs-1 text-dark opacity-50"></i>
@@ -82,6 +94,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <form action="/" method="get" class="row g-2">
+                    <input type="hidden" name="filial" value="{{ current_filial }}">
                     <div class="col-md-10">
                         <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Поиск по гос. номеру, VIN, ФИО или телефону...">
                     </div>
@@ -92,7 +105,7 @@
             </div>
         </div>
 
-        <!-- Таблицы автомобилей, разделенные по дням -->
+        <!-- Список авто -->
         {% if grouped_cars %}
             {% for date_str, cars_list in grouped_cars.items() %}
             <div class="card shadow-sm border-0 mb-4">
@@ -108,8 +121,8 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Статус</th>
-                                    <th>Владелец</th>
-                                    <th>Телефон</th>
+                                    <th>Филиал</th>
+                                    <th>Владелец / Тел</th>
                                     <th>Модель</th>
                                     <th>Гос. номер</th>
                                     <th>VIN-код</th>
@@ -120,7 +133,7 @@
                             <tbody>
                                 {% for car in cars_list %}
                                 <tr>
-                                    <td style="min-width: 140px;">
+                                    <td style="min-width: 130px;">
                                         <form action="/update-status/{{ car.id }}" method="post">
                                             <select name="status" onchange="this.form.submit()" class="form-select status-select {% if car.status == 'В работе' %}bg-warning text-dark border-warning{% elif car.status == 'Готово' %}bg-success text-white border-success{% elif car.status == 'Выдано' %}bg-secondary text-white border-secondary{% else %}bg-info text-dark border-info{% endif %}">
                                                 <option value="Принято" {% if car.status == 'Принято' or not car.status %}selected{% endif %}>🔵 Принято</option>
@@ -130,20 +143,27 @@
                                             </select>
                                         </form>
                                     </td>
-                                    <td class="fw-bold">{{ car.owner.full_name }}</td>
-                                    <td>{{ car.owner.phone }}</td>
+                                    <td>
+                                        <span class="badge {% if car.filial == 'Филиал Сергели' %}bg-primary{% else %}bg-danger{% endif %}">
+                                            {{ car.filial or 'Филиал Сергели' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">{{ car.owner.full_name }}</div>
+                                        <div class="small text-muted">{{ car.owner.phone }}</div>
+                                    </td>
                                     <td>{{ car.brand_model }} ({{ car.manufacture_year }})</td>
                                     <td><span class="badge bg-secondary fs-6">{{ car.plate_number }}</span></td>
                                     <td class="font-monospace small text-uppercase">{{ car.vin_code }}</td>
                                     <td><span class="badge bg-light text-dark border">{{ car.created_by or 'Мастер-приёмщик' }}</span></td>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-1">
-                                            <a href="/edit-car/{{ car.id }}" class="btn btn-outline-secondary btn-sm" title="Редактировать данные"><i class="bi bi-pencil"></i></a>
-                                            <a href="/inspection/{{ car.id }}" class="btn btn-outline-dark btn-sm" title="Акт приёма-передачи и осмотра"><i class="bi bi-clipboard-check me-1"></i> Акт приёма</a>
-                                            <a href="/act/{{ car.id }}" class="btn btn-outline-danger btn-sm" title="Заказ-наряд и выполненные работы"><i class="bi bi-file-earmark-text me-1"></i> Заказ-наряд</a>
+                                            <a href="/edit-car/{{ car.id }}" class="btn btn-outline-secondary btn-sm" title="Редактировать"><i class="bi bi-pencil"></i></a>
+                                            <a href="/inspection/{{ car.id }}" class="btn btn-outline-dark btn-sm" title="Акт осмотра"><i class="bi bi-clipboard-check me-1"></i> Акт</a>
+                                            <a href="/act/{{ car.id }}" class="btn btn-outline-danger btn-sm" title="Заказ-наряд"><i class="bi bi-file-earmark-text me-1"></i> Заказ-наряд</a>
                                             {% if current_user.is_admin %}
-                                            <form action="/delete-car/{{ car.id }}" method="post" onsubmit="return confirm('Вы уверены, что хотите полностью удалить этот заказ-наряд?');" style="display:inline;">
-                                                <button type="submit" class="btn btn-outline-dark btn-sm" title="Удалить полностью"><i class="bi bi-trash"></i></button>
+                                            <form action="/delete-car/{{ car.id }}" method="post" onsubmit="return confirm('Удалить полностью?');" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-dark btn-sm"><i class="bi bi-trash"></i></button>
                                             </form>
                                             {% endif %}
                                         </div>
