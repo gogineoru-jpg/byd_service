@@ -94,6 +94,7 @@ class Car(Base):
     created_by = Column(String, default="Мастер-приёмщик")
     owner = relationship("Client", back_populates="cars")
     works = relationship("WorkItem", back_populates="car", cascade="all, delete-orphan")
+    parts = relationship("SparePart", back_populates="car", cascade="all, delete-orphan")
 
 class WorkItem(Base):
     __tablename__ = "work_items"
@@ -102,6 +103,15 @@ class WorkItem(Base):
     description = Column(String, nullable=False)
     price = Column(Float, default=0.0)
     car = relationship("Car", back_populates="works")
+
+class SparePart(Base):
+    __tablename__ = "spare_parts"
+    id = Column(Integer, primary_key=True, index=True)
+    car_id = Column(Integer, ForeignKey("cars.id"))
+    name = Column(String, nullable=False)
+    quantity = Column(Integer, default=1)
+    price = Column(Float, default=0.0)
+    car = relationship("Car", back_populates="parts")
 
 Base.metadata.create_all(bind=engine)
 
@@ -197,12 +207,35 @@ def add_work(
     db.commit()
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
 
+@app.post("/add-part/{car_id}")
+def add_part(
+    car_id: int,
+    name: str = Form(...),
+    quantity: int = Form(1),
+    price: float = Form(0.0),
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    part = SparePart(car_id=car_id, name=name, quantity=quantity, price=price)
+    db.add(part)
+    db.commit()
+    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+
 @app.post("/delete-work/{work_id}")
 def delete_work(work_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
     work = db.query(WorkItem).filter(WorkItem.id == work_id).first()
     car_id = work.car_id if work else 1
     if work:
         db.delete(work)
+        db.commit()
+    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+
+@app.post("/delete-part/{part_id}")
+def delete_part(part_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
+    part = db.query(SparePart).filter(SparePart.id == part_id).first()
+    car_id = part.car_id if part else 1
+    if part:
+        db.delete(part)
         db.commit()
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
 
@@ -219,8 +252,22 @@ def print_act(request: Request, car_id: int, db: Session = Depends(get_db), user
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
-    total_sum = sum(w.price for w in car.works)
-    return templates.TemplateResponse(request=request, name="act_print.html", context={"car": car, "total_sum": total_sum, "current_user": user})
+    
+    works_sum = sum(w.price for w in car.works)
+    parts_sum = sum(p.price * p.quantity for p in car.parts)
+    total_sum = works_sum + parts_sum
+    
+    return templates.TemplateResponse(
+        request=request, 
+        name="act_print.html", 
+        context={
+            "car": car, 
+            "works_sum": works_sum,
+            "parts_sum": parts_sum,
+            "total_sum": total_sum, 
+            "current_user": user
+        }
+    )
 
 @app.get("/inspection/{car_id}", response_class=HTMLResponse)
 def print_inspection(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
