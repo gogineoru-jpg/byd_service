@@ -8,7 +8,6 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, or_
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 
-# Подключение к БД
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./byd_service.db")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
@@ -21,7 +20,6 @@ else:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Авторизация
 security = HTTPBasic(auto_error=False)
 ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "byd2026")
@@ -40,12 +38,11 @@ def require_admin(credentials: HTTPBasicCredentials = Depends(security)):
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Удаление доступно только администратору",
+            detail="Доступно только администратору",
             headers={"WWW-Authenticate": "Basic"},
         )
     return credentials.username
 
-# Модели БД
 class Client(Base):
     __tablename__ = "clients"
     id = Column(Integer, primary_key=True, index=True)
@@ -167,6 +164,15 @@ def delete_work(work_id: int, db: Session = Depends(get_db), admin: str = Depend
         db.delete(work)
         db.commit()
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+
+# УДАЛЕНИЕ ЗАКАЗ-НАРЯДА ЦЕЛИКОМ (Только для админа)
+@app.post("/delete-car/{car_id}")
+def delete_car(car_id: int, db: Session = Depends(get_db), admin: str = Depends(require_admin)):
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if car:
+        db.delete(car)
+        db.commit()
+    return RedirectResponse(url="/", status_code=303)
 
 @app.get("/act/{car_id}", response_class=HTMLResponse)
 def print_act(request: Request, car_id: int, db: Session = Depends(get_db), is_admin: bool = Depends(check_is_admin)):
