@@ -9,6 +9,7 @@
     <style>
         .brand-red { color: #dc3545; font-weight: 800; letter-spacing: 1px; }
         .brand-help { color: #ffffff; font-weight: 400; font-style: italic; }
+        .status-select { font-weight: 700; border-radius: 6px; font-size: 0.85rem; padding: 4px 8px; }
     </style>
 </head>
 <body class="bg-light">
@@ -28,24 +29,47 @@
     </nav>
 
     <div class="container">
-        <!-- Блок статистики за день и за все время -->
+        <!-- Главный информационный блок статистики -->
         <div class="row g-3 mb-4">
+            <!-- Отдельное окно: Не выданные машины в сервисе -->
             <div class="col-md-6">
-                <div class="card shadow-sm border-0 border-start border-danger border-4">
+                <div class="card shadow-sm border-0 border-start border-warning border-4 h-100">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div>
+                                <div class="text-uppercase text-muted fw-bold small">Сейчас в сервисе (Не выдано)</div>
+                                <div class="fs-1 fw-bold text-warning">{{ in_service_count }} <span class="fs-6 text-muted fw-normal">авт.</span></div>
+                            </div>
+                            <i class="bi bi-tools fs-1 text-warning opacity-75"></i>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap pt-2 border-top">
+                            <span class="badge bg-info text-dark p-2 fs-7"><i class="bi bi-clock-history me-1"></i> Принято: {{ accepted_count }}</span>
+                            <span class="badge bg-warning text-dark p-2 fs-7"><i class="bi bi-gear-fill me-1"></i> В работе: {{ in_progress_count }}</span>
+                            <span class="badge bg-success text-white p-2 fs-7"><i class="bi bi-check-circle-fill me-1"></i> Готово к выдаче: {{ ready_count }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Заказов за день -->
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 border-start border-danger border-4 h-100">
                     <div class="card-body d-flex align-items-center justify-content-between py-3">
                         <div>
-                            <div class="text-uppercase text-muted fw-bold small">Заказов за сегодня ({{ today_str }})</div>
+                            <div class="text-uppercase text-muted fw-bold small">Принято за сегодня ({{ today_str }})</div>
                             <div class="fs-2 fw-bold text-danger">{{ today_count }}</div>
                         </div>
                         <i class="bi bi-calendar-check fs-1 text-danger opacity-50"></i>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card shadow-sm border-0 border-start border-dark border-4">
+
+            <!-- Всего за всё время -->
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 border-start border-dark border-4 h-100">
                     <div class="card-body d-flex align-items-center justify-content-between py-3">
                         <div>
-                            <div class="text-uppercase text-muted fw-bold small">Всего заказ-нарядов в базе</div>
+                            <div class="text-uppercase text-muted fw-bold small">Всего в базе (за всё время)</div>
                             <div class="fs-2 fw-bold text-dark">{{ total_count }}</div>
                         </div>
                         <i class="bi bi-car-front fs-1 text-dark opacity-50"></i>
@@ -83,6 +107,7 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
+                                    <th>Статус</th>
                                     <th>Владелец</th>
                                     <th>Телефон</th>
                                     <th>Модель</th>
@@ -95,6 +120,16 @@
                             <tbody>
                                 {% for car in cars_list %}
                                 <tr>
+                                    <td style="min-width: 140px;">
+                                        <form action="/update-status/{{ car.id }}" method="post">
+                                            <select name="status" onchange="this.form.submit()" class="form-select status-select {% if car.status == 'В работе' %}bg-warning text-dark border-warning{% elif car.status == 'Готово' %}bg-success text-white border-success{% elif car.status == 'Выдано' %}bg-secondary text-white border-secondary{% else %}bg-info text-dark border-info{% endif %}">
+                                                <option value="Принято" {% if car.status == 'Принято' or not car.status %}selected{% endif %}>🔵 Принято</option>
+                                                <option value="В работе" {% if car.status == 'В работе' %}selected{% endif %}>🟡 В работе</option>
+                                                <option value="Готово" {% if car.status == 'Готово' %}selected{% endif %}>🟢 Готово</option>
+                                                <option value="Выдано" {% if car.status == 'Выдано' %}selected{% endif %}>⚪ Выдано</option>
+                                            </select>
+                                        </form>
+                                    </td>
                                     <td class="fw-bold">{{ car.owner.full_name }}</td>
                                     <td>{{ car.owner.phone }}</td>
                                     <td>{{ car.brand_model }} ({{ car.manufacture_year }})</td>
