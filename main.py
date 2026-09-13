@@ -118,7 +118,6 @@ class SparePart(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# Безопасная миграция базы данных
 with engine.begin() as conn:
     try:
         conn.execute(text("ALTER TABLE cars ADD COLUMN created_by VARCHAR DEFAULT 'Мастер-приёмщик';"))
@@ -187,6 +186,12 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
     today_count = len(grouped_cars.get(today_str, []))
     total_count = len(cars)
 
+    # Статистика по статусам
+    accepted_count = sum(1 for c in cars if (c.status == "Принято" or not c.status))
+    in_progress_count = sum(1 for c in cars if c.status == "В работе")
+    ready_count = sum(1 for c in cars if c.status == "Готово")
+    in_service_count = accepted_count + in_progress_count + ready_count
+
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -196,7 +201,11 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
             "current_user": user,
             "today_count": today_count,
             "total_count": total_count,
-            "today_str": today_str
+            "today_str": today_str,
+            "in_service_count": in_service_count,
+            "accepted_count": accepted_count,
+            "in_progress_count": in_progress_count,
+            "ready_count": ready_count
         }
     )
 
