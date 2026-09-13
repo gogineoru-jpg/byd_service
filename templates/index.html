@@ -56,7 +56,7 @@
                                 <th>Гос. номер</th>
                                 <th>VIN-код</th>
                                 <th>Принял мастер</th>
-                                <th class="text-end">Документы</th>
+                                <th class="text-end">Действия / Документы</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -67,10 +67,11 @@
                                     <td>{{ car.owner.phone }}</td>
                                     <td>{{ car.brand_model }} ({{ car.manufacture_year }})</td>
                                     <td><span class="badge bg-secondary fs-6">{{ car.plate_number }}</span></td>
-                                    <td class="font-monospace small">{{ car.vin_code }}</td>
+                                    <td class="font-monospace small text-uppercase">{{ car.vin_code }}</td>
                                     <td><span class="badge bg-light text-dark border">{{ car.created_by or 'Мастер-приёмщик' }}</span></td>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-1">
+                                            <a href="/edit-car/{{ car.id }}" class="btn btn-outline-secondary btn-sm" title="Редактировать данные"><i class="bi bi-pencil"></i></a>
                                             <a href="/inspection/{{ car.id }}" class="btn btn-outline-dark btn-sm" title="Акт приёма-передачи и осмотра"><i class="bi bi-clipboard-check me-1"></i> Акт приёма</a>
                                             <a href="/act/{{ car.id }}" class="btn btn-outline-danger btn-sm" title="Заказ-наряд и выполненные работы"><i class="bi bi-file-earmark-text me-1"></i> Заказ-наряд</a>
                                             {% if current_user.is_admin %}
