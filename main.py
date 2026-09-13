@@ -118,27 +118,27 @@ class SparePart(Base):
 
 Base.metadata.create_all(bind=engine)
 
-with engine.begin() as conn:
+# Безопасная изоляция каждой команды миграции
+migrations = [
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS created_by VARCHAR DEFAULT 'Мастер-приёмщик';",
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;",
+    "UPDATE cars SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL;",
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'Принято';",
+    "UPDATE cars SET status = 'Принято' WHERE status IS NULL;"
+]
+
+for statement in migrations:
     try:
-        conn.execute(text("ALTER TABLE cars ADD COLUMN created_by VARCHAR DEFAULT 'Мастер-приёмщик';"))
+        with engine.begin() as conn:
+            conn.execute(text(statement))
     except Exception:
-        pass
-    try:
-        conn.execute(text("ALTER TABLE cars ADD COLUMN created_at TIMESTAMP;"))
-    except Exception:
-        pass
-    try:
-        conn.execute(text("UPDATE cars SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL;"))
-    except Exception:
-        pass
-    try:
-        conn.execute(text("ALTER TABLE cars ADD COLUMN status VARCHAR DEFAULT 'Принято';"))
-    except Exception:
-        pass
-    try:
-        conn.execute(text("UPDATE cars SET status = 'Принято' WHERE status IS NULL;"))
-    except Exception:
-        pass
+        if "IF NOT EXISTS" in statement:
+            try:
+                alt_statement = statement.replace(" IF NOT EXISTS", "")
+                with engine.begin() as conn:
+                    conn.execute(text(alt_statement))
+            except Exception:
+                pass
 
 app = FastAPI(title="BYD help CRM")
 templates = Jinja2Templates(directory="templates")
@@ -186,7 +186,6 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
     today_count = len(grouped_cars.get(today_str, []))
     total_count = len(cars)
 
-    # Статистика по статусам
     accepted_count = sum(1 for c in cars if (c.status == "Принято" or not c.status))
     in_progress_count = sum(1 for c in cars if c.status == "В работе")
     ready_count = sum(1 for c in cars if c.status == "Готово")
