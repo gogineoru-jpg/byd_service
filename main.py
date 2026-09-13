@@ -92,6 +92,7 @@ class Car(Base):
     mileage = Column(Integer, default=0)
     soh_percent = Column(Float, default=100.0)
     manufacture_year = Column(Integer, default=2023)
+    status = Column(String, default="Принято")
     created_by = Column(String, default="Мастер-приёмщик")
     created_at = Column(DateTime, default=datetime.now)
     owner = relationship("Client", back_populates="cars")
@@ -117,6 +118,7 @@ class SparePart(Base):
 
 Base.metadata.create_all(bind=engine)
 
+# Безопасная миграция базы данных
 with engine.begin() as conn:
     try:
         conn.execute(text("ALTER TABLE cars ADD COLUMN created_by VARCHAR DEFAULT 'Мастер-приёмщик';"))
@@ -128,6 +130,14 @@ with engine.begin() as conn:
         pass
     try:
         conn.execute(text("UPDATE cars SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL;"))
+    except Exception:
+        pass
+    try:
+        conn.execute(text("ALTER TABLE cars ADD COLUMN status VARCHAR DEFAULT 'Принято';"))
+    except Exception:
+        pass
+    try:
+        conn.execute(text("UPDATE cars SET status = 'Принято' WHERE status IS NULL;"))
     except Exception:
         pass
 
@@ -234,6 +244,7 @@ def create_entry(
         mileage=mileage,
         manufacture_year=manufacture_year,
         soh_percent=soh_percent,
+        status="Принято",
         created_by=user["display_name"],
         created_at=datetime.now()
     )
@@ -242,6 +253,19 @@ def create_entry(
     db.refresh(car)
 
     return RedirectResponse(url=f"/inspection/{car.id}", status_code=303)
+
+@app.post("/update-status/{car_id}")
+def update_status(
+    car_id: int,
+    status: str = Form(...),
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if car:
+        car.status = status
+        db.commit()
+    return RedirectResponse(url="/", status_code=303)
 
 @app.get("/edit-car/{car_id}", response_class=HTMLResponse)
 def edit_car_page(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
@@ -266,6 +290,7 @@ def update_car(
     mileage: int = Form(0),
     manufacture_year: int = Form(2023),
     soh_percent: float = Form(100.0),
+    status: str = Form("Принято"),
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
@@ -280,6 +305,7 @@ def update_car(
     car.mileage = mileage
     car.manufacture_year = manufacture_year
     car.soh_percent = soh_percent
+    car.status = status
     
     if car.owner:
         car.owner.full_name = full_name
