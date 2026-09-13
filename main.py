@@ -117,17 +117,18 @@ class SparePart(Base):
 
 Base.metadata.create_all(bind=engine)
 
-with engine.connect() as conn:
-    try:
+# Безопасное добавление новых колонок для миграции существующих данных
+try:
+    with engine.begin() as conn:
         conn.execute(text("ALTER TABLE cars ADD COLUMN created_by VARCHAR DEFAULT 'Мастер-приёмщик';"))
-        conn.commit()
-    except Exception:
-        pass
-    try:
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
         conn.execute(text("ALTER TABLE cars ADD COLUMN created_at TIMESTAMP;"))
-        conn.commit()
-    except Exception:
-        pass
+except Exception:
+    pass
 
 app = FastAPI(title="BYD help CRM")
 templates = Jinja2Templates(directory="templates")
@@ -158,11 +159,12 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
         )
     cars = query.order_by(Car.id.desc()).all()
 
-    # Группировка автомобилей по дате создания
     grouped_cars = {}
     for car in cars:
-        if car.created_at:
+        if car.created_at and hasattr(car.created_at, 'strftime'):
             date_str = car.created_at.strftime("%d.%m.%Y")
+        elif car.created_at:
+            date_str = str(car.created_at)[:10]
         else:
             date_str = "Ранее зарегистрированные"
         
@@ -175,9 +177,9 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
     total_count = len(cars)
 
     return templates.TemplateResponse(
-        request=request, 
-        name="index.html", 
-        context={
+        "index.html",
+        {
+            "request": request,
             "grouped_cars": grouped_cars, 
             "search": search, 
             "current_user": user,
@@ -189,7 +191,13 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
 
 @app.get("/new-entry", response_class=HTMLResponse)
 def new_entry_page(request: Request, user: dict = Depends(get_current_user)):
-    return templates.TemplateResponse(request=request, name="new_entry.html", context={"current_user": user})
+    return templates.TemplateResponse(
+        "new_entry.html",
+        {
+            "request": request,
+            "current_user": user
+        }
+    )
 
 @app.post("/create-entry")
 def create_entry(
@@ -241,7 +249,14 @@ def edit_car_page(request: Request, car_id: int, db: Session = Depends(get_db), 
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
-    return templates.TemplateResponse(request=request, name="edit_car.html", context={"car": car, "current_user": user})
+    return templates.TemplateResponse(
+        "edit_car.html",
+        {
+            "request": request,
+            "car": car,
+            "current_user": user
+        }
+    )
 
 @app.post("/update-car/{car_id}")
 def update_car(
@@ -341,9 +356,9 @@ def print_act(request: Request, car_id: int, db: Session = Depends(get_db), user
     total_sum = works_sum + parts_sum
     
     return templates.TemplateResponse(
-        request=request, 
-        name="act_print.html", 
-        context={
+        "act_print.html",
+        {
+            "request": request,
             "car": car, 
             "works_sum": works_sum,
             "parts_sum": parts_sum,
@@ -357,7 +372,14 @@ def print_inspection(request: Request, car_id: int, db: Session = Depends(get_db
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
-    return templates.TemplateResponse(request=request, name="inspection_act.html", context={"car": car, "current_user": user})
+    return templates.TemplateResponse(
+        "inspection_act.html",
+        {
+            "request": request,
+            "car": car,
+            "current_user": user
+        }
+    )
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
