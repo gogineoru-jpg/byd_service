@@ -52,7 +52,6 @@ USERS = {
         "is_admin": True
     }
 }
-}
 
 def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
     username = credentials.username
