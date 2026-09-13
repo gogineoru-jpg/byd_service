@@ -23,6 +23,8 @@ Base = declarative_base()
 
 security = HTTPBasic()
 
+FILIALS = ["Филиал Сергели", "Филиал Савковский"]
+
 USERS = {
     "master1": {
         "password": os.environ.get("MASTER1_PASS", "byd101"),
@@ -93,6 +95,7 @@ class Car(Base):
     soh_percent = Column(Float, default=100.0)
     manufacture_year = Column(Integer, default=2023)
     status = Column(String, default="Принято")
+    filial = Column(String, default="Филиал Сергели")
     created_by = Column(String, default="Мастер-приёмщик")
     created_at = Column(DateTime, default=datetime.now)
     owner = relationship("Client", back_populates="cars")
@@ -118,13 +121,14 @@ class SparePart(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# Безопасная изоляция каждой команды миграции
 migrations = [
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS created_by VARCHAR DEFAULT 'Мастер-приёмщик';",
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;",
     "UPDATE cars SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL;",
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'Принято';",
-    "UPDATE cars SET status = 'Принято' WHERE status IS NULL;"
+    "UPDATE cars SET status = 'Принято' WHERE status IS NULL;",
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS filial VARCHAR DEFAULT 'Филиал Сергели';",
+    "UPDATE cars SET filial = 'Филиал Сергели' WHERE filial IS NULL;"
 ]
 
 for statement in migrations:
@@ -155,8 +159,18 @@ def admin_login(user: dict = Depends(require_admin)):
     return RedirectResponse(url="/", status_code=303)
 
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request, search: str = "", db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def index(
+    request: Request, 
+    search: str = "", 
+    filial: str = "all", 
+    db: Session = Depends(get_db), 
+    user: dict = Depends(get_current_user)
+):
     query = db.query(Car).join(Client)
+    
+    if filial and filial != "all":
+        query = query.filter(Car.filial == filial)
+        
     if search:
         s = f"%{search}%"
         query = query.filter(
@@ -197,6 +211,8 @@ def index(request: Request, search: str = "", db: Session = Depends(get_db), use
         context={
             "grouped_cars": grouped_cars, 
             "search": search, 
+            "current_filial": filial,
+            "filials": FILIALS,
             "current_user": user,
             "today_count": today_count,
             "total_count": total_count,
@@ -213,7 +229,7 @@ def new_entry_page(request: Request, user: dict = Depends(get_current_user)):
     return templates.TemplateResponse(
         request=request,
         name="new_entry.html",
-        context={"current_user": user}
+        context={"current_user": user, "filials": FILIALS}
     )
 
 @app.post("/create-entry")
@@ -227,6 +243,7 @@ def create_entry(
     mileage: int = Form(0),
     manufacture_year: int = Form(2023),
     soh_percent: float = Form(100.0),
+    filial: str = Form("Филиал Сергели"),
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
@@ -253,6 +270,7 @@ def create_entry(
         manufacture_year=manufacture_year,
         soh_percent=soh_percent,
         status="Принято",
+        filial=filial,
         created_by=user["display_name"],
         created_at=datetime.now()
     )
@@ -283,7 +301,7 @@ def edit_car_page(request: Request, car_id: int, db: Session = Depends(get_db), 
     return templates.TemplateResponse(
         request=request,
         name="edit_car.html",
-        context={"car": car, "current_user": user}
+        context={"car": car, "current_user": user, "filials": FILIALS}
     )
 
 @app.post("/update-car/{car_id}")
@@ -299,6 +317,7 @@ def update_car(
     manufacture_year: int = Form(2023),
     soh_percent: float = Form(100.0),
     status: str = Form("Принято"),
+    filial: str = Form("Филиал Сергели"),
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
@@ -314,6 +333,7 @@ def update_car(
     car.manufacture_year = manufacture_year
     car.soh_percent = soh_percent
     car.status = status
+    car.filial = filial
     
     if car.owner:
         car.owner.full_name = full_name
