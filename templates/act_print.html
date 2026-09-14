@@ -25,7 +25,7 @@
         .info-cell { font-size: 11px; line-height: 1.5; }
         .info-cell b { color: #000; display: inline-block; min-width: 120px; }
         
-        .param-badge { background: #e0e0e0; border: 1px solid #999; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 11px; }
+        .param-badge { background: #e0e0e0; border: 1px solid #999; padding: 1px 5px; border-radius: 3px; font-weight: bold; font-size: 10.5px; }
 
         .section-header { background: #222; color: #fff; font-size: 11px; font-weight: bold; padding: 4px 8px; text-transform: uppercase; margin-top: 12px; margin-bottom: 4px; }
 
@@ -56,7 +56,6 @@
 <body>
 
 <div class="a4-page">
-    <!-- Верхняя панель управления (не печатается) -->
     <div class="nav-bar no-print">
         <div style="display: flex; gap: 8px;">
             <a href="/" class="btn btn-sec">← На главную</a>
@@ -65,7 +64,6 @@
         <button onclick="window.print()" class="btn btn-red">🖨️ Печать Заказ-наряда (А4)</button>
     </div>
 
-    <!-- Шапка автосервиса -->
     <div class="brand-header">
         <div>
             <div class="brand-logo">BYD HELP SERVICE</div>
@@ -80,7 +78,6 @@
 
     <div class="doc-title">ЗАКАЗ-НАРЯД № {{ car.id }}</div>
 
-    <!-- Детализированная информация с отдельным выводом HEV и ODO -->
     <div class="info-grid">
         <div class="info-cell">
             <b>Заказчик (ФИО):</b> {{ car.owner.full_name if car.owner else '-' }}<br>
@@ -90,9 +87,11 @@
         <div class="info-cell">
             <b>Марка / Модель:</b> {{ car.brand_model }} ({{ car.manufacture_year }} г.)<br>
             <b>Гос. номер:</b> {{ car.plate_number }} | <b>VIN:</b> {{ car.vin_code }}<br>
-            <b>Силовая установка:</b> <span class="param-badge">{{ car.engine_type or 'HEV' }}</span><br>
-            <b>Одометр (ODO):</b> <span class="param-badge">{{ "{:,.0f}".format(car.mileage or 0).replace(',', ' ') }} км</span> | 
-            <b>Батарея (SOH):</b> <span class="param-badge">{{ car.soh_percent or 100 }}%</span>
+            <b>Тип привода:</b> <span class="param-badge">{{ car.engine_type or 'Гибрид' }}</span> | <b>SOH:</b> <span class="param-badge">{{ car.soh_percent or 100 }}%</span><br>
+            <b>Детализация пробега:</b> 
+            <span class="param-badge">EV: {{ "{:,.0f}".format(car.ev_mileage or 0).replace(',', ' ') }} км</span>
+            <span class="param-badge">HEV: {{ "{:,.0f}".format(car.hev_mileage or 0).replace(',', ' ') }} км</span><br>
+            <b>Общий пробег (ODO):</b> <span class="param-badge" style="background:#d4edda; border-color:#c3e6cb;">{{ "{:,.0f}".format(car.mileage or 0).replace(',', ' ') }} км</span>
         </div>
     </div>
 
@@ -125,7 +124,6 @@
         </tbody>
     </table>
 
-    <!-- Форма добавления работы -->
     <form action="/add-work/{{ car.id }}" method="post" class="add-form no-print">
         <input type="text" name="description" placeholder="Наименование выполненной работы" style="flex: 2;" required>
         <input type="number" name="price" placeholder="Цена (сум)" style="flex: 1;">
@@ -165,7 +163,6 @@
         </tbody>
     </table>
 
-    <!-- Форма добавления запчасти -->
     <form action="/add-part/{{ car.id }}" method="post" class="add-form no-print">
         <input type="text" name="name" placeholder="Наименование запчасти или артикул (например BYD1124)" style="flex: 2;" required>
         <input type="number" name="quantity" value="1" min="1" style="width: 70px; text-align: center;" required>
@@ -173,7 +170,6 @@
         <button type="submit" class="btn btn-sec" style="background: #222;">+ Добавить запчасть</button>
     </form>
 
-    <!-- Управление скидкой (до 10%) -->
     <div class="no-print" style="background: #fff3e0; border: 1px solid #ffe0b2; padding: 8px; border-radius: 4px; margin-top: 10px;">
         <form action="/update-discount/{{ car.id }}" method="post" style="display: flex; align-items: center; gap: 10px;">
             <b style="font-size: 12px; color: #e65100;">🏷️ Скидка на заказ (макс. 10%):</b>
@@ -182,7 +178,6 @@
         </form>
     </div>
 
-    <!-- Итоговый калькулятор -->
     <div class="summary-box">
         <div class="summary-row">
             <span>Работы и услуги:</span>
@@ -208,7 +203,6 @@
         </div>
     </div>
 
-    <!-- Условия и правила -->
     <div class="terms-box">
         <b>Условия выполнения работ и гарантия:</b><br>
         1. Автомобиль принят в ремонт и диагностику без осмотра скрытых внутренних повреждений.<br>
@@ -217,7 +211,6 @@
         4. Замененные старые детали переданы владельцу / утилизированы по согласованию.
     </div>
 
-    <!-- Подписи сторон -->
     <div class="signatures">
         <div class="sig-block">
             Исполнитель (Мастер-приёмщик)<br><br>
