@@ -3,212 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BYD help - Система приёмки</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title>BYD help — Система приёмки</title>
     <style>
-        .brand-red { color: #dc3545; font-weight: 800; letter-spacing: 1px; }
-        .brand-help { color: #ffffff; font-weight: 400; font-style: italic; }
-        .status-select { font-weight: 700; border-radius: 6px; font-size: 0.85rem; padding: 4px 8px; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { margin: 0; background-color: #121212; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 1300px; margin: 0 auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #d32f2f; padding-bottom: 15px; margin-bottom: 20px; }
+        .brand { font-size: 22px; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .brand span { color: #d32f2f; }
+        
+        .nav-btns { display: flex; gap: 10px; align-items: center; }
+        .btn { padding: 8px 16px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 13px; display: inline-block; }
+        .btn-primary { background: #d32f2f; color: #fff; }
+        .btn-primary:hover { background: #b71c1c; }
+        .btn-secondary { background: #333; color: #fff; border: 1px solid #555; }
+        .btn-secondary:hover { background: #444; }
+
+        .filial-bar { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; background: #1e1e1e; padding: 10px 15px; border-radius: 6px; border: 1px solid #333; }
+        .filial-btn { padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; color: #ccc; background: #2a2a2a; border: 1px solid #444; }
+        .filial-btn.active { background: #2196F3; color: white; border-color: #2196F3; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #1e1e1e; border: 1px solid #333; border-radius: 6px; padding: 15px; position: relative; }
+        .stat-title { font-size: 11px; text-transform: uppercase; color: #888; font-weight: bold; letter-spacing: 0.5px; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #fff; margin: 5px 0; }
+        .stat-badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .badge { font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: bold; }
+        .badge-accepted { background: #0288d1; color: white; }
+        .badge-progress { background: #f57c00; color: white; }
+        .badge-ready { background: #388e3c; color: white; }
+
+        .search-box { display: flex; gap: 10px; background: #1e1e1e; padding: 15px; border-radius: 6px; border: 1px solid #333; margin-bottom: 25px; }
+        .search-box input { flex: 1; padding: 10px 15px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 14px; }
+        
+        .date-section { margin-bottom: 25px; }
+        .date-header { background: #1a1a1a; color: #fff; padding: 10px 15px; border-radius: 6px 6px 0 0; border: 1px solid #333; border-bottom: none; display: flex; justify-content: space-between; align-items: center; }
+        
+        .table-container { background: #1e1e1e; border-radius: 0 0 6px 6px; border: 1px solid #333; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        th { background: #2a2a2a; color: #bbb; padding: 12px; font-weight: 600; border-bottom: 1px solid #333; }
+        td { padding: 12px; border-bottom: 1px solid #2a2a2a; vertical-align: middle; }
+        tr:hover { background: #252525; }
+
+        .plate { background: #555; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 13px; }
+        .filial-tag { background: #3f51b5; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        
+        select.status-select { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; border: none; cursor: pointer; color: white; }
+        select.status-Принято { background: #0288d1; }
+        select.status-В_работе { background: #f57c00; }
+        select.status-Готово { background: #388e3c; }
+        select.status-Выдано { background: #616161; }
+
+        .action-btns { display: flex; gap: 5px; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 4px; text-decoration: none; border: 1px solid #444; background: #2a2a2a; color: #fff; }
+        .btn-sm:hover { background: #3a3a3a; }
     </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3 shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fs-4" href="/">
-                <i class="bi bi-ev-front me-2 text-danger"></i><span class="brand-red">BYD</span> <span class="brand-help">help</span>
-            </a>
-            <div class="d-flex align-items-center">
-                <a href="/<a href="/warehouse" style="background: #333; color: #fff; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; margin-right: 8px; border: 1px solid #555;">📦 Склад</a>new-entry" class="btn btn-danger btn-sm me-3 fw-bold"><i class="bi bi-plus-lg me-1"></i> Новая приёмка</a>
-                <span class="badge bg-secondary me-2 p-2"><i class="bi bi-person-circle me-1 text-danger"></i> {{ current_user.display_name }}</span>
-                {% if not current_user.is_admin %}
-                    <a href="/admin" class="btn btn-outline-light btn-sm"><i class="bi bi-key me-1"></i> Админ</a>
-                {% endif %}
-            </div>
+<body>
+
+<div class="container">
+    <!-- Шапка -->
+    <div class="header">
+        <div class="brand">🚗 <span>BYD</span> help</div>
+        <div class="nav-btns">
+            <a href="/warehouse" class="btn btn-secondary">📦 Склад запчастей</a>
+            <a href="/new-entry" class="btn btn-primary">+ Новая приёмка</a>
+            <span style="font-size: 13px; color: #aaa; background: #2a2a2a; padding: 6px 12px; border-radius: 4px; border: 1px solid #444;">
+                <b>{{ current_user.display_name }}</b>
+            </span>
         </div>
-    </nav>
+    </div>
 
-    <div class="container">
-        <!-- Кнопки выбора Филиала -->
-        <div class="card shadow-sm border-0 mb-3 bg-white">
-            <div class="card-body py-2 d-flex align-items-center flex-wrap gap-2">
-                <span class="fw-bold text-muted me-2"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Филиал:</span>
-                <a href="/?filial=all&search={{ search }}" class="btn btn-sm {% if current_filial == 'all' %}btn-dark fw-bold{% else %}btn-outline-dark{% endif %}">
-                    🏢 Все филиалы
-                </a>
-                {% for f in filials %}
-                <a href="/?filial={{ f }}&search={{ search }}" class="btn btn-sm {% if current_filial == f %}btn-danger fw-bold{% else %}btn-outline-secondary{% endif %}">
-                    📍 {{ f }}
-                </a>
-                {% endfor %}
-            </div>
-        </div>
+    <!-- Фильтр по филиалам -->
+    <div class="filial-bar">
+        <span style="font-size: 13px; font-weight: bold; color: #aaa;">📍 Филиал:</span>
+        <a href="/?filial=all&search={{ search }}" class="filial-btn {% if current_filial == 'all' %}active{% endif %}">Все филиалы</a>
+        {% for f in filials %}
+        <a href="/?filial={{ f }}&search={{ search }}" class="filial-btn {% if current_filial == f %}active{% endif %}">{{ f }}</a>
+        {% endfor %}
+    </div>
 
-        <!-- Статистика -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-6">
-                <div class="card shadow-sm border-0 border-start border-warning border-4 h-100">
-                    <div class="card-body py-3">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div>
-                                <div class="text-uppercase text-muted fw-bold small">Сейчас в сервисе (Не выдано)</div>
-                                <div class="fs-1 fw-bold text-warning">{{ in_service_count }} <span class="fs-6 text-muted fw-normal">авт.</span></div>
-                            </div>
-                            <i class="bi bi-tools fs-1 text-warning opacity-75"></i>
-                        </div>
-                        <div class="d-flex gap-2 flex-wrap pt-2 border-top">
-                            <span class="badge bg-info text-dark p-2 fs-7"><i class="bi bi-clock-history me-1"></i> Принято: {{ accepted_count }}</span>
-                            <span class="badge bg-warning text-dark p-2 fs-7"><i class="bi bi-gear-fill me-1"></i> В работе: {{ in_progress_count }}</span>
-                            <span class="badge bg-success text-white p-2 fs-7"><i class="bi bi-check-circle-fill me-1"></i> Готово: {{ ready_count }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 border-start border-danger border-4 h-100">
-                    <div class="card-body d-flex align-items-center justify-content-between py-3">
-                        <div>
-                            <div class="text-uppercase text-muted fw-bold small">За сегодня ({{ today_str }})</div>
-                            <div class="fs-2 fw-bold text-danger">{{ today_count }}</div>
-                        </div>
-                        <i class="bi bi-calendar-check fs-1 text-danger opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 border-start border-dark border-4 h-100">
-                    <div class="card-body d-flex align-items-center justify-content-between py-3">
-                        <div>
-                            <div class="text-uppercase text-muted fw-bold small">Всего записей</div>
-                            <div class="fs-2 fw-bold text-dark">{{ total_count }}</div>
-                        </div>
-                        <i class="bi bi-car-front fs-1 text-dark opacity-50"></i>
-                    </div>
-                </div>
+    <!-- Статистика и Касса -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">СЕЙЧАС В СЕРВИСЕ (НЕ ВЫДАНО)</div>
+            <div class="stat-value" style="color: #2196F3;">{{ in_service_count }} <span style="font-size: 14px; color: #888;">авт.</span></div>
+            <div class="stat-badges">
+                <span class="badge badge-accepted">Принято: {{ accepted_count }}</span>
+                <span class="badge badge-progress">В работе: {{ in_progress_count }}</span>
+                <span class="badge badge-ready">Готово: {{ ready_count }}</span>
             </div>
         </div>
 
-        <!-- Поиск -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <form action="/" method="get" class="row g-2">
-                    <input type="hidden" name="filial" value="{{ current_filial }}">
-                    <div class="col-md-10">
-                        <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Поиск по гос. номеру, VIN, ФИО или телефону...">
-                    </div>
-                    <div class="col-md-2 d-grid">
-                        <button type="submit" class="btn btn-dark"><i class="bi bi-search me-1"></i> Найти</button>
-                    </div>
-                </form>
-            </div>
+        <div class="stat-card">
+            <div class="stat-title">ЗА СЕГОДНЯ ({{ today_str }})</div>
+            <div class="stat-value" style="color: #4CAF50;">{{ today_count }}</div>
+            <div style="font-size: 12px; color: #aaa;">Новых автомобилей</div>
         </div>
 
-        <!-- Список авто -->
-        {% if grouped_cars %}
-            {% for date_str, cars_list in grouped_cars.items() %}
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
-                    <span class="fw-bold fs-6">
-                        <i class="bi bi-calendar-event me-2 text-danger"></i> Дата: {{ date_str }}
-                    </span>
-                    <span class="badge bg-danger fs-6">Заказ-нарядов: {{ cars_list|length }}</span>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Статус</th>
-                                    <th>Филиал</th>
-                                    <th>Владелец / Тел</th>
-                                    <th>Модель</th>
-                                    <th>Гос. номер</th>
-                                    <th>VIN-код</th>
-                                    <th>Принял мастер</th>
-                                    <th class="text-end">Действия / Документы</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for car in cars_list %}
-                                <tr>
-                                    <td style="min-width: 130px;">
-                                        <form action="/update-status/{{ car.id }}" method="post">
-                                            <select name="status" onchange="this.form.submit()" class="form-select status-select {% if car.status == 'В работе' %}bg-warning text-dark border-warning{% elif car.status == 'Готово' %}bg-success text-white border-success{% elif car.status == 'Выдано' %}bg-secondary text-white border-secondary{% else %}bg-info text-dark border-info{% endif %}">
-                                                <option value="Принято" {% if car.status == 'Принято' or not car.status %}selected{% endif %}>🔵 Принято</option>
-                                                <option value="В работе" {% if car.status == 'В работе' %}selected{% endif %}>🟡 В работе</option>
-                                                <option value="Готово" {% if car.status == 'Готово' %}selected{% endif %}>🟢 Готово</option>
-                                                <option value="Выдано" {% if car.status == 'Выдано' %}selected{% endif %}>⚪ Выдано</option>
-                                            </select>
-                                        </form>
-                                    </td>
-                                    <td>
-                                        <span class="badge {% if car.filial == 'Филиал Сергели' %}bg-primary{% else %}bg-danger{% endif %}">
-                                            {{ car.filial or 'Филиал Сергели' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="fw-bold">{{ car.owner.full_name }}</div>
-                                        <div class="small text-muted">{{ car.owner.phone }}</div>
-                                    </td>
-                                    <td>{{ car.brand_model }} ({{ car.manufacture_year }})</td>
-                                    <td><span class="badge bg-secondary fs-6">{{ car.plate_number }}</span></td>
-                                    <td class="font-monospace small text-uppercase">{{ car.vin_code }}</td>
-                                    <td><span class="badge bg-light text-dark border">{{ car.created_by or 'Мастер-приёмщик' }}</span></td>
-                                    <td class="text-end">
-                                        <div class="d-flex justify-content-end gap-1">
-                                            <a href="/edit-car/{{ car.id }}" class="btn btn-outline-secondary btn-sm" title="Редактировать"><i class="bi bi-pencil"></i></a>
-                                            <a href="/inspection/{{ car.id }}" class="btn btn-outline-dark btn-sm" title="Акт осмотра"><i class="bi bi-clipboard-check me-1"></i> Акт</a>
-                                            <a href="/act/{{ car.id }}" class="btn btn-outline-danger btn-sm" title="Заказ-наряд"><i class="bi bi-file-earmark-text me-1"></i> Заказ-наряд</a>
-                                            {% if current_user.is_admin %}
-                                            <form action="/delete-car/{{ car.id }}" method="post" onsubmit="return confirm('Удалить полностью?');" style="display:inline;">
-                                                <button type="submit" class="btn btn-outline-dark btn-sm"><i class="bi bi-trash"></i></button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="stat-card">
+            <div class="stat-title">ВСЕГО ЗАПИСЕЙ</div>
+            <div class="stat-value">{{ total_count }}</div>
+            <div style="font-size: 12px; color: #aaa;">За всё время</div>
+        </div>
+
+        {% if current_user.is_admin %}
+        <div class="stat-card" style="border-color: #4CAF50; background: #1a251a;">
+            <div class="stat-title" style="color: #81c784;">📊 ВЫРУЧКА / КАССА ЗА ДЕНЬ</div>
+            <div style="display: flex; gap: 8px; margin-top: 5px; align-items: center;">
+                <input type="date" id="admin-calc-date" value="{{ today_date_iso }}" onchange="fetchDailySum(this.value)" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 12px;">
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="card shadow-sm border-0 p-4 text-center text-muted">
-                Записи не найдены
+            <div class="stat-value" style="color: #81c784; font-size: 22px; margin-top: 5px;">
+                <span id="admin-sum-result">{{ "{:,.0f}".format(today_revenue).replace(',', ' ') }}</span> <span style="font-size: 13px;">сум</span>
             </div>
+            <div id="admin-cars-count" style="font-size: 11px; color: #a5d6a7;">
+                Машин за день: {{ today_count }}
+            </div>
+        </div>
         {% endif %}
     </div>
-</body>
-</html>
-{% if current_user.is_admin %}
-<div style="background: #1e1e1e; color: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #333; margin: 15px 0; max-width: 380px;">
-    <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #4CAF50;">📊 Выручка / Касса за день</h3>
-    
-    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-        <label for="admin-calc-date" style="font-size: 13px;">Дата:</label>
-        <input type="date" id="admin-calc-date" value="{{ today_date_iso }}" onchange="fetchDailySum(this.value)" style="padding: 5px 8px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #fff;">
-    </div>
 
-    <div style="font-size: 18px; font-weight: bold;">
-        Итого: <span id="admin-sum-result" style="color: #4CAF50;">{{ "{:,.0f}".format(today_revenue).replace(',', ' ') }}</span> сум
+    <!-- Поиск -->
+    <form method="get" action="/" class="search-box">
+        <input type="hidden" name="filial" value="{{ current_filial }}">
+        <input type="text" name="search" value="{{ search }}" placeholder="Поиск по гос. номеру, VIN, ФИО или телефону...">
+        <button type="submit" class="btn btn-secondary">🔍 Найти</button>
+    </form>
+
+    <!-- Таблицы машин по дням -->
+    {% for date_str, cars in grouped_cars.items() %}
+    <div class="date-section">
+        <div class="date-header">
+            <div style="font-weight: bold; font-size: 14px;">📅 Дата: {{ date_str }}</div>
+            <div style="background: #d32f2f; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">
+                Заказ-нарядов: {{ cars|length }}
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Статус</th>
+                        <th>Филиал</th>
+                        <th>Владелец / Тел</th>
+                        <th>Модель</th>
+                        <th>Гос. номер</th>
+                        <th>VIN-код</th>
+                        <th>Принял мастер</th>
+                        <th>Действия / Документы</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for car in cars %}
+                    <tr>
+                        <td>
+                            <form action="/update-status/{{ car.id }}" method="post" style="margin:0;">
+                                <select name="status" onchange="this.form.submit()" class="status-select status-{{ (car.status or 'Принято').replace(' ', '_') }}">
+                                    <option value="Принято" {% if car.status == 'Принято' or not car.status %}selected{% endif %}>Принято</option>
+                                    <option value="В работе" {% if car.status == 'В работе' %}selected{% endif %}>В работе</option>
+                                    <option value="Готово" {% if car.status == 'Готово' %}selected{% endif %}>Готово</option>
+                                    <option value="Выдано" {% if car.status == 'Выдано' %}selected{% endif %}>Выдано</option>
+                                </select>
+                            </form>
+                        </td>
+                        <td><span class="filial-tag">{{ car.filial }}</span></td>
+                        <td>
+                            <b>{{ car.owner.full_name if car.owner else 'Не указан' }}</b><br>
+                            <small style="color: #888;">{{ car.owner.phone if car.owner else '' }}</small>
+                        </td>
+                        <td>{{ car.brand_model }} <small style="color: #888;">({{ car.manufacture_year }})</small></td>
+                        <td><span class="plate">{{ car.plate_number }}</span></td>
+                        <td style="font-family: monospace; font-size: 12px; color: #aaa;">{{ car.vin_code }}</td>
+                        <td><small style="background: #2a2a2a; padding: 4px 8px; border-radius: 4px; border: 1px solid #444;">{{ car.created_by or 'Мастер' }}</small></td>
+                        <td>
+                            <div class="action-btns">
+                                <a href="/edit-car/{{ car.id }}" class="btn-sm" title="Редактировать">✏️</a>
+                                <a href="/inspection/{{ car.id }}" class="btn-sm" title="Акт приёмки">📋 Акт</a>
+                                <a href="/act/{{ car.id }}" class="btn-sm" style="border-color: #d32f2f; color: #ff5252;" title="Заказ-наряд">📝 Заказ-наряд</a>
+                                {% if current_user.is_admin %}
+                                <form action="/delete-car/{{ car.id }}" method="post" onsubmit="return confirm('Удалить эту запись?');" style="margin:0;">
+                                    <button type="submit" class="btn-sm" style="background: #c62828; border: none; cursor: pointer;">🗑️</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-    <div id="admin-cars-count" style="font-size: 12px; color: #aaa; margin-top: 4px;">
-        Машин за день: {{ today_count }}
+    {% else %}
+    <div style="text-align: center; color: #666; padding: 40px; background: #1e1e1e; border-radius: 6px; border: 1px solid #333;">
+        Записи не найдены
     </div>
+    {% endfor %}
 </div>
 
+{% if current_user.is_admin %}
 <script>
 function fetchDailySum(selectedDate) {
     if (!selectedDate) return;
     fetch('/api/admin/daily-sum?date_str=' + selectedDate)
-        .then(res => {
-            if (!res.ok) throw new Error('Auth required');
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
             const formattedSum = Number(data.total || 0).toLocaleString('ru-RU');
             document.getElementById('admin-sum-result').innerText = formattedSum;
@@ -220,3 +218,6 @@ function fetchDailySum(selectedDate) {
 }
 </script>
 {% endif %}
+
+</body>
+</html>
