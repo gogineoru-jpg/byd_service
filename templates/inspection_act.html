@@ -15,19 +15,24 @@
         }
         .brand-red { color: #dc3545; font-weight: 800; }
         .car-schema {
-            border: 1px dashed #ccc;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
             padding: 10px;
-            background-color: #fafafa;
+            background-color: #ffffff;
         }
         .terms-box {
             font-size: 10px;
-            line-height: 1.3;
+            line-height: 1.35;
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 8px 12px;
+            border-radius: 6px;
+            padding: 10px 14px;
         }
+        .car-title { font-size: 10px; font-weight: bold; fill: #495057; text-anchor: middle; font-family: sans-serif; }
+        .car-part { stroke: #2c3e50; stroke-width: 1.8; fill: #fff; stroke-linecap: round; stroke-linejoin: round; }
+        .car-glass { stroke: #0056b3; stroke-width: 1.2; fill: #e8f4f8; }
+        .car-detail { stroke: #6c757d; stroke-width: 1; fill: none; }
+        .car-wheel { stroke: #212529; stroke-width: 2; fill: #e9ecef; }
     </style>
 </head>
 <body class="bg-light">
@@ -76,65 +81,103 @@
                 </div>
             </div>
 
-            <!-- Car Inspection Schema (Кузов / Схема повреждений) -->
+            <!-- Car Inspection Schema (Красивая SVG схема кузова) -->
             <div class="mb-3">
-                <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">Схема осмотра кузова и повреждений (X - царапина, O - вмятина, V - скол)</h6>
+                <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">Схема осмотра кузова (X - царапина, O - вмятина, V - скол)</h6>
                 <div class="car-schema text-center">
-                    <svg viewBox="0 0 800 280" width="100%" height="210" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Top View -->
-                        <g stroke="#333" stroke-width="2" fill="none">
-                            <!-- Car Outline Top -->
-                            <rect x="250" y="80" width="300" height="120" rx="30" ry="30" stroke="#555" stroke-width="2" fill="#fff"/>
-                            <!-- Front Windshield -->
-                            <path d="M 320 85 Q 330 140 320 195" />
-                            <!-- Rear Windshield -->
-                            <path d="M 480 85 Q 470 140 480 195" />
-                            <!-- Roof Lines -->
-                            <line x1="335" y1="82" x2="465" y2="82" stroke-dashedarray="4"/>
-                            <line x1="335" y1="198" x2="465" y2="198" stroke-dashedarray="4"/>
-                            <!-- Hood Line -->
-                            <line x1="280" y1="85" x2="280" y2="195" stroke="#ccc"/>
-                            <!-- Trunk Line -->
-                            <line x1="520" y1="85" x2="520" y2="195" stroke="#ccc"/>
+                    <svg viewBox="0 0 800 250" width="100%" height="210" xmlns="http://www.w3.org/2000/svg">
+                        <!-- TOP VIEW -->
+                        <g transform="translate(250, 15)">
+                            <text x="150" y="10" class="car-title">ВИД СВЕРХУ</text>
+                            <path d="M 50 65 C 50 35, 75 25, 150 25 C 225 25, 250 35, 250 65 C 250 95, 225 105, 150 105 C 75 105, 50 95, 50 65 Z" class="car-part" />
+                            <path d="M 85 27 Q 95 65 85 103" class="car-detail" />
+                            <path d="M 115 30 Q 125 65 115 100 L 140 97 Q 148 65 140 33 Z" class="car-glass" />
+                            <rect x="148" y="38" width="60" height="54" rx="4" class="car-glass" />
+                            <path d="M 218 36 Q 212 65 218 94 L 232 90 Q 227 65 232 40 Z" class="car-glass" />
                             <!-- Mirrors -->
-                            <rect x="330" y="65" width="20" height="12" rx="3" fill="#eee"/>
-                            <rect x="330" y="203" width="20" height="12" rx="3" fill="#eee"/>
+                            <path d="M 118 28 L 108 18 L 122 18 Z" fill="#e0e0e0" stroke="#333" stroke-width="1"/>
+                            <path d="M 118 102 L 108 112 L 122 112 Z" fill="#e0e0e0" stroke="#333" stroke-width="1"/>
                         </g>
 
-                        <!-- Left Side View -->
-                        <g stroke="#333" stroke-width="2" fill="none">
-                            <path d="M 30 180 L 50 150 L 90 130 L 170 130 L 200 150 L 220 180 Z" />
-                            <!-- Wheels Left -->
-                            <circle cx="70" cy="180" r="16" fill="#fff"/>
-                            <circle cx="180" cy="180" r="16" fill="#fff"/>
-                            <text x="100" y="210" font-size="12" fill="#777" stroke="none">ЛЕВЫЙ БОРТ</text>
+                        <!-- FRONT VIEW -->
+                        <g transform="translate(25, 15)">
+                            <text x="75" y="10" class="car-title">СПЕРЕДИ</text>
+                            <path d="M 25 85 C 25 70, 35 50, 45 43 C 55 37, 95 37, 105 43 C 115 50, 125 70, 125 85 C 125 90, 120 95, 75 95 C 30 95, 25 90, 25 85 Z" class="car-part"/>
+                            <path d="M 42 45 Q 75 41 108 45 L 102 65 Q 75 62 48 65 Z" class="car-glass"/>
+                            <path d="M 30 70 Q 45 68 50 77 Q 35 80 30 70 Z" fill="#fff" stroke="#333" stroke-width="1"/>
+                            <path d="M 120 70 Q 105 68 100 77 Q 115 80 120 70 Z" fill="#fff" stroke="#333" stroke-width="1"/>
+                            <rect x="52" y="73" width="46" height="12" rx="2" class="car-detail"/>
+                            <rect x="20" y="75" width="8" height="20" rx="3" fill="#333"/>
+                            <rect x="122" y="75" width="8" height="20" rx="3" fill="#333"/>
                         </g>
 
-                        <!-- Right Side View -->
-                        <g stroke="#333" stroke-width="2" fill="none">
-                            <path d="M 580 180 L 600 150 L 640 130 L 720 130 L 750 150 L 770 180 Z" />
-                            <!-- Wheels Right -->
-                            <circle cx="620" cy="180" r="16" fill="#fff"/>
-                            <circle cx="730" cy="180" r="16" fill="#fff"/>
-                            <text x="640" y="210" font-size="12" fill="#777" stroke="none">ПРАВЫЙ БОРТ</text>
+                        <!-- REAR VIEW -->
+                        <g transform="translate(625, 15)">
+                            <text x="75" y="10" class="car-title">СЗАДИ</text>
+                            <path d="M 25 85 C 25 70, 35 50, 45 43 C 55 37, 95 37, 105 43 C 115 50, 125 70, 125 85 C 125 90, 120 95, 75 95 C 30 95, 25 90, 25 85 Z" class="car-part"/>
+                            <path d="M 42 45 Q 75 41 108 45 L 104 63 Q 75 60 46 63 Z" class="car-glass"/>
+                            <path d="M 30 70 L 120 70 L 118 75 L 32 75 Z" fill="#dc3545" stroke="#333" stroke-width="1"/>
+                            <rect x="58" y="77" width="34" height="11" rx="1" fill="#fff" stroke="#333" stroke-width="1"/>
+                            <rect x="20" y="75" width="8" height="20" rx="3" fill="#333"/>
+                            <rect x="122" y="75" width="8" height="20" rx="3" fill="#333"/>
                         </g>
 
-                        <!-- Front View -->
-                        <g stroke="#333" stroke-width="2" fill="none">
-                            <rect x="70" y="30" width="110" height="60" rx="10" />
-                            <rect x="85" y="35" width="80" height="25" rx="5" fill="#eef" />
-                            <circle cx="85" cy="70" r="8" />
-                            <circle cx="165" cy="70" r="8" />
-                            <text x="105" y="15" font-size="12" fill="#777" stroke="none">СПЕРЕДИ</text>
+                        <!-- LEFT SIDE VIEW -->
+                        <g transform="translate(25, 135)">
+                            <text x="175" y="10" class="car-title">ЛЕВЫЙ БОРТ</text>
+                            <path d="M 20 75
+                                     C 25 70, 35 65, 60 63
+                                     C 90 61, 110 35, 140 27
+                                     C 180 20, 260 20, 290 30
+                                     C 315 40, 330 60, 340 65
+                                     C 348 69, 350 77, 345 83
+                                     L 340 87
+                                     L 20 87 Z" class="car-part" />
+                            <path d="M 115 37 L 142 29 Q 200 25 248 28 L 280 39 Q 240 38 185 38 Z" class="car-glass"/>
+                            <path d="M 115 40 L 180 40 L 180 60 L 102 60 Z" class="car-glass"/>
+                            <path d="M 185 40 L 275 40 L 255 60 L 185 60 Z" class="car-glass"/>
+                            <line x1="182" y1="40" x2="182" y2="85" class="car-detail"/>
+                            <path d="M 102 60 Q 100 70 95 85" class="car-detail"/>
+                            <path d="M 255 60 Q 265 70 275 85" class="car-detail"/>
+                            <rect x="165" y="63" width="12" height="3" rx="1" fill="#333"/>
+                            <rect x="235" y="63" width="12" height="3" rx="1" fill="#333"/>
+                            <!-- Wheels -->
+                            <path d="M 50 87 A 20 20 0 0 1 90 87" fill="#fff" stroke="#2c3e50" stroke-width="1.8"/>
+                            <circle cx="70" cy="87" r="16" class="car-wheel"/>
+                            <circle cx="70" cy="87" r="7" fill="#adb5bd"/>
+
+                            <path d="M 260 87 A 20 20 0 0 1 300 87" fill="#fff" stroke="#2c3e50" stroke-width="1.8"/>
+                            <circle cx="280" cy="87" r="16" class="car-wheel"/>
+                            <circle cx="280" cy="87" r="7" fill="#adb5bd"/>
                         </g>
 
-                        <!-- Rear View -->
-                        <g stroke="#333" stroke-width="2" fill="none">
-                            <rect x="620" y="30" width="110" height="60" rx="10" />
-                            <rect x="635" y="35" width="80" height="25" rx="5" fill="#fee" />
-                            <rect x="630" y="65" width="20" height="8" rx="2" fill="#dc3545" />
-                            <rect x="700" y="65" width="20" height="8" rx="2" fill="#dc3545" />
-                            <text x="655" y="15" font-size="12" fill="#777" stroke="none">СЗАДИ</text>
+                        <!-- RIGHT SIDE VIEW -->
+                        <g transform="translate(425, 135)">
+                            <text x="175" y="10" class="car-title">ПРАВЫЙ БОРТ</text>
+                            <path d="M 330 75
+                                     C 325 70, 315 65, 290 63
+                                     C 260 61, 240 35, 210 27
+                                     C 170 20, 90 20, 60 30
+                                     C 35 40, 20 60, 10 65
+                                     C 2 69, 0 77, 5 83
+                                     L 10 87
+                                     L 330 87 Z" class="car-part" />
+                            <path d="M 235 37 L 208 29 Q 150 25 102 28 L 70 39 Q 110 38 165 38 Z" class="car-glass"/>
+                            <path d="M 235 40 L 170 40 L 170 60 L 248 60 Z" class="car-glass"/>
+                            <path d="M 165 40 L 75 40 L 95 60 L 165 60 Z" class="car-glass"/>
+                            <line x1="168" y1="40" x2="168" y2="85" class="car-detail"/>
+                            <path d="M 248 60 Q 250 70 255 85" class="car-detail"/>
+                            <path d="M 95 60 Q 85 70 75 85" class="car-detail"/>
+                            <rect x="173" y="63" width="12" height="3" rx="1" fill="#333"/>
+                            <rect x="103" y="63" width="12" height="3" rx="1" fill="#333"/>
+                            <!-- Wheels -->
+                            <path d="M 300 87 A 20 20 0 0 0 260 87" fill="#fff" stroke="#2c3e50" stroke-width="1.8"/>
+                            <circle cx="280" cy="87" r="16" class="car-wheel"/>
+                            <circle cx="280" cy="87" r="7" fill="#adb5bd"/>
+
+                            <path d="M 90 87 A 20 20 0 0 0 50 87" fill="#fff" stroke="#2c3e50" stroke-width="1.8"/>
+                            <circle cx="70" cy="87" r="16" class="car-wheel"/>
+                            <circle cx="70" cy="87" r="7" fill="#adb5bd"/>
                         </g>
                     </svg>
                 </div>
@@ -146,7 +189,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>Элемент проверки</th>
-                        <th class="text-center" style="width: 140px;">Состояние / Наличие</th>
+                        <th class="text-center" style="width: 150px;">Состояние / Наличие</th>
                         <th>Примечания / Дополнительно</th>
                     </tr>
                 </thead>
@@ -182,17 +225,17 @@
             <!-- Reported Issues -->
             <div class="mb-3">
                 <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">Заявленные неисправности и пожелания заказчика:</h6>
-                <div class="border rounded p-2 bg-light" style="min-height: 65px;"></div>
+                <div class="border rounded p-2 bg-light" style="min-height: 55px;"></div>
             </div>
 
             <!-- Terms & Conditions / Delayed Vehicle Clause -->
             <div class="terms-box mb-3 text-muted">
-                <div class="fw-bold text-dark mb-1">УСЛОВИЯ ПРИЕМА АВТОМОБИЛЯ И СОГЛАСОВАНИЕ:</div>
+                <div class="fw-bold text-dark mb-1">УСЛОВИЯ ПРИЕМА АВТОМОБИЛЯ И СОГЛАСОВАНИЕ СРОКОВ:</div>
                 <ol class="mb-0 ps-3">
                     <li>Заказчик подтверждает правильность зафиксированных данных о комплектации, пробеге и видимых повреждениях автомобиля.</li>
                     <li>Исполнитель не несет ответственности за ценные вещи, оставленные в салоне автомобиля и не сданные по описи.</li>
-                    <li><strong>Согласование сроков и стоимости:</strong> При необходимости проведения дополнительных диагностических/ремонтных работ, задержки автомобиля в связи с поставкой запчастей или сложностью ремонта, мастер-приемщик информирует Заказчика и согласовывает новые сроки и стоимость по телефону или мессенджеру.</li>
-                    <li>Заказчик обязуется забрать автомобиль в течение 3-х календарных дней после уведомления о завершении работ. За последующее хранение может взиматься плата согласно тарифу автосервиса.</li>
+                    <li><strong>Форс-мажор и задержка автомобиля:</strong> В случае возникновения форс-мажорных обстоятельств (задержка поставки необходимых запчастей, отключение электроэнергии, выявление скрытых дефектов в процессе ремонта и т.д.), автомобиль может задержаться на автосервисе на срок <strong>до 3 (трёх) рабочих дней</strong>. Исполнитель обязуется своевременно уведомить Заказчика о задержке по телефону или мессенджеру.</li>
+                    <li>Заказчик обязуется забрать автомобиль в течение 3-х дней после уведомления о готовности. За последующее хранение может взиматься плата согласно тарифу сервиса.</li>
                 </ol>
             </div>
 
