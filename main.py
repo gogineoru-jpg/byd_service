@@ -297,7 +297,8 @@ def create_entry(
     if existing_car and existing_car.created_at:
         time_diff = (datetime.now() - existing_car.created_at).total_seconds()
         if time_diff < 60:
-            return RedirectResponse(url=f"/inspection/{existing_car.id}", status_code=303)
+            # Сразу открываем Заказ-наряд
+            return RedirectResponse(url=f"/act/{existing_car.id}", status_code=303)
 
     client = db.query(Client).filter(Client.phone == phone).first()
     if not client:
@@ -327,7 +328,8 @@ def create_entry(
     db.commit()
     db.refresh(car)
 
-    return RedirectResponse(url=f"/inspection/{car.id}", status_code=303)
+    # Сразу открываем Заказ-наряд
+    return RedirectResponse(url=f"/act/{car.id}", status_code=303)
 
 @app.post("/update-status/{car_id}")
 def update_status(
