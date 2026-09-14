@@ -1,4 +1,22 @@
+# --- ПОДСЧЕТ ВЫРУЧКИ ПО ДНЯМ ДЛЯ АДМИНА ---
+@app.route('/api/admin/daily-sum', methods=['GET'])
+@login_required
+def get_daily_sum():
+    if getattr(current_user, 'role', None) != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
 
+    selected_date = request.args.get('date')
+    if not selected_date:
+        return jsonify({'error': 'Date is required'}), 400
+
+    total_sum = db.session.query(func.sum(Car.price))\
+        .filter(func.date(Car.created_at) == selected_date)\
+        .scalar() or 0
+
+    return jsonify({
+        'date': selected_date,
+        'total': float(total_sum)
+    })
 import os
 import uvicorn
 import secrets
