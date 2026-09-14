@@ -48,10 +48,9 @@
 
         .plate { background: #555; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 13px; }
         
-        /* Метки филиалов: Синий для Сергели, Красный для Циолковский */
-        .filial-tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; display: inline-block; }
-        .filial-sergeli { background: #1976D2; } /* Синий */
-        .filial-tsiolkovsky { background: #D32F2F; } /* Красный */
+        .filial-tag { padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; display: inline-block; white-space: nowrap; text-align: center; }
+        .filial-sergeli { background: #1976D2; }
+        .filial-tsiolkovsky { background: #D32F2F; }
         
         select.status-select { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; border: none; cursor: pointer; color: white; }
         select.status-Принято { background: #0288d1; }
@@ -109,16 +108,22 @@
             <div style="font-size: 12px; color: #aaa;">За всё время</div>
         </div>
 
+        <!-- КАССА С ДЕТАЛИЗАЦИЕЙ РАБОТЫ / ЗАПЧАСТИ -->
         {% if current_user.is_admin %}
         <div class="stat-card" style="border-color: #4CAF50; background: #1a251a;">
-            <div class="stat-title" style="color: #81c784;">📊 ВЫРУЧКА / КАССА ЗА ДЕНЬ</div>
+            <div class="stat-title" style="color: #81c784;">📊 ВЫРУЧКА ЗА ДЕНЬ</div>
             <div style="display: flex; gap: 8px; margin-top: 5px; align-items: center;">
                 <input type="date" id="admin-calc-date" value="{{ today_date_iso }}" onchange="fetchDailySum(this.value)" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 12px;">
             </div>
             <div class="stat-value" style="color: #81c784; font-size: 22px; margin-top: 5px;">
                 <span id="admin-sum-result">{{ "{:,.0f}".format(today_revenue).replace(',', ' ') }}</span> <span style="font-size: 13px;">сум</span>
             </div>
-            <div id="admin-cars-count" style="font-size: 11px; color: #a5d6a7;">
+            <!-- Раздельная разбивка -->
+            <div style="font-size: 11px; color: #a5d6a7; border-top: 1px dashed #33691e; padding-top: 4px; margin-top: 4px;">
+                🛠️ За работы: <b id="admin-works-result">{{ "{:,.0f}".format(today_works_revenue).replace(',', ' ') }}</b> сум<br>
+                📦 За запчасти: <b id="admin-parts-result">{{ "{:,.0f}".format(today_parts_revenue).replace(',', ' ') }}</b> сум
+            </div>
+            <div id="admin-cars-count" style="font-size: 10px; color: #81c784; margin-top: 2px;">
                 Машин за день: {{ today_count }}
             </div>
         </div>
@@ -211,8 +216,9 @@ function fetchDailySum(selectedDate) {
     fetch('/api/admin/daily-sum?date_str=' + selectedDate)
         .then(res => res.json())
         .then(data => {
-            const formattedSum = Number(data.total || 0).toLocaleString('ru-RU');
-            document.getElementById('admin-sum-result').innerText = formattedSum;
+            document.getElementById('admin-sum-result').innerText = Number(data.total || 0).toLocaleString('ru-RU');
+            document.getElementById('admin-works-result').innerText = Number(data.works_total || 0).toLocaleString('ru-RU');
+            document.getElementById('admin-parts-result').innerText = Number(data.parts_total || 0).toLocaleString('ru-RU');
             document.getElementById('admin-cars-count').innerText = 'Машин за день: ' + (data.cars_count || 0);
         })
         .catch(() => {
