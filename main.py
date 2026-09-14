@@ -124,7 +124,6 @@ class SparePart(Base):
     price = Column(Float, default=0.0)
     car = relationship("Car", back_populates="parts")
 
-# Модель склада запчастей
 class WarehousePart(Base):
     __tablename__ = "warehouse_parts"
     id = Column(Integer, primary_key=True, index=True)
@@ -194,8 +193,6 @@ def get_daily_sum(
         "total": total_sum,
         "cars_count": len(cars)
     }
-
-# --- МАРШРУТЫ СКЛАДА ---
 
 @app.get("/warehouse", response_class=HTMLResponse)
 def warehouse_page(
@@ -504,7 +501,31 @@ def add_part(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
-    part = SparePart(car_id=car_id, name=name, quantity=quantity, price=price)
+    name_clean = name.strip()
+    car = db.query(Car).filter(Car.id == car_id).first()
+    car_filial = car.filial if car else "Филиал Сергели"
+
+    # Ищем запчасть на складе по совпадению названия
+    wh_part = db.query(WarehousePart).filter(
+        func.lower(WarehousePart.name) == name_clean.lower(),
+        WarehousePart.filial == car_filial
+    ).first()
+
+    if not wh_part:
+        wh_part = db.query(WarehousePart).filter(
+            func.lower(WarehousePart.name) == name_clean.lower()
+        ).first()
+
+    # Если цена не была введена вручную (0), берутся данные со склада
+    final_price = price
+    if (price == 0.0 or price is None) and wh_part:
+        final_price = wh_part.price
+
+    # Автоматическое списание количества со склада
+    if wh_part:
+        wh_part.quantity = max(0, wh_part.quantity - quantity)
+
+    part = SparePart(car_id=car_id, name=name_clean, quantity=quantity, price=final_price)
     db.add(part)
     db.commit()
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
@@ -521,11 +542,28 @@ def delete_work(work_id: int, db: Session = Depends(get_db), user: dict = Depend
 @app.post("/delete-part/{part_id}")
 def delete_part(part_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
     part = db.query(SparePart).filter(SparePart.id == part_id).first()
-    car_id = part.car_id if part else 1
     if part:
+        car_id = part.car_id
+        car = db.query(Car).filter(Car.id == car_id).first()
+        car_filial = car.filial if car else "Филиал Сергели"
+
+        # Возврат количества на склад при удалении позиции из заказ-наряда
+        wh_part = db.query(WarehousePart).filter(
+            func.lower(WarehousePart.name) == part.name.lower(),
+            WarehousePart.filial == car_filial
+        ).first()
+        if not wh_part:
+            wh_part = db.query(WarehousePart).filter(
+                func.lower(WarehousePart.name) == part.name.lower()
+            ).first()
+
+        if wh_part:
+            wh_part.quantity += part.quantity
+
         db.delete(part)
         db.commit()
-    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+        return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+    return RedirectResponse(url="/", status_code=303)
 
 @app.post("/delete-car/{car_id}")
 def delete_car(car_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
