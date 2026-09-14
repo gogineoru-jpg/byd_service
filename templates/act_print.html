@@ -21,9 +21,11 @@
 
         .doc-title { text-align: center; font-size: 16px; font-weight: bold; text-transform: uppercase; margin: 10px 0; letter-spacing: 0.5px; }
 
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 1px solid #000; padding: 8px; margin-bottom: 12px; background: #fafafa; }
-        .info-cell { font-size: 11px; }
-        .info-cell b { color: #000; display: inline-block; min-width: 110px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 1px solid #000; padding: 10px; margin-bottom: 12px; background: #fafafa; }
+        .info-cell { font-size: 11px; line-height: 1.5; }
+        .info-cell b { color: #000; display: inline-block; min-width: 120px; }
+        
+        .param-badge { background: #e0e0e0; border: 1px solid #999; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 11px; }
 
         .section-header { background: #222; color: #fff; font-size: 11px; font-weight: bold; padding: 4px 8px; text-transform: uppercase; margin-top: 12px; margin-bottom: 4px; }
 
@@ -78,7 +80,7 @@
 
     <div class="doc-title">ЗАКАЗ-НАРЯД № {{ car.id }}</div>
 
-    <!-- Таблица информации -->
+    <!-- Детализированная информация с отдельным выводом HEV и ODO -->
     <div class="info-grid">
         <div class="info-cell">
             <b>Заказчик (ФИО):</b> {{ car.owner.full_name if car.owner else '-' }}<br>
@@ -88,7 +90,9 @@
         <div class="info-cell">
             <b>Марка / Модель:</b> {{ car.brand_model }} ({{ car.manufacture_year }} г.)<br>
             <b>Гос. номер:</b> {{ car.plate_number }} | <b>VIN:</b> {{ car.vin_code }}<br>
-            <b>Пробег / SOH:</b> {{ car.mileage }} км / {{ car.soh_percent }}% | <b>Двиг:</b> {{ car.engine_type }}
+            <b>Силовая установка:</b> <span class="param-badge">{{ car.engine_type or 'HEV' }}</span><br>
+            <b>Одометр (ODO):</b> <span class="param-badge">{{ "{:,.0f}".format(car.mileage or 0).replace(',', ' ') }} км</span> | 
+            <b>Батарея (SOH):</b> <span class="param-badge">{{ car.soh_percent or 100 }}%</span>
         </div>
     </div>
 
