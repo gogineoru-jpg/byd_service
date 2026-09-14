@@ -23,8 +23,8 @@ Base = declarative_base()
 
 security = HTTPBasic()
 
-# Названия филиалов обновлены
-FILIALS = ["Филиал Сергели", "Циолковский"]
+# Полные названия филиалов
+FILIALS = ["Филиал Сергели", "Филиал Циолковский"]
 
 USERS = {
     "master1": {
@@ -150,7 +150,8 @@ migrations = [
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS discount_percent FLOAT DEFAULT 0.0;",
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS ev_mileage INTEGER DEFAULT 0;",
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS hev_mileage INTEGER DEFAULT 0;",
-    "UPDATE cars SET filial = 'Циолковский' WHERE filial = 'Филиал Савковский';"
+    "UPDATE cars SET filial = 'Филиал Циолковский' WHERE filial = 'Циолковский' OR filial = 'Филиал Савковский';",
+    "UPDATE warehouse_parts SET filial = 'Филиал Циолковский' WHERE filial = 'Циолковский' OR filial = 'Филиал Савковский';"
 ]
 
 for statement in migrations:
