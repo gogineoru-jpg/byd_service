@@ -47,7 +47,11 @@
         tr:hover { background: #252525; }
 
         .plate { background: #555; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 13px; }
-        .filial-tag { background: #3f51b5; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        
+        /* Метки филиалов: Синий для Сергели, Красный для Циолковский */
+        .filial-tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; display: inline-block; }
+        .filial-sergeli { background: #1976D2; } /* Синий */
+        .filial-tsiolkovsky { background: #D32F2F; } /* Красный */
         
         select.status-select { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; border: none; cursor: pointer; color: white; }
         select.status-Принято { background: #0288d1; }
@@ -63,7 +67,6 @@
 <body>
 
 <div class="container">
-    <!-- Шапка -->
     <div class="header">
         <div class="brand">🚗 <span>BYD</span> help</div>
         <div class="nav-btns">
@@ -75,7 +78,6 @@
         </div>
     </div>
 
-    <!-- Фильтр по филиалам -->
     <div class="filial-bar">
         <span style="font-size: 13px; font-weight: bold; color: #aaa;">📍 Филиал:</span>
         <a href="/?filial=all&search={{ search }}" class="filial-btn {% if current_filial == 'all' %}active{% endif %}">Все филиалы</a>
@@ -84,7 +86,6 @@
         {% endfor %}
     </div>
 
-    <!-- Статистика -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-title">СЕЙЧАС В СЕРВИСЕ (НЕ ВЫДАНО)</div>
@@ -108,7 +109,6 @@
             <div style="font-size: 12px; color: #aaa;">За всё время</div>
         </div>
 
-        <!-- КАССА / ВЫРУЧКА ВИДНА ТОЛЬКО АДМИНИСТРАТОРУ -->
         {% if current_user.is_admin %}
         <div class="stat-card" style="border-color: #4CAF50; background: #1a251a;">
             <div class="stat-title" style="color: #81c784;">📊 ВЫРУЧКА / КАССА ЗА ДЕНЬ</div>
@@ -125,14 +125,12 @@
         {% endif %}
     </div>
 
-    <!-- Поиск -->
     <form method="get" action="/" class="search-box">
         <input type="hidden" name="filial" value="{{ current_filial }}">
         <input type="text" name="search" value="{{ search }}" placeholder="Поиск по гос. номеру, VIN, ФИО или телефону...">
         <button type="submit" class="btn btn-secondary">🔍 Найти</button>
     </form>
 
-    <!-- Таблицы машин по дням -->
     {% for date_str, cars in grouped_cars.items() %}
     <div class="date-section">
         <div class="date-header">
@@ -168,7 +166,11 @@
                                 </select>
                             </form>
                         </td>
-                        <td><span class="filial-tag">{{ car.filial }}</span></td>
+                        <td>
+                            <span class="filial-tag {% if 'Сергели' in car.filial %}filial-sergeli{% else %}filial-tsiolkovsky{% endif %}">
+                                {{ car.filial }}
+                            </span>
+                        </td>
                         <td>
                             <b>{{ car.owner.full_name if car.owner else 'Не указан' }}</b><br>
                             <small style="color: #888;">{{ car.owner.phone if car.owner else '' }}</small>
