@@ -32,7 +32,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         .logo-group {
             display: flex;
@@ -41,21 +41,17 @@
         }
         .byd-logo-oval {
             border: 2px solid #d32f2f;
-            border-radius: 40px;
+            border-radius: 35px;
             padding: 1px 10px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
             color: #d32f2f;
             letter-spacing: 1px;
             display: inline-block;
             line-height: 1;
         }
-        .title-group {
-            display: flex;
-            flex-direction: column;
-        }
         .main-brand-title {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 900;
             line-height: 1;
         }
@@ -64,7 +60,7 @@
             font-size: 6px;
             font-weight: bold;
             color: #555;
-            margin-top: 2px;
+            margin-top: 1px;
             letter-spacing: 0.2px;
         }
         .slogan-group {
@@ -72,7 +68,7 @@
             font-size: 6px;
             font-weight: bold;
             color: #444;
-            line-height: 1.2;
+            line-height: 1.15;
         }
         .slogan-group strong {
             font-size: 7px;
@@ -91,8 +87,8 @@
             color: #fff;
             font-size: 10px;
             font-weight: 900;
-            padding: 3px 8px;
-            border-radius: 3px;
+            padding: 2.5px 8px;
+            border-radius: 2px;
             text-transform: uppercase;
             flex-grow: 1;
             margin-right: 8px;
@@ -121,12 +117,12 @@
             color: #fff;
             font-size: 7.5px;
             font-weight: bold;
-            padding: 2px 5px;
+            padding: 1.5px 5px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
         .block-body {
-            padding: 3px 4px;
+            padding: 2.5px 4px;
         }
 
         /* Form Lines */
@@ -156,7 +152,7 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1px 4px;
-            font-size: 7px;
+            font-size: 6.8px;
         }
         .check-item {
             display: flex;
@@ -173,7 +169,7 @@
             background: #fff;
         }
 
-        /* Car Inspection Diagram */
+        /* Visual Inspection Diagram */
         .inspection-header {
             background: #000;
             color: #fff;
@@ -231,6 +227,26 @@
             text-align: center;
         }
 
+        /* Force Majeure Block */
+        .fm-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr 1fr;
+            gap: 4px;
+            padding: 3px;
+        }
+        .fm-col-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 2px;
+            font-size: 6.5px;
+        }
+        .fm-list {
+            margin: 0;
+            padding-left: 10px;
+            font-size: 6px;
+            line-height: 1.15;
+        }
+
         /* Signatures */
         .sig-block {
             margin-top: 4px;
@@ -245,7 +261,6 @@
             margin-top: 4px;
         }
 
-        /* Print Override */
         @media print {
             .no-print { display: none !important; }
             body { background: #fff; }
@@ -257,7 +272,7 @@
 
     <div class="no-print" style="background: #222; padding: 6px; text-align: right; margin-bottom: 6px;">
         <button onclick="window.print()" style="background: #d32f2f; color: #fff; border: none; padding: 6px 18px; font-weight: bold; cursor: pointer; border-radius: 3px;">
-            🖨️ Распечатать / Сохранить в PDF
+            🖨️ Распечатать Акт (A4)
         </button>
     </div>
 
@@ -266,7 +281,7 @@
         <div class="header-top">
             <div class="logo-group">
                 <div class="byd-logo-oval">BYD</div>
-                <div class="title-group">
+                <div>
                     <div class="main-brand-title"><span class="red-text">BYD</span> Help Service</div>
                     <div class="sub-brand-title">ДИАГНОСТИКА • РЕМОНТ • ЗАПЧАСТИ • ЗАБОТА О ВАШЕМ АВТО</div>
                 </div>
@@ -430,10 +445,10 @@
             </div>
         </div>
 
-        <!-- Section 3: Visual Body Inspection -->
+        <!-- Section 3: Visual Inspection (5 Angles) -->
         <div>
             <div class="inspection-header">
-                <div class="inspection-title">Наружный осмотр состояния автомобиля</div>
+                <div class="inspection-title">Наружный осмотр состояния кузова</div>
                 <div class="inspection-legend">
                     <span>🟢 В - Вмятина</span>
                     <span>🟦 С - Скол</span>
@@ -446,6 +461,7 @@
             </div>
 
             <div class="car-views-box">
+                <!-- Front View -->
                 <div>
                     <svg viewBox="0 0 160 110" width="100%" height="68">
                         <g stroke="#000" stroke-width="1.3" fill="none" stroke-linejoin="round">
@@ -458,9 +474,10 @@
                             <rect x="135" y="68" width="7" height="16" rx="2" fill="#000"/>
                         </g>
                     </svg>
-                    <div class="view-lbl">Вид спереди</div>
+                    <div class="view-lbl">Спереди</div>
                 </div>
 
+                <!-- Left Side View -->
                 <div>
                     <svg viewBox="0 0 220 100" width="100%" height="68">
                         <g stroke="#000" stroke-width="1.3" fill="none" stroke-linejoin="round">
@@ -473,11 +490,12 @@
                             <circle cx="166" cy="68" r="5" fill="#000"/>
                         </g>
                     </svg>
-                    <div class="view-lbl">Левая сторона</div>
+                    <div class="view-lbl">Слева</div>
                 </div>
 
+                <!-- Top View -->
                 <div>
-                    <svg viewBox="0 0 100 180" width="100%" height="80">
+                    <svg viewBox="0 0 100 180" width="100%" height="78">
                         <g stroke="#000" stroke-width="1.3" fill="none" stroke-linejoin="round">
                             <rect x="20" y="8" width="60" height="164" rx="26" fill="#fff"/>
                             <path d="M 28 42 C 42 36, 58 36, 72 42 L 68 64 C 52 60, 48 60, 32 64 Z" fill="#f4f4f4"/>
@@ -487,9 +505,10 @@
                             <path d="M 80 48 L 90 42 L 90 56 Z" fill="#000"/>
                         </g>
                     </svg>
-                    <div class="view-lbl">Вид сверху</div>
+                    <div class="view-lbl">Сверху</div>
                 </div>
 
+                <!-- Right Side View -->
                 <div>
                     <svg viewBox="0 0 220 100" width="100%" height="68">
                         <g stroke="#000" stroke-width="1.3" fill="none" stroke-linejoin="round">
@@ -502,9 +521,10 @@
                             <circle cx="54" cy="68" r="5" fill="#000"/>
                         </g>
                     </svg>
-                    <div class="view-lbl">Правая сторона</div>
+                    <div class="view-lbl">Справа</div>
                 </div>
 
+                <!-- Rear View -->
                 <div>
                     <svg viewBox="0 0 160 110" width="100%" height="68">
                         <g stroke="#000" stroke-width="1.3" fill="none" stroke-linejoin="round">
@@ -516,7 +536,7 @@
                             <rect x="135" y="68" width="7" height="16" rx="2" fill="#000"/>
                         </g>
                     </svg>
-                    <div class="view-lbl">Вид сзади</div>
+                    <div class="view-lbl">Сзади</div>
                 </div>
             </div>
         </div>
@@ -530,9 +550,9 @@
                         <thead>
                             <tr>
                                 <th>Позиция</th>
-                                <th>Глубина протектора, мм</th>
-                                <th>Внешние повреждения</th>
-                                <th>Шина в порядке</th>
+                                <th>Протектор, мм</th>
+                                <th>Повреждения</th>
+                                <th>Исправность</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -566,14 +586,14 @@
             </div>
 
             <div class="block-box">
-                <div class="block-title">Запчасти заказчика (переданные с автомобилем)</div>
+                <div class="block-title">Запчасти заказчика (переданные с ТС)</div>
                 <div style="padding: 1px;">
                     <table class="data-tbl">
                         <thead>
                             <tr>
                                 <th style="width: 18px;">№</th>
                                 <th>Наименование</th>
-                                <th style="width: 40px;">Кол-во</th>
+                                <th style="width: 35px;">Кол-во</th>
                                 <th>Примечание</th>
                             </tr>
                         </thead>
@@ -588,14 +608,39 @@
             </div>
         </div>
 
-        <!-- Section 5: Force Majeure & Conditions -->
+        <!-- Section 5: Detailed Force Majeure Section -->
         <div class="block-box" style="margin-top: 4px;">
-            <div class="block-title">Условия оказания услуг и Форс-Мажорные обстоятельства</div>
-            <div class="block-body" style="font-size: 6px; line-height: 1.15; color: #111;">
-                <p style="margin: 0 0 2px 0;"><b>1. Форс-мажорные события:</b> Стороны освобождаются от ответственности за полное или частичное неисполнение обязательств при наступлении событий непреодолимой силы: природные катаклизмы, пожары, аварии энергосетей, военные действия, ограничения госорганов, задержки таможни или сбои международной логистики поставок комплектующих.</p>
-                <p style="margin: 0 0 2px 0;"><b>2. Обязанности Исполнителя:</b> Известить Заказчика о происшествии; обеспечить сохранность ТС при наличии возможности; заморозить выполнение работ без применения пеней/штрафов; продлить срок выполнения работ на время действия форс-мажора.</p>
-                <p style="margin: 0 0 2px 0;"><b>3. Обязанности Заказчика:</b> Оплатить фактически выполненные работы и поставленные запчасти до момента форс-мажора; оперативно согласовать продление сроков либо порядок эвакуации/хранения ТС.</p>
-                <p style="margin: 0;"><b>4. Примечание:</b> Исполнитель не несет ответственности за ценные вещи в салоне. ТС принято в грязном виде, возможны скрытые дефекты ЛКП.</p>
+            <div class="block-title">Положения о форс-мажоре и условия ремонта</div>
+            <div class="fm-grid">
+                <div>
+                    <div class="fm-col-title">Что входит в форс-мажор:</div>
+                    <ul class="fm-list">
+                        <li>Стихийные бедствия (пожар, наводнение, землетрясение).</li>
+                        <li>Аварии на городских инженерных сетях (электричество).</li>
+                        <li>Военные действия, теракты, режим ЧС, акты госорганов.</li>
+                        <li>Задержки таможенного оформления и сбои международных поставок запчастей.</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="fm-col-title">Требования к Сервису:</div>
+                    <ul class="fm-list">
+                        <li>Оперативно уведомить Клиента о наступлении форс-мажора.</li>
+                        <li>Обеспечить максимальную сохранность ТС.</li>
+                        <li>Приостановить работы без начисления пеней и штрафов.</li>
+                        <li>Продлить срок ремонта на время действия обстоятельств.</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="fm-col-title">Требования к Клиенту:</div>
+                    <ul class="fm-list">
+                        <li>Оплатить фактически выполненные работы и поставленные детали.</li>
+                        <li>Согласовать продление сроков или порядок эвакуации/хранения ТС.</li>
+                        <li>Забрать ценное имущество (Сервис за личные вещи в салоне ответственности не несет).</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="font-size: 5.8px; color: #333; padding: 0 4px 2px 4px; border-top: 1px dashed #ccc;">
+                * Примечание: ТС принимается в грязном виде, осмотр проводится без мойки. За скрытые дефекты ЛКП и повреждения, не видимые под загрязнением, Сервис ответственности не несет.
             </div>
         </div>
 
