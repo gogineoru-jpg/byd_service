@@ -1,1 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BYD Help Service — Склад запчастей</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { margin: 0; background-color: #121212; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #d32f2f; padding-bottom: 15px; margin-bottom: 20px; }
+        .brand { font-size: 22px; font-weight: 900; letter-spacing: 1px; }
+        .brand span { color: #d32f2f; }
+        
+        .nav-btns { display: flex; gap: 10px; align-items: center; }
+        .btn { padding: 8px 16px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 13px; display: inline-block; }
+        .btn-primary { background: #d32f2f; color: #fff; }
+        .btn-primary:hover { background: #b71c1c; }
+        .btn-secondary { background: #333; color: #fff; border: 1px solid #555; }
+        .btn-secondary:hover { background: #444; }
 
+        .card { background: #1e1e1e; border: 1px solid #333; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 10px; }
+        input, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 13px; width: 100%; }
+
+        .table-container { background: #1e1e1e; border-radius: 6px; border: 1px solid #333; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        th { background: #2a2a2a; color: #bbb; padding: 12px; font-weight: 600; border-bottom: 1px solid #333; }
+        td { padding: 10px 12px; border-bottom: 1px solid #2a2a2a; }
+        tr:hover { background: #252525; }
+
+        .out-of-stock { color: #ff5252; font-weight: bold; }
+        .in-stock { color: #4CAF50; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="brand"><span>BYD</span> HELP SERVICE — СКЛАД</div>
+        <div class="nav-btns">
+            <a href="/" class="btn btn-secondary">← Журнал авто</a>
+            <span style="font-size: 13px; color: #888;"><b>{{ current_user.display_name }}</b></span>
+        </div>
+    </div>
+
+    <!-- Форма добавления запчасти -->
+    <div class="card">
+        <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #fff;">➕ Приход запчасти на склад</h3>
+        <form action="/warehouse/add" method="post">
+            <div class="form-grid">
+                <div>
+                    <label style="font-size: 11px; color: #aaa;">Наименование:</label>
+                    <input type="text" name="name" placeholder="например, Фильтр салона BYD Song" required>
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: #aaa;">Артикул / Код:</label>
+                    <input type="text" name="part_code" placeholder="BYD-48190">
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: #aaa;">Количество (шт):</label>
+                    <input type="number" name="quantity" value="1" min="0" required>
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: #aaa;">Цена (сум):</label>
+                    <input type="number" name="price" value="0" step="1000" min="0" required>
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: #aaa;">Филиал:</label>
+                    <select name="filial">
+                        {% for f in filials %}
+                        <option value="{{ f }}">{{ f }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Добавить на склад</button>
+        </form>
+    </div>
+
+    <!-- Фильтр и поиск -->
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <form method="get" action="/warehouse" style="display: flex; gap: 10px; width: 100%;">
+            <input type="text" name="search" value="{{ search }}" placeholder="Поиск по названию или артикулу..." style="max-width: 350px;">
+            <select name="filial" onchange="this.form.submit()" style="max-width: 200px;">
+                <option value="all" {% if current_filial == 'all' %}selected{% endif %}>Все филиалы</option>
+                {% for f in filials %}
+                <option value="{{ f }}" {% if current_filial == f %}selected{% endif %}>{{ f }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-secondary">Найти</button>
+        </form>
+    </div>
+
+    <!-- Таблица остатков -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Наименование запчасти</th>
+                    <th>Артикул</th>
+                    <th>Филиал</th>
+                    <th>Кол-во (шт)</th>
+                    <th>Цена за шт</th>
+                    <th>Обновит остаток</th>
+                    {% if current_user.is_admin %}
+                    <th>Удалить</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for part in parts %}
+                <tr>
+                    <td><b>#{{ part.id }}</b></td>
+                    <td><b>{{ part.name }}</b></td>
+                    <td style="font-family: monospace;">{{ part.part_code or '-' }}</td>
+                    <td>{{ part.filial }}</td>
+                    <td class="{% if part.quantity > 0 %}in-stock{% else %}out-of-stock{% endif %}">
+                        {{ part.quantity }} шт.
+                    </td>
+                    <td>{{ "{:,.0f}".format(part.price or 0).replace(',', ' ') }} сум</td>
+                    <td>
+                        <form action="/warehouse/update/{{ part.id }}" method="post" style="display: flex; gap: 5px;">
+                            <input type="number" name="quantity" value="{{ part.quantity }}" style="width: 70px; padding: 3px 6px;">
+                            <input type="number" name="price" value="{{ part.price }}" style="width: 100px; padding: 3px 6px;">
+                            <button type="submit" class="btn btn-secondary" style="padding: 3px 8px; font-size: 11px;">Сохранить</button>
+                        </form>
+                    </td>
+                    {% if current_user.is_admin %}
+                    <td>
+                        <form action="/warehouse/delete/{{ part.id }}" method="post" onsubmit="return confirm('Удалить позицию со склада?');">
+                            <button type="submit" class="btn btn-primary" style="padding: 3px 8px; font-size: 11px; background: #c62828;">🗑️</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: #666; padding: 20px;">Запчасти на складе не найдены</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
