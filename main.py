@@ -163,7 +163,6 @@ def get_db():
 def admin_login(user: dict = Depends(require_admin)):
     return RedirectResponse(url="/", status_code=303)
 
-# --- АПИ ДЛЯ ПОЛУЧЕНИЯ ВЫРУЧКИ ЗА ДЕНЬ (ДЛЯ АДМИНА) ---
 @app.get("/api/admin/daily-sum")
 def get_daily_sum(
     date_str: str = "",
@@ -230,7 +229,6 @@ def index(
     today_count = len(today_cars)
     total_count = len(cars)
 
-    # Расчет сегодняшней выручки
     today_revenue = sum(
         sum(w.price for w in car.works if w.price) + 
         sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
@@ -289,6 +287,18 @@ def create_entry(
     plate_number = plate_number.strip().upper()
     vin_code = vin_code.strip().upper()
     
+    # Защита от дубликатов при двойном клике
+    existing_car = db.query(Car).filter(
+        Car.plate_number == plate_number,
+        Car.vin_code == vin_code,
+        Car.status == "Принято"
+    ).order_by(Car.id.desc()).first()
+
+    if existing_car and existing_car.created_at:
+        time_diff = (datetime.now() - existing_car.created_at).total_seconds()
+        if time_diff < 60:
+            return RedirectResponse(url=f"/inspection/{existing_car.id}", status_code=303)
+
     client = db.query(Client).filter(Client.phone == phone).first()
     if not client:
         client = Client(full_name=full_name, phone=phone)
