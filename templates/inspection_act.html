@@ -1,3 +1,16 @@
+<div class="no-print" style="display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 10px 20px; color: white; margin-bottom: 15px;">
+    <div style="display: flex; gap: 10px;">
+        <a href="/" style="background: #444; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px;">← На главную</a>
+        <a href="/act/{{ car.id }}" style="background: #2196F3; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px;">📋 Заказ-наряд</a>
+    </div>
+    <button onclick="window.print()" style="background: #d32f2f; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">🖨️ Распечатать Акт (А4)</button>
+</div>
+
+<style>
+@media print {
+    .no-print { display: none !important; }
+}
+</style>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
