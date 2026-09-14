@@ -19,7 +19,6 @@
         table.data-table td { padding: 2px 0; vertical-align: top; }
         table.data-table td.label { font-weight: bold; color: #444; width: 42%; }
 
-        /* Схема автомобиля */
         .car-schema-section { margin-bottom: 12px; }
         .car-schema-container { 
             display: flex; 
@@ -86,18 +85,16 @@
                 <tr><td class="label">Марка / Модель:</td><td>{{ car.brand_model }} ({{ car.manufacture_year }} г.)</td></tr>
                 <tr><td class="label">Гос. номер:</td><td><b>{{ car.plate_number }}</b></td></tr>
                 <tr><td class="label">VIN-код:</td><td>{{ car.vin_code }}</td></tr>
-                <tr><td class="label">Тип ДВС / Бат.:</td><td>{{ car.engine_type or '-' }}</td></tr>
-                <tr><td class="label">Пробег / SOH:</td><td>{{ "{:,.0f}".format(car.mileage or 0).replace(',', ' ') }} км | {{ car.soh_percent or 100 }}%</td></tr>
+                <tr><td class="label">Тип привода / Бат.:</td><td>{{ car.engine_type or '-' }} | SOH: {{ car.soh_percent or 100 }}%</td></tr>
+                <tr><td class="label">Пробег EV / HEV:</td><td>EV: {{ "{:,.0f}".format(car.ev_mileage or 0).replace(',', ' ') }} км | HEV: {{ "{:,.0f}".format(car.hev_mileage or 0).replace(',', ' ') }} км</td></tr>
+                <tr><td class="label">Общий пробег (ODO):</td><td><b>{{ "{:,.0f}".format(car.mileage or 0).replace(',', ' ') }} км</b></td></tr>
             </table>
         </div>
     </div>
 
-    <!-- Схема осмотра автомобиля со всех сторон -->
     <div class="car-schema-section">
         <div class="block-title">Схема осмотра кузова (Обозначения: Х — царапина, О — вмятина, V — скол, Т — трещина):</div>
         <div class="car-schema-container">
-            
-            <!-- Спереди -->
             <div class="schema-card">
                 <div class="schema-label">Спереди</div>
                 <svg class="car-svg" viewBox="0 0 120 80" width="90" height="60">
@@ -112,26 +109,24 @@
                 </svg>
             </div>
 
-            <!-- Слева (Увеличенный размер) -->
             <div class="schema-card">
                 <div class="schema-label">Слева</div>
                 <svg class="car-svg" viewBox="0 0 180 80" width="160" height="70">
-                    <path d="M 8 52 L 8 38 L 35 38 L 56 10 L 142 10 L 165 24 L 165 52 Z" /> <!-- Контур кузова -->
-                    <polygon points="58,14 92,14 92,35 43,35" /> <!-- Переднее окно -->
-                    <polygon points="98,14 136,14 154,26 98,35" /> <!-- Заднее окно -->
-                    <line x1="95" y1="14" x2="95" y2="56" /> <!-- Средняя стойка/дверь -->
-                    <line x1="40" y1="35" x2="40" y2="56" /> <!-- Передок/переднее крыло -->
-                    <line x1="148" y1="35" x2="148" y2="56" /> <!-- Задок/заднее крыло -->
-                    <line x1="82" y1="39" x2="91" y2="39" stroke-width="2.5" /> <!-- Ручка передняя -->
-                    <line x1="134" y1="39" x2="143" y2="39" stroke-width="2.5" /> <!-- Ручка задняя -->
-                    <circle cx="44" cy="54" r="13" fill="#fff" /> <!-- Переднее колесо -->
+                    <path d="M 8 52 L 8 38 L 35 38 L 56 10 L 142 10 L 165 24 L 165 52 Z" />
+                    <polygon points="58,14 92,14 92,35 43,35" />
+                    <polygon points="98,14 136,14 154,26 98,35" />
+                    <line x1="95" y1="14" x2="95" y2="56" />
+                    <line x1="40" y1="35" x2="40" y2="56" />
+                    <line x1="148" y1="35" x2="148" y2="56" />
+                    <line x1="82" y1="39" x2="91" y2="39" stroke-width="2.5" />
+                    <line x1="134" y1="39" x2="143" y2="39" stroke-width="2.5" />
+                    <circle cx="44" cy="54" r="13" fill="#fff" />
                     <circle cx="44" cy="54" r="8" />
-                    <circle cx="134" cy="54" r="13" fill="#fff" /> <!-- Заднее колесо -->
+                    <circle cx="134" cy="54" r="13" fill="#fff" />
                     <circle cx="134" cy="54" r="8" />
                 </svg>
             </div>
 
-            <!-- Сверху -->
             <div class="schema-card">
                 <div class="schema-label">Сверху</div>
                 <svg class="car-svg" viewBox="0 0 80 140" width="55" height="95">
@@ -146,7 +141,6 @@
                 </svg>
             </div>
 
-            <!-- Справа (Увеличенный размер) -->
             <div class="schema-card">
                 <div class="schema-label">Справа</div>
                 <svg class="car-svg" viewBox="0 0 180 80" width="160" height="70">
@@ -165,7 +159,6 @@
                 </svg>
             </div>
 
-            <!-- Сзади -->
             <div class="schema-card">
                 <div class="schema-label">Сзади</div>
                 <svg class="car-svg" viewBox="0 0 120 80" width="90" height="60">
@@ -179,7 +172,6 @@
                     <rect x="90" y="68" width="18" height="8" fill="#333" />
                 </svg>
             </div>
-
         </div>
     </div>
 
