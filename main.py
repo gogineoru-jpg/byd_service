@@ -23,7 +23,8 @@ Base = declarative_base()
 
 security = HTTPBasic()
 
-FILIALS = ["Филиал Сергели", "Филиал Савковский"]
+# Названия филиалов обновлены
+FILIALS = ["Филиал Сергели", "Циолковский"]
 
 USERS = {
     "master1": {
@@ -43,7 +44,7 @@ USERS = {
     },
     "master4": {
         "password": os.environ.get("MASTER4_PASS", "byd104"),
-        "name": "Ориф (Филиал Савковский)",
+        "name": "Ориф (Филиал Циолковский)",
         "is_admin": False
     },
     "admin": {
@@ -148,7 +149,8 @@ migrations = [
     "UPDATE cars SET filial = 'Филиал Сергели' WHERE filial IS NULL;",
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS discount_percent FLOAT DEFAULT 0.0;",
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS ev_mileage INTEGER DEFAULT 0;",
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS hev_mileage INTEGER DEFAULT 0;"
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS hev_mileage INTEGER DEFAULT 0;",
+    "UPDATE cars SET filial = 'Циолковский' WHERE filial = 'Филиал Савковский';"
 ]
 
 for statement in migrations:
@@ -391,7 +393,6 @@ def create_entry(
     plate_number = plate_number.strip().upper()
     vin_code = vin_code.strip().upper()
 
-    # Рассчитываем общий пробег, если он не передан напрямую
     total_odo = mileage if mileage > 0 else (ev_mileage + hev_mileage)
 
     client = db.query(Client).filter(Client.phone == phone).first()
