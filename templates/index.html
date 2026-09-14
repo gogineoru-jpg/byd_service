@@ -184,3 +184,39 @@
     </div>
 </body>
 </html>
+{% if current_user.is_admin %}
+<div style="background: #1e1e1e; color: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #333; margin: 15px 0; max-width: 380px;">
+    <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #4CAF50;">📊 Выручка / Касса за день</h3>
+    
+    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+        <label for="admin-calc-date" style="font-size: 13px;">Дата:</label>
+        <input type="date" id="admin-calc-date" value="{{ today_date_iso }}" onchange="fetchDailySum(this.value)" style="padding: 5px 8px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #fff;">
+    </div>
+
+    <div style="font-size: 18px; font-weight: bold;">
+        Итого: <span id="admin-sum-result" style="color: #4CAF50;">{{ "{:,.0f}".format(today_revenue).replace(',', ' ') }}</span> сум
+    </div>
+    <div id="admin-cars-count" style="font-size: 12px; color: #aaa; margin-top: 4px;">
+        Машин за день: {{ today_count }}
+    </div>
+</div>
+
+<script>
+function fetchDailySum(selectedDate) {
+    if (!selectedDate) return;
+    fetch('/api/admin/daily-sum?date_str=' + selectedDate)
+        .then(res => {
+            if (!res.ok) throw new Error('Auth required');
+            return res.json();
+        })
+        .then(data => {
+            const formattedSum = Number(data.total || 0).toLocaleString('ru-RU');
+            document.getElementById('admin-sum-result').innerText = formattedSum;
+            document.getElementById('admin-cars-count').innerText = 'Машин за день: ' + (data.cars_count || 0);
+        })
+        .catch(() => {
+            document.getElementById('admin-sum-result').innerText = '0';
+        });
+}
+</script>
+{% endif %}
