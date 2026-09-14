@@ -27,7 +27,7 @@
                 <h5 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2 text-danger"></i> Регистрация нового автомобиля</h5>
             </div>
             <div class="card-body p-4">
-                <form action="/create-entry" method="post">
+                <form action="/create-entry" method="post" onsubmit="this.querySelector('button[type=submit]').disabled = true;">
                     <!-- Выбор филиала -->
                     <div class="bg-light p-3 rounded mb-4 border border-danger">
                         <label class="form-label fw-bold text-danger"><i class="bi bi-geo-alt-fill me-1"></i> Филиал обслуживания *</label>
