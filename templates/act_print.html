@@ -2,196 +2,157 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Заказ-наряд №{{ car.id }} - BYD help</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title>Заказ-наряд №{{ car.id }}</title>
     <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { margin: 0; padding: 20px; background: #f5f5f5; color: #111; font-size: 13px; }
+        .page { max-width: 900px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 6px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        
+        .nav-bar { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 10px 20px; color: white; margin-bottom: 20px; border-radius: 6px; }
+        .btn { padding: 6px 14px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 12px; display: inline-block; }
+        .btn-sec { background: #444; color: #fff; }
+        .btn-blue { background: #2196F3; color: #fff; }
+        .btn-red { background: #d32f2f; color: #fff; }
+
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .header-table td { padding: 4px 0; vertical-align: top; }
+
+        h2 { text-align: center; margin: 10px 0 20px 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .section-title { font-weight: bold; font-size: 14px; margin: 15px 0 8px 0; border-bottom: 2px solid #333; padding-bottom: 4px; }
+        
+        table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        table.data-table th, table.data-table td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+        table.data-table th { background: #f0f0f0; font-size: 12px; }
+
+        .add-form { display: flex; gap: 8px; margin-bottom: 15px; background: #f9f9f9; padding: 10px; border: 1px dashed #ccc; border-radius: 4px; }
+        .add-form input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+
+        .total-box { text-align: right; font-size: 16px; font-weight: bold; margin-top: 15px; padding: 10px; background: #eee; border-radius: 4px; }
+
         @media print {
             .no-print { display: none !important; }
-            body { background-color: #fff !important; font-size: 12px; }
-            .card { border: none !important; box-shadow: none !important; }
+            body { background: #fff; padding: 0; }
+            .page { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
         }
-        .brand-red { color: #dc3545; font-weight: 800; }
     </style>
 </head>
-<body class="bg-light">
-    <div class="container my-4" style="max-width: 900px;">
-        <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-            <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> На главную</a>
-            <button onclick="window.print()" class="btn btn-primary btn-sm"><i class="bi bi-printer me-1"></i> Печать заказ-наряда</button>
+<body>
+
+<div class="page">
+    <!-- Кнопки управления (не печатаются) -->
+    <div class="nav-bar no-print">
+        <div style="display: flex; gap: 8px;">
+            <a href="/" class="btn btn-sec">← На главную</a>
+            <a href="/inspection/{{ car.id }}" class="btn btn-blue">📋 Акт приёмки</a>
         </div>
-
-        <div class="card shadow border-0 p-4 bg-white">
-            <!-- Header -->
-            <div class="row border-bottom pb-3 mb-3 align-items-center">
-                <div class="col-6">
-                    <h3 class="mb-0 fw-bold"><span class="brand-red">BYD</span> help</h3>
-                    <div class="fw-bold text-dark fs-6">{{ car.filial or 'Филиал Сергели' }}</div>
-                    <div class="text-muted small">
-                        <i class="bi bi-telephone-fill me-1"></i>
-                        {% if car.filial == "Филиал Савковский" %}
-                            +998 70 179 40 45
-                        {% else %}
-                            +998 95 881 63 93
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="col-6 text-end">
-                    <h4 class="fw-bold text-uppercase mb-0">Заказ-наряд №{{ car.id }}</h4>
-                    <div class="text-muted small">Дата: {{ car.created_at.strftime('%d.%m.%Y %H:%M') if car.created_at else '' }}</div>
-                </div>
-            </div>
-
-            <!-- Customer and Car Info -->
-            <div class="row g-3 mb-4 small">
-                <div class="col-6 border-end">
-                    <h6 class="fw-bold text-uppercase text-muted mb-2">Заказчик:</h6>
-                    <div><strong>ФИО:</strong> {{ car.owner.full_name }}</div>
-                    <div><strong>Телефон:</strong> {{ car.owner.phone }}</div>
-                </div>
-                <div class="col-6">
-                    <h6 class="fw-bold text-uppercase text-muted mb-2">Автомобиль:</h6>
-                    <div><strong>Модель:</strong> {{ car.brand_model }} ({{ car.manufacture_year }})</div>
-                    <div><strong>Гос. номер:</strong> <span class="badge bg-dark">{{ car.plate_number }}</span></div>
-                    <div><strong>VIN:</strong> {{ car.vin_code }}</div>
-                    <div><strong>Пробег:</strong> {{ car.mileage }} км | <strong>SOH:</strong> {{ car.soh_percent }}%</div>
-                </div>
-            </div>
-
-            <!-- Works Table -->
-            <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">1. Выполненные работы</h6>
-            <table class="table table-bordered table-sm mb-3">
-                <thead class="table-light">
-                    <tr>
-                        <th>№</th>
-                        <th>Наименование работ</th>
-                        <th class="text-end" style="width: 170px;">Стоимость (сум)</th>
-                        <th class="no-print text-center" style="width: 50px;"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for work in car.works %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ work.description }}</td>
-                        <td class="text-end">{{ "{:,.0f}".format(work.price).replace(',', ' ') }}</td>
-                        <td class="no-print text-center">
-                            {% if current_user.is_admin %}
-                            <form action="/delete-work/{{ work.id }}" method="post" style="display:inline;">
-                                <button type="submit" class="btn btn-link text-danger p-0 border-0"><i class="bi bi-x-circle"></i></button>
-                            </form>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted">Работы еще не добавлены</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <!-- Add Work Form (No Print) -->
-            <div class="no-print card bg-light border-0 p-2 mb-4">
-                <form action="/add-work/{{ car.id }}" method="post" class="row g-2 align-items-center">
-                    <div class="col-md-7">
-                        <input type="text" name="description" class="form-control form-control-sm" placeholder="Наименование работы" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="number" step="1000" name="price" class="form-control form-control-sm" placeholder="Цена (сум)" required>
-                    </div>
-                    <div class="col-md-2 d-grid">
-                        <button type="submit" class="btn btn-dark btn-sm"><i class="bi bi-plus-lg"></i> Добавить</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Spare Parts Table -->
-            <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">2. Запасные части и материалы</h6>
-            <table class="table table-bordered table-sm mb-3">
-                <thead class="table-light">
-                    <tr>
-                        <th>№</th>
-                        <th>Наименование запчасти</th>
-                        <th class="text-center" style="width: 80px;">Кол-во</th>
-                        <th class="text-end" style="width: 140px;">Цена (сум)</th>
-                        <th class="text-end" style="width: 140px;">Сумма (сум)</th>
-                        <th class="no-print text-center" style="width: 50px;"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for part in car.parts %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ part.name }}</td>
-                        <td class="text-center">{{ part.quantity }}</td>
-                        <td class="text-end">{{ "{:,.0f}".format(part.price).replace(',', ' ') }}</td>
-                        <td class="text-end">{{ "{:,.0f}".format(part.price * part.quantity).replace(',', ' ') }}</td>
-                        <td class="no-print text-center">
-                            {% if current_user.is_admin %}
-                            <form action="/delete-part/{{ part.id }}" method="post" style="display:inline;">
-                                <button type="submit" class="btn btn-link text-danger p-0 border-0"><i class="bi bi-x-circle"></i></button>
-                            </form>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">Запчасти еще не добавлены</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <!-- Add Part Form (No Print) -->
-            <div class="no-print card bg-light border-0 p-2 mb-4">
-                <form action="/add-part/{{ car.id }}" method="post" class="row g-2 align-items-center">
-                    <div class="col-md-5">
-                        <input type="text" name="name" class="form-control form-control-sm" placeholder="Название запчасти" required>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="number" name="quantity" class="form-control form-control-sm" value="1" min="1" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="number" step="1000" name="price" class="form-control form-control-sm" placeholder="Цена (сум)" required>
-                    </div>
-                    <div class="col-md-2 d-grid">
-                        <button type="submit" class="btn btn-dark btn-sm"><i class="bi bi-plus-lg"></i> Добавить</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Totals -->
-            <div class="row justify-content-end mb-4">
-                <div class="col-md-6">
-                    <table class="table table-borderless table-sm">
-                        <tr>
-                            <td>Итого работы:</td>
-                            <td class="text-end fw-bold">{{ "{:,.0f}".format(works_sum).replace(',', ' ') }} сум</td>
-                        </tr>
-                        <tr>
-                            <td>Итого запчасти:</td>
-                            <td class="text-end fw-bold">{{ "{:,.0f}".format(parts_sum).replace(',', ' ') }} сум</td>
-                        </tr>
-                        <tr class="border-top border-2 border-dark">
-                            <td class="fs-6 fw-bold">ОБЩАЯ СУММА:</td>
-                            <td class="text-end fs-6 fw-bold text-danger">{{ "{:,.0f}".format(total_sum).replace(',', ' ') }} сум</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Signatures -->
-            <div class="row mt-5 pt-3 border-top small">
-                <div class="col-6">
-                    <p class="mb-4">Исполнитель (Мастер): ___________________ ({{ car.created_by or 'Мастер-приёмщик' }})</p>
-                </div>
-                <div class="col-6 text-end">
-                    <p class="mb-4">Заказчик (Клиент): ___________________ ({{ car.owner.full_name }})</p>
-                </div>
-            </div>
-        </div>
+        <button onclick="window.print()" class="btn btn-red">🖨️ Печать заказ-наряда (А4)</button>
     </div>
+
+    <h2>Заказ-наряд № {{ car.id }}</h2>
+
+    <table class="header-table">
+        <tr>
+            <td style="width: 50%;">
+                <b>Заказчик:</b> {{ car.owner.full_name if car.owner else '-' }}<br>
+                <b>Телефон:</b> {{ car.owner.phone if car.owner else '-' }}<br>
+                <b>Филиал:</b> {{ car.filial }}
+            </td>
+            <td style="width: 50%; text-align: right;">
+                <b>Автомобиль:</b> {{ car.brand_model }} ({{ car.manufacture_year }})<br>
+                <b>Гос. номер:</b> {{ car.plate_number }} | <b>VIN:</b> {{ car.vin_code }}<br>
+                <b>Пробег:</b> {{ car.mileage }} км | <b>SOH:</b> {{ car.soh_percent }}%
+            </td>
+        </tr>
+    </table>
+
+    <!-- 1. РАБОТЫ -->
+    <div class="section-title">1. ВЫПОЛНЕННЫЕ РАБОТЫ</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 40px;">№</th>
+                <th>Наименование работ</th>
+                <th style="width: 130px; text-align: right;">Стоимость (сум)</th>
+                <th class="no-print" style="width: 30px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for work in car.works %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ work.description }}</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(work.price or 0).replace(',', ' ') }}</td>
+                <td class="no-print" style="text-align: center;">
+                    <form action="/delete-work/{{ work.id }}" method="post" style="margin:0;">
+                        <button type="submit" style="color: red; border: none; background: none; cursor: pointer; font-weight: bold;">✕</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" style="text-align: center; color: #888;">Работы не внесены</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form action="/add-work/{{ car.id }}" method="post" class="add-form no-print">
+        <input type="text" name="description" placeholder="Наименование работы" style="flex: 2;" required>
+        <input type="number" name="price" placeholder="Цена (сум)" style="flex: 1;">
+        <button type="submit" class="btn btn-sec" style="background: #333;">+ Добавить</button>
+    </form>
+
+    <!-- 2. ЗАПЧАСТИ -->
+    <div class="section-title">2. ЗАПАСНЫЕ ЧАСТИ И МАТЕРИАЛЫ</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 40px;">№</th>
+                <th>Наименование запчасти / Артикул</th>
+                <th style="width: 70px; text-align: center;">Кол-во</th>
+                <th style="width: 120px; text-align: right;">Цена (сум)</th>
+                <th style="width: 130px; text-align: right;">Сумма (сум)</th>
+                <th class="no-print" style="width: 30px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for part in car.parts %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ part.name }}</td>
+                <td style="text-align: center;">{{ part.quantity }}</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(part.price or 0).replace(',', ' ') }}</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format((part.price or 0) * part.quantity).replace(',', ' ') }}</td>
+                <td class="no-print" style="text-align: center;">
+                    <form action="/delete-part/{{ part.id }}" method="post" style="margin:0;">
+                        <button type="submit" style="color: red; border: none; background: none; cursor: pointer; font-weight: bold;">✕</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align: center; color: #888;">Запчасти не внесены</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form action="/add-part/{{ car.id }}" method="post" class="add-form no-print">
+        <input type="text" name="name" placeholder="Наименование или артикул (например BYD1124)" style="flex: 2;" required>
+        <input type="number" name="quantity" value="1" min="1" style="width: 70px; text-align: center;" required>
+        <input type="number" name="price" placeholder="Цена (сум)" style="flex: 1;">
+        <button type="submit" class="btn btn-sec" style="background: #333;">+ Добавить</button>
+    </form>
+
+    <!-- ИТОГО -->
+    <div class="total-box">
+        Итого к оплате: {{ "{:,.0f}".format(total_sum).replace(',', ' ') }} СУМ
+    </div>
+
+    <table style="width: 100%; margin-top: 50px;">
+        <tr>
+            <td style="width: 50%;">Работу выполнил (Мастер): ___________________</td>
+            <td style="width: 50%; text-align: right;">Заказчик претензий не имеет: ___________________</td>
+        </tr>
+    </table>
+</div>
+
 </body>
 </html>
