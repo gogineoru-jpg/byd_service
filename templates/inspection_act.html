@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Акт приёмки - передачи автомобиля в ремонт №{{ car.id }}</title>
+    <title>Акт приёмки - передачи автомобиля в ремонт</title>
     <style>
         @page {
             size: A4 portrait;
-            margin: 6mm 8mm;
+            margin: 5mm 8mm;
         }
         * {
             box-sizing: border-box;
@@ -17,7 +17,9 @@
             padding: 0;
             background: #fff;
             color: #000;
-            font-size: 8.5px;
+            font-size: 8px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
         .page {
             width: 100%;
@@ -25,232 +27,211 @@
             margin: 0 auto;
         }
 
-        /* Top Branding Header */
-        .brand-header {
+        /* Top Header */
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 4px;
         }
-        .brand-left {
+        .logo-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
-        .byd-oval {
+        .byd-logo-oval {
             border: 2.5px solid #d32f2f;
-            border-radius: 50px;
-            padding: 2px 10px;
-            font-size: 18px;
+            border-radius: 40px;
+            padding: 1px 12px;
+            font-size: 19px;
             font-weight: 900;
             color: #d32f2f;
             letter-spacing: 1px;
             display: inline-block;
+            line-height: 1;
         }
-        .brand-text {
+        .title-group {
             display: flex;
             flex-direction: column;
         }
-        .brand-name {
+        .main-brand-title {
             font-size: 20px;
             font-weight: 900;
-            color: #000;
             line-height: 1;
         }
-        .brand-sub {
-            font-size: 7px;
-            color: #555;
+        .main-brand-title .red-text { color: #d32f2f; }
+        .sub-brand-title {
+            font-size: 6.5px;
             font-weight: bold;
-            margin-top: 3px;
+            color: #555;
+            margin-top: 2px;
             letter-spacing: 0.2px;
         }
-        .brand-right {
+        .slogan-group {
             text-align: right;
-            font-size: 7px;
-            color: #444;
+            font-size: 6.5px;
             font-weight: bold;
-            line-height: 1.2;
+            color: #444;
+            line-height: 1.25;
+        }
+        .slogan-group strong {
+            font-size: 7.5px;
+            color: #000;
         }
 
-        /* Document Title Bar */
-        .title-bar {
+        /* Title Bar */
+        .doc-title-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
-        .title-black-box {
-            background: #111;
+        .title-black-bg {
+            background: #000;
             color: #fff;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 900;
-            padding: 4px 12px;
-            border-radius: 4px;
-            letter-spacing: 0.5px;
+            padding: 3px 10px;
+            border-radius: 3px;
+            text-transform: uppercase;
             flex-grow: 1;
             margin-right: 10px;
-            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
-        .title-number-box {
-            border: 1px solid #111;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 9.5px;
+        .doc-number-box {
+            font-size: 9px;
             font-weight: bold;
             white-space: nowrap;
         }
 
-        /* 2 Column Layout */
-        .grid-2 {
+        /* Section Layouts */
+        .row-2col {
             display: grid;
             grid-template-columns: 1fr 1.15fr;
-            gap: 6px;
-            margin-bottom: 6px;
+            gap: 5px;
+            margin-bottom: 5px;
         }
-
-        /* Section Block Styling */
         .block-box {
-            border: 1px solid #111;
-            border-radius: 3px;
+            border: 1px solid #000;
+            border-radius: 2px;
             overflow: hidden;
         }
-        .block-header {
-            background: #111;
+        .block-title {
+            background: #000;
             color: #fff;
-            font-size: 8.5px;
+            font-size: 8px;
             font-weight: bold;
-            padding: 3px 6px;
+            padding: 2px 6px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
-        .block-content {
-            padding: 4px 6px;
+        .block-body {
+            padding: 3px 5px;
         }
 
         /* Form Lines */
-        .form-row {
+        .f-row {
             display: flex;
             align-items: flex-end;
-            margin-bottom: 3px;
-            font-size: 8px;
+            margin-bottom: 2.5px;
+            font-size: 7.5px;
         }
-        .form-row:last-child {
-            margin-bottom: 0;
-        }
-        .form-label {
+        .f-row:last-child { margin-bottom: 0; }
+        .f-label {
             white-space: nowrap;
-            color: #111;
-            padding-right: 3px;
+            color: #000;
+            padding-right: 2px;
         }
-        .form-line {
-            border-bottom: 1px solid #111;
+        .f-value {
+            border-bottom: 1px solid #000;
             flex-grow: 1;
             font-weight: bold;
-            padding-left: 4px;
-            min-height: 11px;
-            font-size: 8.5px;
+            padding-left: 3px;
+            min-height: 10px;
+            font-size: 8px;
         }
 
-        /* Checkboxes Grid */
+        /* Checkboxes */
         .check-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 2px 6px;
-            font-size: 8px;
+            gap: 1.5px 6px;
+            font-size: 7.5px;
         }
         .check-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-        .square-box {
+        .sq-box {
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border: 1px solid #000;
-            margin-right: 2px;
+            margin-right: 1px;
             vertical-align: middle;
+            background: #fff;
         }
 
-        /* Inspection Diagram Header & Legend */
+        /* Car Inspection Diagram */
         .inspection-header {
-            background: #111;
+            background: #000;
             color: #fff;
-            padding: 3px 8px;
+            padding: 2px 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-radius: 3px 3px 0 0;
+            border-radius: 2px 2px 0 0;
         }
         .inspection-title {
-            font-size: 8.5px;
+            font-size: 8px;
             font-weight: bold;
             text-transform: uppercase;
         }
         .inspection-legend {
             display: flex;
-            gap: 6px;
-            font-size: 7px;
+            gap: 5px;
+            font-size: 6.5px;
             color: #fff;
             font-weight: bold;
         }
-        .legend-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 2px;
-        }
-
-        /* Car Views Grid */
-        .car-views-container {
-            border: 1px solid #111;
+        .car-views-box {
+            border: 1px solid #000;
             border-top: none;
-            padding: 6px 4px 2px 4px;
+            padding: 4px 2px 2px 2px;
             display: grid;
             grid-template-columns: 1fr 1.3fr 0.9fr 1.3fr 1fr;
-            gap: 4px;
+            gap: 3px;
             align-items: flex-end;
             text-align: center;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
-        .view-label {
-            font-size: 7.5px;
+        .view-lbl {
+            font-size: 7px;
             font-weight: bold;
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         /* Tables */
-        .data-table {
+        .data-tbl {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7.5px;
+            font-size: 7px;
         }
-        .data-table th {
-            border: 1px solid #111;
-            background: #f0f0f0;
-            padding: 2px 3px;
+        .data-tbl th {
+            border: 1px solid #000;
+            background: #f2f2f2;
+            padding: 1.5px 2px;
             text-align: center;
             font-weight: bold;
         }
-        .data-table td {
-            border: 1px solid #111;
-            padding: 2px 3px;
+        .data-tbl td {
+            border: 1px solid #000;
+            padding: 1.5px 2px;
             text-align: center;
         }
 
-        /* Signatures */
-        .sig-block {
-            margin-top: 6px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            font-size: 8px;
-        }
-        .sig-line-item {
-            display: flex;
-            align-items: flex-end;
-            margin-top: 10px;
-        }
-
+        /* Print Override */
         @media print {
             .no-print { display: none !important; }
             body { background: #fff; }
@@ -260,125 +241,125 @@
 </head>
 <body>
 
-    <!-- Print Button -->
-    <div class="no-print" style="background: #222; padding: 6px; text-align: right; margin-bottom: 8px;">
-        <button onclick="window.print()" style="background: #e53935; color: #fff; border: none; padding: 5px 15px; font-weight: bold; cursor: pointer; border-radius: 3px;">
-            🖨️ Печать Акта
+    <!-- Control Buttons (Hidden on Print) -->
+    <div class="no-print" style="background: #222; padding: 6px; text-align: right; margin-bottom: 6px;">
+        <button onclick="window.print()" style="background: #d32f2f; color: #fff; border: none; padding: 5px 15px; font-weight: bold; cursor: pointer; border-radius: 3px;">
+            🖨️ Распечатать Акт
         </button>
     </div>
 
     <div class="page">
         <!-- Header -->
-        <div class="brand-header">
-            <div class="brand-left">
-                <div class="byd-oval">BYD</div>
-                <div class="brand-text">
-                    <div class="brand-name">BYD Help Service</div>
-                    <div class="brand-sub">ДИАГНОСТИКА • РЕМОНТ • ЗАПЧАСТИ • ЗАБОТА О ВАШЕМ АВТО</div>
+        <div class="header-top">
+            <div class="logo-group">
+                <div class="byd-logo-oval">BYD</div>
+                <div class="title-group">
+                    <div class="main-brand-title"><span class="red-text">BYD</span> Help Service</div>
+                    <div class="sub-brand-title">ДИАГНОСТИКА • РЕМОНТ • ЗАПЧАСТИ • ЗАБОТА О ВАШЕМ АВТО</div>
                 </div>
             </div>
-            <div class="brand-right">
+            <div class="slogan-group">
                 НАДЕЖНОСТЬ<br>
                 ТЕХНОЛОГИИ<br>
                 ДВИЖЕНИЕ ВПЕРЕД<br>
-                <strong style="font-size: 8px; color: #000;">BUILD YOUR DREAMS</strong>
+                <strong>BUILD YOUR DREAMS</strong>
             </div>
         </div>
 
-        <!-- Title Bar -->
-        <div class="title-bar">
-            <div class="title-black-box">Акт приёмки - передачи автомобиля в ремонт</div>
-            <div class="title-number-box">
-                № <u style="padding: 0 10px;">{{ car.id }}</u> от «<u>{{ car.created_at.strftime('%d') if car.created_at else '__' }}</u>» <u>{{ car.created_at.strftime('%m') if car.created_at else '__' }}</u> 20<u>{{ car.created_at.strftime('%y') if car.created_at else '__' }}</u> г.
+        <!-- Document Title Bar -->
+        <div class="doc-title-bar">
+            <div class="title-black-bg">Акт приёмки - передачи автомобиля в ремонт</div>
+            <div class="doc-number-box">
+                № <u>&nbsp;{{ car.id }}&nbsp;</u> от «<u>&nbsp;{{ car.created_at.strftime('%d') if car.created_at else '__' }}&nbsp;</u>» <u>&nbsp;{{ car.created_at.strftime('%m') if car.created_at else '__' }}&nbsp;</u> 20<u>{{ car.created_at.strftime('%y') if car.created_at else '26' }}</u> г.
             </div>
         </div>
 
-        <!-- Block 1: Customer Data & Car Info -->
-        <div class="grid-2">
-            <!-- Customer Data -->
+        <!-- Row 1: Client Data & Vehicle Info -->
+        <div class="row-2col">
+            <!-- Client Data -->
             <div class="block-box">
-                <div class="block-header">Данные клиента</div>
-                <div class="block-content">
-                    <div class="form-row">
-                        <span class="form-label">ФИО / Наименование:</span>
-                        <div class="form-line">{{ car.owner.full_name }}</div>
+                <div class="block-title">Данные клиента</div>
+                <div class="block-body">
+                    <div class="f-row">
+                        <span class="f-label">ФИО / Наименование:</span>
+                        <div class="f-value">{{ car.owner.full_name }}</div>
                     </div>
-                    <div class="form-row">
-                        <span class="form-label">Телефон:</span>
-                        <div class="form-line">{{ car.owner.phone }}</div>
+                    <div class="f-row">
+                        <span class="f-label">Телефон:</span>
+                        <div class="f-value">{{ car.owner.phone }}</div>
                     </div>
-                    <div class="form-row">
-                        <span class="form-label">Адрес:</span>
-                        <div class="form-line"></div>
+                    <div class="f-row">
+                        <span class="f-label">Адрес:</span>
+                        <div class="f-value"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Car Info -->
+            <!-- Vehicle Info -->
             <div class="block-box">
-                <div class="block-header">Информация об автомобиле</div>
-                <div class="block-content">
-                    <div class="form-row">
-                        <span class="form-label">Марка / Модель:</span>
-                        <div class="form-line" style="flex-grow: 1.2;">{{ car.brand_model }}</div>
-                        <span class="form-label" style="padding-left: 4px;">Гос. номер:</span>
-                        <div class="form-line">{{ car.plate_number }}</div>
+                <div class="block-title">Информация об автомобиле</div>
+                <div class="block-body">
+                    <div class="f-row">
+                        <span class="f-label">Марка / Модель:</span>
+                        <div class="f-value" style="flex-grow: 1.2;">{{ car.brand_model }}</div>
+                        <span class="f-label" style="padding-left: 3px;">Гос. номер:</span>
+                        <div class="f-value">{{ car.plate_number }}</div>
                     </div>
-                    <div class="form-row">
-                        <span class="form-label">Год выпуска:</span>
-                        <div class="form-line"></div>
-                        <span class="form-label" style="padding-left: 4px;">Пробег, км:</span>
-                        <div class="form-line">{{ car.mileage }}</div>
+                    <div class="f-row">
+                        <span class="f-label">Год выпуска:</span>
+                        <div class="f-value"></div>
+                        <span class="f-label" style="padding-left: 3px;">Пробег, км:</span>
+                        <div class="f-value">{{ car.mileage }}</div>
                     </div>
-                    <div class="form-row">
-                        <span class="form-label">Цвет:</span>
-                        <div class="form-line"></div>
-                        <span class="form-label" style="padding-left: 4px;">Кузов №:</span>
-                        <div class="form-line"></div>
+                    <div class="f-row">
+                        <span class="f-label">Цвет:</span>
+                        <div class="f-value"></div>
+                        <span class="f-label" style="padding-left: 3px;">Кузов №:</span>
+                        <div class="f-value"></div>
                     </div>
-                    <div class="form-row">
-                        <span class="form-label">VIN:</span>
-                        <div class="form-line" style="flex-grow: 1.5; font-family: monospace; font-size: 9px;">{{ car.vin_code }}</div>
-                        <span class="form-label" style="padding-left: 4px;">Двигатель №:</span>
-                        <div class="form-line"></div>
+                    <div class="f-row">
+                        <span class="f-label">VIN:</span>
+                        <div class="f-value" style="flex-grow: 1.5; font-family: monospace; font-size: 8px;">{{ car.vin_code }}</div>
+                        <span class="f-label" style="padding-left: 3px;">Двигатель №:</span>
+                        <div class="f-value"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Block 2: Technical Data & Completeness -->
-        <div class="grid-2">
-            <!-- Tech Data -->
+        <!-- Row 2: Tech Specs & Completeness -->
+        <div class="row-2col">
+            <!-- Technical Specs -->
             <div class="block-box">
-                <div class="block-header">Технические данные</div>
-                <div class="block-content">
-                    <div class="form-row" style="margin-bottom: 4px;">
-                        <span class="form-label">Тип двигателя:</span>
-                        <span style="font-size: 7.5px;">
-                            <span class="square-box"></span>Бензин &nbsp;
-                            <span class="square-box"></span>Дизель &nbsp;
-                            <span class="square-box"></span>Гибрид &nbsp;
-                            <span class="square-box" style="background:#000;"></span>Электро
+                <div class="block-title">Технические данные</div>
+                <div class="block-body">
+                    <div class="f-row" style="margin-bottom: 3px;">
+                        <span class="f-label">Тип двигателя:</span>
+                        <span style="font-size: 7px;">
+                            <span class="sq-box"></span>Бензин &nbsp;
+                            <span class="sq-box"></span>Дизель &nbsp;
+                            <span class="sq-box"></span>Гибрид &nbsp;
+                            <span class="sq-box" style="background:#000;"></span>Электро
                         </span>
                     </div>
-                    <div class="form-row">
-                        <span class="form-label">Объём, л / Мощность, кВт:</span>
-                        <div class="form-line"></div>
+                    <div class="f-row">
+                        <span class="f-label">Объём, л / Мощность, кВт:</span>
+                        <div class="f-value"></div>
                     </div>
-                    <div class="form-row" style="margin-bottom: 4px; margin-top: 3px;">
-                        <span class="form-label">Тип КПП:</span>
-                        <span style="font-size: 7.5px;">
-                            <span class="square-box"></span>МКПП &nbsp;
-                            <span class="square-box" style="background:#000;"></span>АКПП &nbsp;
-                            <span class="square-box"></span>Вариатор
+                    <div class="f-row" style="margin-bottom: 3px; margin-top: 2px;">
+                        <span class="f-label">Тип КПП:</span>
+                        <span style="font-size: 7px;">
+                            <span class="sq-box"></span>МКПП &nbsp;
+                            <span class="sq-box" style="background:#000;"></span>АКПП &nbsp;
+                            <span class="sq-box"></span>Вариатор
                         </span>
                     </div>
-                    <div class="form-row">
-                        <span class="form-label">Привод:</span>
-                        <span style="font-size: 7.5px;">
-                            <span class="square-box"></span>Передний &nbsp;
-                            <span class="square-box"></span>Задний &nbsp;
-                            <span class="square-box" style="background:#000;"></span>Полный
+                    <div class="f-row">
+                        <span class="f-label">Привод:</span>
+                        <span style="font-size: 7px;">
+                            <span class="sq-box"></span>Передний &nbsp;
+                            <span class="sq-box"></span>Задний &nbsp;
+                            <span class="sq-box" style="background:#000;"></span>Полный
                         </span>
                     </div>
                 </div>
@@ -386,160 +367,163 @@
 
             <!-- Completeness -->
             <div class="block-box">
-                <div class="block-header">Комплектность автомобиля</div>
-                <div class="block-content">
+                <div class="block-title">Комплектность автомобиля</div>
+                <div class="block-body">
                     <div class="check-grid">
                         <div class="check-item">
                             <span>Ключи (шт.): <b>{{ car.key_count or '1' }}</b></span>
                         </div>
                         <div class="check-item">
                             <span>Аптечка:</span>
-                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                            <span><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</span>
                         </div>
                         <div class="check-item">
                             <span>Брелок:</span>
-                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                            <span><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</span>
                         </div>
                         <div class="check-item">
                             <span>Огнетушитель:</span>
-                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                            <span><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</span>
                         </div>
                         <div class="check-item">
                             <span>Документы:</span>
-                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                            <span><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</span>
                         </div>
                         <div class="check-item">
                             <span>Знак авар. остановки:</span>
-                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                            <span><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</span>
                         </div>
                         <div class="check-item">
                             <span>Запасное колесо:</span>
-                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                            <span><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</span>
                         </div>
                         <div class="check-item">
                             <span>Компрессор:</span>
-                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                            <span><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</span>
                         </div>
                         <div class="check-item">
                             <span>Домкрат:</span>
-                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                            <span><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</span>
                         </div>
                         <div class="check-item">
                             <span>Зарядное устройство:</span>
-                            <span><span class="square-box" style="background:#000;"></span>Да <span class="square-box"></span>Нет</span>
+                            <span><span class="sq-box" style="background:#000;"></span>Да <span class="sq-box"></span>Нет</span>
                         </div>
-                    </div>
-                    <div class="form-row" style="margin-top: 3px;">
-                        <span class="form-label">Другое:</span>
-                        <div class="form-line"></div>
+                        <div class="check-item">
+                            <span>Баллонный ключ:</span>
+                            <span><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</span>
+                        </div>
+                        <div class="check-item">
+                            <span>Другое: ________________</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Block 3: External Inspection & Car Views -->
+        <!-- Section 3: Visual Body Inspection -->
         <div>
             <div class="inspection-header">
                 <div class="inspection-title">Наружный осмотр состояния автомобиля</div>
                 <div class="inspection-legend">
-                    <span class="legend-tag"><span style="color:#2e7d32;">🟢</span> В - Вмятина</span>
-                    <span class="legend-tag"><span style="color:#1565c0;">🟦</span> С - Скол</span>
-                    <span class="legend-tag"><span style="color:#c62828;">🔺</span> Ц - Цараина</span>
-                    <span class="legend-tag"><span style="color:#d32f2f;">❌</span> Р - Разбито</span>
-                    <span class="legend-tag"><span style="color:#fbc02d;">🟡</span> О - Отсутствует</span>
-                    <span class="legend-tag">П - Повреждение</span>
-                    <span class="legend-tag">Т - Трещина</span>
+                    <span>🟢 В - Вмятина</span>
+                    <span>🟦 С - Скол</span>
+                    <span>🔺 Ц - Царапина</span>
+                    <span>❌ Р - Разбито</span>
+                    <span>🟡 О - Отсутствует</span>
+                    <span>П - Повреждение</span>
+                    <span>Т - Трещина</span>
                 </div>
             </div>
 
-            <div class="car-views-container">
+            <div class="car-views-box">
                 <!-- Front View -->
                 <div>
-                    <svg viewBox="0 0 160 110" width="100%" height="78">
-                        <g stroke="#111" stroke-width="1.3" fill="none" stroke-linejoin="round">
+                    <svg viewBox="0 0 160 110" width="100%" height="75">
+                        <g stroke="#000" stroke-width="1.3" fill="none" stroke-linejoin="round">
                             <path d="M 25 75 C 22 62, 26 35, 42 24 C 54 16, 106 16, 118 24 C 134 35, 138 62, 135 75 C 135 84, 128 88, 80 88 C 32 88, 25 84, 25 75 Z" fill="#fff"/>
                             <path d="M 42 26 C 54 18, 106 18, 118 26 L 112 48 C 88 44, 72 44, 48 48 Z" fill="#f4f4f4"/>
                             <path d="M 28 54 Q 48 50 58 60 Q 38 66 28 54 Z" fill="#eee"/>
                             <path d="M 132 54 Q 112 50 102 60 Q 122 66 132 54 Z" fill="#eee"/>
                             <rect x="62" y="68" width="36" height="12" rx="1" fill="#fff"/>
-                            <rect x="18" y="68" width="7" height="16" rx="2" fill="#222"/>
-                            <rect x="135" y="68" width="7" height="16" rx="2" fill="#222"/>
+                            <rect x="18" y="68" width="7" height="16" rx="2" fill="#000"/>
+                            <rect x="135" y="68" width="7" height="16" rx="2" fill="#000"/>
                         </g>
                     </svg>
-                    <div class="view-label">Вид спереди</div>
+                    <div class="view-lbl">Вид спереди</div>
                 </div>
 
                 <!-- Left Side View -->
                 <div>
-                    <svg viewBox="0 0 220 100" width="100%" height="78">
-                        <g stroke="#111" stroke-width="1.3" fill="none" stroke-linejoin="round">
+                    <svg viewBox="0 0 220 100" width="100%" height="75">
+                        <g stroke="#000" stroke-width="1.3" fill="none" stroke-linejoin="round">
                             <path d="M 10 60 C 16 50, 34 46, 56 42 C 74 38, 88 18, 116 14 C 158 8, 186 12, 200 24 C 210 32, 214 48, 208 62 L 198 68 L 10 68 Z" fill="#fff"/>
                             <path d="M 94 18 L 120 14 C 154 12, 180 16, 188 28 L 178 40 C 138 40, 94 40, 94 18 Z" fill="#f4f4f4"/>
                             <path d="M 90 18 L 90 40 L 54 40 L 70 24 Z" fill="#f4f4f4"/>
                             <circle cx="48" cy="68" r="14" fill="#fff" stroke-width="2"/>
                             <circle cx="166" cy="68" r="14" fill="#fff" stroke-width="2"/>
-                            <circle cx="48" cy="68" r="5" fill="#111"/>
-                            <circle cx="166" cy="68" r="5" fill="#111"/>
+                            <circle cx="48" cy="68" r="5" fill="#000"/>
+                            <circle cx="166" cy="68" r="5" fill="#000"/>
                         </g>
                     </svg>
-                    <div class="view-label">Левая сторона</div>
+                    <div class="view-lbl">Левая сторона</div>
                 </div>
 
                 <!-- Top View -->
                 <div>
-                    <svg viewBox="0 0 100 180" width="100%" height="95">
-                        <g stroke="#111" stroke-width="1.3" fill="none" stroke-linejoin="round">
+                    <svg viewBox="0 0 100 180" width="100%" height="90">
+                        <g stroke="#000" stroke-width="1.3" fill="none" stroke-linejoin="round">
                             <rect x="20" y="8" width="60" height="164" rx="26" fill="#fff"/>
                             <path d="M 28 42 C 42 36, 58 36, 72 42 L 68 64 C 52 60, 48 60, 32 64 Z" fill="#f4f4f4"/>
                             <rect x="30" y="68" width="40" height="54" rx="4" fill="#eee"/>
                             <path d="M 30 130 C 46 126, 54 126, 70 130 L 66 144 C 52 142, 48 142, 34 144 Z" fill="#f4f4f4"/>
-                            <path d="M 20 48 L 10 42 L 10 56 Z" fill="#111"/>
-                            <path d="M 80 48 L 90 42 L 90 56 Z" fill="#111"/>
+                            <path d="M 20 48 L 10 42 L 10 56 Z" fill="#000"/>
+                            <path d="M 80 48 L 90 42 L 90 56 Z" fill="#000"/>
                         </g>
                     </svg>
-                    <div class="view-label">Вид сверху</div>
+                    <div class="view-lbl">Вид сверху</div>
                 </div>
 
                 <!-- Right Side View -->
                 <div>
-                    <svg viewBox="0 0 220 100" width="100%" height="78">
-                        <g stroke="#111" stroke-width="1.3" fill="none" stroke-linejoin="round">
+                    <svg viewBox="0 0 220 100" width="100%" height="75">
+                        <g stroke="#000" stroke-width="1.3" fill="none" stroke-linejoin="round">
                             <path d="M 210 60 C 204 50, 186 46, 164 42 C 146 38, 132 18, 104 14 C 62 8, 34 12, 20 24 C 10 32, 6 48, 12 62 L 22 68 L 210 68 Z" fill="#fff"/>
                             <path d="M 126 18 L 100 14 C 66 12, 40 16, 32 28 L 42 40 C 82 40, 126 40, 126 18 Z" fill="#f4f4f4"/>
                             <path d="M 130 18 L 130 40 L 166 40 L 150 24 Z" fill="#f4f4f4"/>
                             <circle cx="172" cy="68" r="14" fill="#fff" stroke-width="2"/>
                             <circle cx="54" cy="68" r="14" fill="#fff" stroke-width="2"/>
-                            <circle cx="172" cy="68" r="5" fill="#111"/>
-                            <circle cx="54" cy="68" r="5" fill="#111"/>
+                            <circle cx="172" cy="68" r="5" fill="#000"/>
+                            <circle cx="54" cy="68" r="5" fill="#000"/>
                         </g>
                     </svg>
-                    <div class="view-label">Правая сторона</div>
+                    <div class="view-lbl">Правая сторона</div>
                 </div>
 
                 <!-- Rear View -->
                 <div>
-                    <svg viewBox="0 0 160 110" width="100%" height="78">
-                        <g stroke="#111" stroke-width="1.3" fill="none" stroke-linejoin="round">
+                    <svg viewBox="0 0 160 110" width="100%" height="75">
+                        <g stroke="#000" stroke-width="1.3" fill="none" stroke-linejoin="round">
                             <path d="M 25 75 C 22 62, 26 35, 42 24 C 54 16, 106 16, 118 24 C 134 35, 138 62, 135 75 C 135 84, 128 88, 80 88 C 32 88, 25 84, 25 75 Z" fill="#fff"/>
                             <path d="M 42 26 C 54 18, 106 18, 118 26 L 112 48 C 88 44, 72 44, 48 48 Z" fill="#f4f4f4"/>
                             <path d="M 27 52 L 133 52 L 130 60 L 30 60 Z" fill="#d32f2f"/>
                             <rect x="62" y="68" width="36" height="12" rx="1" fill="#fff"/>
-                            <rect x="18" y="68" width="7" height="16" rx="2" fill="#222"/>
-                            <rect x="135" y="68" width="7" height="16" rx="2" fill="#222"/>
+                            <rect x="18" y="68" width="7" height="16" rx="2" fill="#000"/>
+                            <rect x="135" y="68" width="7" height="16" rx="2" fill="#000"/>
                         </g>
                     </svg>
-                    <div class="view-label">Вид сзади</div>
+                    <div class="view-lbl">Вид сзади</div>
                 </div>
             </div>
         </div>
 
-        <!-- Block 4: Tire Condition & Customer Spare Parts -->
-        <div class="grid-2">
-            <!-- Tire Condition -->
+        <!-- Row 4: Tires & Customer Spare Parts -->
+        <div class="row-2col">
+            <!-- Tires Condition -->
             <div class="block-box">
-                <div class="block-header">Состояние шин</div>
-                <div style="padding: 2px;">
-                    <table class="data-table">
+                <div class="block-title">Состояние шин</div>
+                <div style="padding: 1px;">
+                    <table class="data-tbl">
                         <thead>
                             <tr>
                                 <th>Позиция</th>
@@ -552,26 +536,26 @@
                             <tr>
                                 <td style="text-align: left;">Переднее левое</td>
                                 <td></td>
-                                <td><span class="square-box"></span>Да <span class="square-box"></span>Нет</td>
-                                <td><span class="square-box" style="background:#000;"></span>Да <span class="square-box"></span>Нет</td>
+                                <td><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</td>
+                                <td><span class="sq-box" style="background:#000;"></span>Да <span class="sq-box"></span>Нет</td>
                             </tr>
                             <tr>
                                 <td style="text-align: left;">Переднее правое</td>
                                 <td></td>
-                                <td><span class="square-box"></span>Да <span class="square-box"></span>Нет</td>
-                                <td><span class="square-box" style="background:#000;"></span>Да <span class="square-box"></span>Нет</td>
+                                <td><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</td>
+                                <td><span class="sq-box" style="background:#000;"></span>Да <span class="sq-box"></span>Нет</td>
                             </tr>
                             <tr>
                                 <td style="text-align: left;">Заднее левое</td>
                                 <td></td>
-                                <td><span class="square-box"></span>Да <span class="square-box"></span>Нет</td>
-                                <td><span class="square-box" style="background:#000;"></span>Да <span class="square-box"></span>Нет</td>
+                                <td><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</td>
+                                <td><span class="sq-box" style="background:#000;"></span>Да <span class="sq-box"></span>Нет</td>
                             </tr>
                             <tr>
                                 <td style="text-align: left;">Заднее правое</td>
                                 <td></td>
-                                <td><span class="square-box"></span>Да <span class="square-box"></span>Нет</td>
-                                <td><span class="square-box" style="background:#000;"></span>Да <span class="square-box"></span>Нет</td>
+                                <td><span class="sq-box"></span>Да <span class="sq-box"></span>Нет</td>
+                                <td><span class="sq-box" style="background:#000;"></span>Да <span class="sq-box"></span>Нет</td>
                             </tr>
                         </tbody>
                     </table>
@@ -580,14 +564,14 @@
 
             <!-- Customer Spare Parts -->
             <div class="block-box">
-                <div class="block-header">Запчасти заказчика (переданные с автомобилем)</div>
-                <div style="padding: 2px;">
-                    <table class="data-table">
+                <div class="block-title">Запчасти заказчика (переданные с автомобилем)</div>
+                <div style="padding: 1px;">
+                    <table class="data-tbl">
                         <thead>
                             <tr>
-                                <th style="width: 20px;">№</th>
+                                <th style="width: 18px;">№</th>
                                 <th>Наименование</th>
-                                <th style="width: 45px;">Кол-во</th>
+                                <th style="width: 40px;">Кол-во</th>
                                 <th>Примечание</th>
                             </tr>
                         </thead>
@@ -599,29 +583,6 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-
-        <!-- Disclaimer Note -->
-        <div style="font-size: 7px; color: #333; margin-top: 4px; line-height: 1.2;">
-            <b>Примечание:</b> За оставленные в салоне ценные вещи исполнитель ответственности не несет. Автомобиль принят в грязном виде, возможны скрытые повреждения ЛКП. С правилами оказания услуг заказчик ознакомлен и согласен.
-        </div>
-
-        <!-- Signatures Block -->
-        <div class="sig-block">
-            <div>
-                <div class="sig-line-item">
-                    <span>Автомобиль сдал (Заказчик):</span>
-                    <div class="form-line"></div>
-                </div>
-                <div style="font-size: 6.5px; color: #555; text-align: right; padding-right: 20px;">(Подпись / Расшифровка)</div>
-            </div>
-            <div>
-                <div class="sig-line-item">
-                    <span>Автомобиль принял (Мастер):</span>
-                    <div class="form-line"></div>
-                </div>
-                <div style="font-size: 6.5px; color: #555; text-align: right; padding-right: 20px;">(Подпись / Расшифровка)</div>
             </div>
         </div>
 
