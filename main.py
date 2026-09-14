@@ -174,6 +174,7 @@ def get_db():
 def admin_login(user: dict = Depends(require_admin)):
     return RedirectResponse(url="/", status_code=303)
 
+# Эндпоинт подсчета выручки за день — ТОЛЬКО ДЛЯ АДМИНИСТРАТОРА
 @app.get("/api/admin/daily-sum")
 def get_daily_sum(
     date_str: str = "",
@@ -231,7 +232,6 @@ def warehouse_page(
         }
     )
 
-# Приход на склад — ТОЛЬКО для администратора
 @app.post("/warehouse/add")
 def add_warehouse_part(
     name: str = Form(...),
@@ -324,13 +324,15 @@ def index(
     today_count = len(today_cars)
     total_count = len(cars)
 
+    # Выручка рассчитывается ТОЛЬКО если вошел Администратор
     today_revenue = 0.0
-    for car in today_cars:
-        w_sum = sum(w.price for w in car.works if w.price)
-        p_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
-        subt = w_sum + p_sum
-        disc = min(10.0, max(0.0, car.discount_percent or 0.0))
-        today_revenue += (subt - (subt * disc / 100.0))
+    if user["is_admin"]:
+        for car in today_cars:
+            w_sum = sum(w.price for w in car.works if w.price)
+            p_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
+            subt = w_sum + p_sum
+            disc = min(10.0, max(0.0, car.discount_percent or 0.0))
+            today_revenue += (subt - (subt * disc / 100.0))
 
     accepted_count = sum(1 for c in cars if (c.status == "Принято" or not c.status))
     in_progress_count = sum(1 for c in cars if c.status == "В работе")
@@ -432,7 +434,6 @@ def update_discount(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
-    # Ограничение скидки не более 10%
     if discount_percent < 0:
         discount_percent = 0.0
     if discount_percent > 10.0:
@@ -481,7 +482,7 @@ def update_car(
     manufacture_year: int = Form(2023),
     soh_percent: float = Form(100.0),
     status: str = Form("Принято"),
-    filial: str = Form("Ф利ал Сергели"),
+    filial: str = Form("Филиал Сергели"),
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
