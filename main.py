@@ -483,11 +483,16 @@ def update_car(
 def add_work(
     car_id: int,
     description: str = Form(...),
-    price: float = Form(0.0),
+    price: str = Form("0"),
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
-    work = WorkItem(car_id=car_id, description=description, price=price)
+    try:
+        parsed_price = float(str(price).replace(",", ".").replace(" ", "")) if price else 0.0
+    except ValueError:
+        parsed_price = 0.0
+
+    work = WorkItem(car_id=car_id, description=description.strip(), price=parsed_price)
     db.add(work)
     db.commit()
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
@@ -497,35 +502,51 @@ def add_part(
     car_id: int,
     name: str = Form(...),
     quantity: int = Form(1),
-    price: float = Form(0.0),
+    price: str = Form("0"),
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
     name_clean = name.strip()
+    
+    try:
+        parsed_price = float(str(price).replace(",", ".").replace(" ", "")) if price else 0.0
+    except ValueError:
+        parsed_price = 0.0
+
     car = db.query(Car).filter(Car.id == car_id).first()
     car_filial = car.filial if car else "Филиал Сергели"
 
-    # Ищем запчасть на складе по совпадению названия
+    # Ищем позицию по НАЗВАНИЮ или по АРТИКУЛУ (part_code)
     wh_part = db.query(WarehousePart).filter(
-        func.lower(WarehousePart.name) == name_clean.lower(),
+        or_(
+            func.lower(WarehousePart.name) == name_clean.lower(),
+            func.lower(WarehousePart.part_code) == name_clean.lower()
+        ),
         WarehousePart.filial == car_filial
     ).first()
 
     if not wh_part:
         wh_part = db.query(WarehousePart).filter(
-            func.lower(WarehousePart.name) == name_clean.lower()
+            or_(
+                func.lower(WarehousePart.name) == name_clean.lower(),
+                func.lower(WarehousePart.part_code) == name_clean.lower()
+            )
         ).first()
 
-    # Если цена не была введена вручную (0), берутся данные со склада
-    final_price = price
-    if (price == 0.0 or price is None) and wh_part:
-        final_price = wh_part.price
+    part_display_name = name_clean
 
-    # Автоматическое списание количества со склада
     if wh_part:
+        # Автоматически подставляем правильное имя с названия товара
+        part_display_name = wh_part.name
+        
+        # Если цена была не введена (0), берем её со склада
+        if parsed_price == 0.0:
+            parsed_price = wh_part.price
+            
+        # Списываем со склада
         wh_part.quantity = max(0, wh_part.quantity - quantity)
 
-    part = SparePart(car_id=car_id, name=name_clean, quantity=quantity, price=final_price)
+    part = SparePart(car_id=car_id, name=part_display_name, quantity=quantity, price=parsed_price)
     db.add(part)
     db.commit()
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
@@ -547,14 +568,20 @@ def delete_part(part_id: int, db: Session = Depends(get_db), user: dict = Depend
         car = db.query(Car).filter(Car.id == car_id).first()
         car_filial = car.filial if car else "Филиал Сергели"
 
-        # Возврат количества на склад при удалении позиции из заказ-наряда
+        # При удалении возвращаем списанное кол-во обратно на склад
         wh_part = db.query(WarehousePart).filter(
-            func.lower(WarehousePart.name) == part.name.lower(),
+            or_(
+                func.lower(WarehousePart.name) == part.name.lower(),
+                func.lower(WarehousePart.part_code) == part.name.lower()
+            ),
             WarehousePart.filial == car_filial
         ).first()
         if not wh_part:
             wh_part = db.query(WarehousePart).filter(
-                func.lower(WarehousePart.name) == part.name.lower()
+                or_(
+                    func.lower(WarehousePart.name) == part.name.lower(),
+                    func.lower(WarehousePart.part_code) == part.name.lower()
+                )
             ).first()
 
         if wh_part:
