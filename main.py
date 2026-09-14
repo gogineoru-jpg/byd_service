@@ -180,7 +180,6 @@ def get_db():
 def admin_login(user: dict = Depends(require_admin)):
     return RedirectResponse(url="/", status_code=303)
 
-# Разделенный подсчет выручки за день (Работы отдельно, Запчасти отдельно)
 @app.get("/api/admin/daily-sum")
 def get_daily_sum(
     date_str: str = "",
@@ -199,10 +198,8 @@ def get_daily_sum(
         works_sum = sum(w.price for w in car.works if w.price)
         parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
         subtotal = works_sum + parts_sum
-        
         disc = min(10.0, max(0.0, car.discount_percent or 0.0))
         
-        # Пропорциональное применение скидки или раздельный учёт
         if subtotal > 0:
             ratio = (subtotal - (subtotal * disc / 100.0)) / subtotal
             total_works += works_sum * ratio
@@ -217,6 +214,84 @@ def get_daily_sum(
         "parts_total": total_parts,
         "cars_count": len(cars)
     }
+
+# Страница финансовой и услуговой аналитики за период
+@app.get("/analytics", response_class=HTMLResponse)
+def analytics_page(
+    request: Request,
+    start_date: str = "",
+    end_date: str = "",
+    filial: str = "all",
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin)
+):
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    if not start_date:
+        start_date = datetime.now().strftime("%Y-%m-01") # с 1 числа текущего месяца
+    if not end_date:
+        end_date = today_str
+
+    query = db.query(Car).filter(
+        func.date(Car.created_at) >= start_date,
+        func.date(Car.created_at) <= end_date
+    )
+
+    if filial and filial != "all":
+        query = query.filter(Car.filial == filial)
+
+    cars = query.all()
+
+    total_revenue = 0.0
+    total_works_revenue = 0.0
+    total_parts_revenue = 0.0
+    works_stats = {} # { "Наименование работы": {"count": кол-во, "sum": сумма} }
+
+    for car in cars:
+        w_sum = sum(w.price for w in car.works if w.price)
+        p_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
+        subt = w_sum + p_sum
+        disc = min(10.0, max(0.0, car.discount_percent or 0.0))
+        
+        final_car_sum = subt - (subt * disc / 100.0)
+        total_revenue += final_car_sum
+
+        w_final = 0.0
+        p_final = 0.0
+        if subt > 0:
+            ratio = final_car_sum / subt
+            w_final = w_sum * ratio
+            p_final = p_sum * ratio
+
+        total_works_revenue += w_final
+        total_parts_revenue += p_final
+
+        # Собираем статистику по популярности работ
+        for work in car.works:
+            desc = work.description.strip()
+            if desc not in works_stats:
+                works_stats[desc] = {"count": 0, "sum": 0.0}
+            works_stats[desc]["count"] += 1
+            works_stats[desc]["sum"] += (work.price * (w_final / w_sum) if w_sum > 0 else 0)
+
+    # Сортируем работы по популярности (количеству заказов)
+    sorted_works = sorted(works_stats.items(), key=lambda x: x[1]["count"], reverse=True)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="analytics.html",
+        context={
+            "current_user": user,
+            "filials": FILIALS,
+            "start_date": start_date,
+            "end_date": end_date,
+            "current_filial": filial,
+            "total_cars": len(cars),
+            "total_revenue": total_revenue,
+            "total_works_revenue": total_works_revenue,
+            "total_parts_revenue": total_parts_revenue,
+            "sorted_works": sorted_works
+        }
+    )
 
 @app.get("/warehouse", response_class=HTMLResponse)
 def warehouse_page(
