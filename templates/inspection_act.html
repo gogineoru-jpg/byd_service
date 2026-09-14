@@ -3,40 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Акт осмотра №{{ car.id }} - BYD help</title>
+    <title>Акт приёмки-передачи №{{ car.id }} - BYD Help Service</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
+        body { font-size: 11px; color: #111; }
         @media print {
             .no-print { display: none !important; }
-            body { background-color: #fff !important; font-size: 11px; }
+            body { background-color: #fff !important; font-size: 10px; }
+            .container { max-width: 100% !important; padding: 0 !important; }
             .card { border: none !important; box-shadow: none !important; }
-            .print-p-0 { padding: 0 !important; }
+            .table-sm td, .table-sm th { padding: 2px 4px !important; }
         }
         .brand-red { color: #dc3545; font-weight: 800; }
-        .car-schema {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 10px;
-            background-color: #ffffff;
+        .section-header {
+            background-color: #1a252f;
+            color: #fff;
+            font-weight: bold;
+            font-size: 11px;
+            padding: 3px 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .terms-box {
-            font-size: 10px;
-            line-height: 1.35;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 10px 14px;
-        }
-        .car-title { font-size: 10px; font-weight: bold; fill: #495057; text-anchor: middle; font-family: sans-serif; }
-        .car-part { stroke: #2c3e50; stroke-width: 1.8; fill: #fff; stroke-linecap: round; stroke-linejoin: round; }
-        .car-glass { stroke: #0056b3; stroke-width: 1.2; fill: #e8f4f8; }
-        .car-detail { stroke: #6c757d; stroke-width: 1; fill: none; }
-        .car-wheel { stroke: #212529; stroke-width: 2; fill: #e9ecef; }
+        .doc-table th { background-color: #f1f3f5; font-size: 10px; }
+        .car-schema { border: 1px solid #dee2e6; border-radius: 4px; padding: 5px; background: #fff; }
+        .car-title { font-size: 9px; font-weight: bold; fill: #495057; text-anchor: middle; }
+        .car-part { stroke: #2c3e50; stroke-width: 1.5; fill: #fff; stroke-linecap: round; stroke-linejoin: round; }
+        .car-glass { stroke: #0056b3; stroke-width: 1; fill: #e8f4f8; }
+        .car-detail { stroke: #6c757d; stroke-width: 0.8; fill: none; }
+        .car-wheel { stroke: #212529; stroke-width: 1.5; fill: #e9ecef; }
+        .terms-text { font-size: 9px; line-height: 1.25; color: #333; }
+        .checkbox-custom { width: 12px; height: 12px; border: 1px solid #333; display: inline-block; vertical-align: middle; margin-right: 3px; }
     </style>
 </head>
 <body class="bg-light">
-    <div class="container my-3" style="max-width: 900px;">
+    <div class="container my-3" style="max-width: 920px;">
+        <!-- Top Control Bar -->
         <div class="d-flex justify-content-between align-items-center mb-3 no-print">
             <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> На главную</a>
             <div>
@@ -46,12 +48,16 @@
         </div>
 
         <div class="card shadow border-0 p-4 bg-white">
-            <!-- Header -->
-            <div class="row border-bottom pb-2 mb-3 align-items-center">
-                <div class="col-6">
-                    <h3 class="mb-0 fw-bold"><span class="brand-red">BYD</span> help</h3>
-                    <div class="fw-bold text-dark fs-6">{{ car.filial or 'Филиал Сергели' }}</div>
-                    <div class="text-muted small">
+            <!-- Header Branding -->
+            <div class="row align-items-center border-bottom pb-2 mb-2">
+                <div class="col-4">
+                    <h2 class="fw-bold mb-0"><span class="brand-red">BYD</span> <span class="fs-4 text-dark fw-bold">Help Service</span></h2>
+                    <div class="fw-bold text-danger" style="font-size: 9px; letter-spacing: 0.5px;">ДИАГНОСТИКА • РЕМОНТ • ЗАПЧАСТИ</div>
+                    <div class="fw-bold text-secondary" style="font-size: 8px;">НАДЕЖНОСТЬ • ТЕХНОЛОГИИ • ДВИЖЕНИЕ ВПЕРЕД</div>
+                </div>
+                <div class="col-4 text-center">
+                    <div class="fw-bold fs-6 text-dark">{{ car.filial or 'Филиал Сергели' }}</div>
+                    <div class="small fw-bold text-muted">
                         <i class="bi bi-telephone-fill me-1"></i>
                         {% if car.filial == "Филиал Савковский" %}
                             +998 70 179 40 45
@@ -60,195 +66,268 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="col-6 text-end">
-                    <h4 class="fw-bold text-uppercase mb-0">Акт приема-передачи №{{ car.id }}</h4>
-                    <div class="text-muted small">Дата приема: {{ car.created_at.strftime('%d.%m.%Y %H:%M') if car.created_at else '' }}</div>
+                <div class="col-4 text-end">
+                    <span class="badge bg-danger text-uppercase p-2 mb-1" style="font-size: 10px;">BUILD YOUR DREAMS</span>
+                    <div class="fw-bold text-dark" style="font-size: 10px;">ПРОФЕССИОНАЛЬНЫЙ СЕРВИС ДЛЯ ВАШЕГО BYD</div>
                 </div>
             </div>
 
-            <!-- Customer and Car Info -->
-            <div class="row g-3 mb-3 small">
-                <div class="col-6 border-end">
-                    <h6 class="fw-bold text-uppercase text-muted mb-2">Заказчик / Владелец:</h6>
-                    <div><strong>ФИО:</strong> {{ car.owner.full_name }}</div>
-                    <div><strong>Телефон:</strong> {{ car.owner.phone }}</div>
+            <!-- Title -->
+            <div class="text-center my-2">
+                <h5 class="fw-bold text-uppercase mb-0">АКТ ПРИЁМКИ - ПЕРЕДАЧИ АВТОМОБИЛЯ В РЕМОНТ</h5>
+                <div class="fw-bold">№ <span class="text-danger fs-6">{{ car.id }}</span> от {{ car.created_at.strftime('%d.%m.%Y') if car.created_at else '' }} г.</div>
+            </div>
+
+            <!-- Client & Car Info Tables -->
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <div class="section-header">ДАННЫЕ КЛИЕНТА</div>
+                    <table class="table table-bordered table-sm mb-0 doc-table" style="font-size: 10.5px;">
+                        <tr>
+                            <th style="width: 35%;">ФИО / Наименов.:</th>
+                            <td><strong>{{ car.owner.full_name }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Телефон:</th>
+                            <td><strong>{{ car.owner.phone }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Адрес:</th>
+                            <td>г. Ташкент</td>
+                        </tr>
+                    </table>
                 </div>
                 <div class="col-6">
-                    <h6 class="fw-bold text-uppercase text-muted mb-2">Автомобиль:</h6>
-                    <div><strong>Модель:</strong> {{ car.brand_model }} ({{ car.manufacture_year }})</div>
-                    <div><strong>Гос. номер:</strong> <span class="badge bg-dark">{{ car.plate_number }}</span> | <strong>VIN:</strong> {{ car.vin_code }}</div>
-                    <div><strong>Пробег:</strong> {{ car.mileage }} км | <strong>SOH АКБ:</strong> {{ car.soh_percent }}%</div>
+                    <div class="section-header">ИНФОРМАЦИЯ ОБ АВТОМОБИЛЕ</div>
+                    <table class="table table-bordered table-sm mb-0 doc-table" style="font-size: 10.5px;">
+                        <tr>
+                            <th style="width: 30%;">Марка / Модель:</th>
+                            <td><strong>{{ car.brand_model }}</strong></td>
+                            <th style="width: 25%;">Гос. номер:</th>
+                            <td><strong class="bg-dark text-white px-1 rounded">{{ car.plate_number }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Год выпуска:</th>
+                            <td>{{ car.manufacture_year }}</td>
+                            <th>Пробег, км:</th>
+                            <td><strong>{{ car.mileage }}</strong> (SOH: {{ car.soh_percent }}%)</td>
+                        </tr>
+                        <tr>
+                            <th>VIN:</th>
+                            <td colspan="3"><strong class="font-monospace">{{ car.vin_code }}</strong></td>
+                        </tr>
+                    </table>
                 </div>
             </div>
 
-            <!-- Car Inspection Schema (Красивая SVG схема кузова) -->
-            <div class="mb-3">
-                <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">Схема осмотра кузова (X - царапина, O - вмятина, V - скол)</h6>
+            <!-- Technical Data & Completeness -->
+            <div class="row g-2 mb-2">
+                <div class="col-5">
+                    <div class="section-header">ТЕХНИЧЕСКИЕ ДАННЫЕ</div>
+                    <table class="table table-bordered table-sm mb-0 doc-table" style="font-size: 10px;">
+                        <tr>
+                            <th>Тип двигателя:</th>
+                            <td>
+                                <span class="me-1">{% if car.engine_type == 'Электро' %}<b>[X]</b>{% else %}[ ]{% endif %} Электро</span>
+                                <span class="me-1">{% if car.engine_type == 'Гибрид' %}<b>[X]</b>{% else %}[ ]{% endif %} Гибрид</span>
+                                <span>{% if car.engine_type == 'Бензин' %}<b>[X]</b>{% else %}[ ]{% endif %} Бензин</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Тип КПП:</th>
+                            <td>[X] АКПП / Редуктор &nbsp;&nbsp; [ ] МКПП</td>
+                        </tr>
+                        <tr>
+                            <th>Привод:</th>
+                            <td>[ ] Передний &nbsp;&nbsp; [ ] Задний &nbsp;&nbsp; [ ] Полный</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-7">
+                    <div class="section-header">КОМПЛЕКТНОСТЬ АВТОМОБИЛЯ</div>
+                    <table class="table table-bordered table-sm mb-0 doc-table" style="font-size: 9.5px;">
+                        <tr>
+                            <td>Ключи (шт.): ____</td>
+                            <td>[ ] Аптечка</td>
+                            <td>[ ] Знак авар. остановки</td>
+                        </tr>
+                        <tr>
+                            <td>[ ] Брелок / Карта</td>
+                            <td>[ ] Огнетушитель</td>
+                            <td>[ ] Компрессор / Ремкомпл.</td>
+                        </tr>
+                        <tr>
+                            <td>[ ] Документы (ТЕХПАСПОРТ)</td>
+                            <td>[ ] Запасное колесо</td>
+                            <td>[ ] Зарядное устройство</td>
+                        </tr>
+                        <tr>
+                            <td>[ ] Домкрат</td>
+                            <td>[ ] Баллонный ключ</td>
+                            <td>Другое: ____________________</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vehicle Inspection Schema -->
+            <div class="mb-2">
+                <div class="section-header">НАРУЖНЫЙ ОСМОТР СОСТОЯНИЯ АВТОМОБИЛЯ</div>
+                <div class="py-1 px-2 border border-top-0 mb-1 bg-light text-center fw-bold" style="font-size: 9px;">
+                    ОБОЗНАЧЕНИЯ: &nbsp;&nbsp;
+                    <span class="text-danger">В</span> - Вмятина &nbsp;|&nbsp;
+                    <span class="text-danger">С</span> - Скол &nbsp;|&nbsp;
+                    <span class="text-danger">Ц</span> - Царапина &nbsp;|&nbsp;
+                    <span class="text-danger">Т</span> - Трещина &nbsp;|&nbsp;
+                    <span class="text-danger">Р</span> - Разбито &nbsp;|&nbsp;
+                    <span class="text-danger">П</span> - Повреждение &nbsp;|&nbsp;
+                    <span class="text-danger">O</span> - Отсутствует элемент
+                </div>
                 <div class="car-schema text-center">
-                    <svg viewBox="0 0 800 250" width="100%" height="210" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 800 210" width="100%" height="175" xmlns="http://www.w3.org/2000/svg">
                         <!-- TOP VIEW -->
-                        <g transform="translate(250, 15)">
-                            <text x="150" y="10" class="car-title">ВИД СВЕРХУ</text>
-                            <path d="M 50 65 C 50 35, 75 25, 150 25 C 225 25, 250 35, 250 65 C 250 95, 225 105, 150 105 C 75 105, 50 95, 50 65 Z" class="car-part" />
-                            <path d="M 85 27 Q 95 65 85 103" class="car-detail" />
-                            <path d="M 115 30 Q 125 65 115 100 L 140 97 Q 148 65 140 33 Z" class="car-glass" />
-                            <rect x="148" y="38" width="60" height="54" rx="4" class="car-glass" />
-                            <path d="M 218 36 Q 212 65 218 94 L 232 90 Q 227 65 232 40 Z" class="car-glass" />
-                            <!-- Mirrors -->
-                            <path d="M 118 28 L 108 18 L 122 18 Z" fill="#e0e0e0" stroke="#333" stroke-width="1"/>
-                            <path d="M 118 102 L 108 112 L 122 112 Z" fill="#e0e0e0" stroke="#333" stroke-width="1"/>
+                        <g transform="translate(260, 5)">
+                            <text x="140" y="10" class="car-title">ВИД СВЕРХУ</text>
+                            <path d="M 50 60 C 50 30, 75 22, 140 22 C 205 22, 230 30, 230 60 C 230 90, 205 98, 140 98 C 75 98, 50 90, 50 60 Z" class="car-part" />
+                            <path d="M 80 25 Q 90 60 80 95" class="car-detail" />
+                            <path d="M 110 27 Q 120 60 110 93 L 132 90 Q 140 60 132 30 Z" class="car-glass" />
+                            <rect x="138" y="34" width="55" height="52" rx="4" class="car-glass" />
+                            <path d="M 200 32 Q 195 60 200 88 L 212 85 Q 208 60 212 35 Z" class="car-glass" />
+                            <path d="M 110 25 L 100 16 L 114 16 Z" fill="#e0e0e0" stroke="#333" stroke-width="1"/>
+                            <path d="M 110 95 L 100 104 L 114 104 Z" fill="#e0e0e0" stroke="#333" stroke-width="1"/>
                         </g>
 
                         <!-- FRONT VIEW -->
-                        <g transform="translate(25, 15)">
-                            <text x="75" y="10" class="car-title">СПЕРЕДИ</text>
-                            <path d="M 25 85 C 25 70, 35 50, 45 43 C 55 37, 95 37, 105 43 C 115 50, 125 70, 125 85 C 125 90, 120 95, 75 95 C 30 95, 25 90, 25 85 Z" class="car-part"/>
-                            <path d="M 42 45 Q 75 41 108 45 L 102 65 Q 75 62 48 65 Z" class="car-glass"/>
-                            <path d="M 30 70 Q 45 68 50 77 Q 35 80 30 70 Z" fill="#fff" stroke="#333" stroke-width="1"/>
-                            <path d="M 120 70 Q 105 68 100 77 Q 115 80 120 70 Z" fill="#fff" stroke="#333" stroke-width="1"/>
-                            <rect x="52" y="73" width="46" height="12" rx="2" class="car-detail"/>
-                            <rect x="20" y="75" width="8" height="20" rx="3" fill="#333"/>
-                            <rect x="122" y="75" width="8" height="20" rx="3" fill="#333"/>
+                        <g transform="translate(20, 5)">
+                            <text x="75" y="10" class="car-title">ВИД СПЕРЕДИ</text>
+                            <path d="M 25 75 C 25 60, 35 42, 45 37 C 55 32, 95 32, 105 37 C 115 42, 125 60, 125 75 C 125 80, 120 85, 75 85 C 30 85, 25 80, 25 75 Z" class="car-part"/>
+                            <path d="M 42 40 Q 75 36 108 40 L 102 58 Q 75 55 48 58 Z" class="car-glass"/>
+                            <path d="M 30 62 Q 45 60 50 68 Q 35 71 30 62 Z" fill="#fff" stroke="#333" stroke-width="1"/>
+                            <path d="M 120 62 Q 105 60 100 68 Q 115 71 120 62 Z" fill="#fff" stroke="#333" stroke-width="1"/>
+                            <rect x="52" y="65" width="46" height="12" rx="2" class="car-detail"/>
+                            <rect x="20" y="66" width="7" height="18" rx="2" fill="#333"/>
+                            <rect x="123" y="66" width="7" height="18" rx="2" fill="#333"/>
                         </g>
 
                         <!-- REAR VIEW -->
-                        <g transform="translate(625, 15)">
-                            <text x="75" y="10" class="car-title">СЗАДИ</text>
-                            <path d="M 25 85 C 25 70, 35 50, 45 43 C 55 37, 95 37, 105 43 C 115 50, 125 70, 125 85 C 125 90, 120 95, 75 95 C 30 95, 25 90, 25 85 Z" class="car-part"/>
-                            <path d="M 42 45 Q 75 41 108 45 L 104 63 Q 75 60 46 63 Z" class="car-glass"/>
-                            <path d="M 30 70 L 120 70 L 118 75 L 32 75 Z" fill="#dc3545" stroke="#333" stroke-width="1"/>
-                            <rect x="58" y="77" width="34" height="11" rx="1" fill="#fff" stroke="#333" stroke-width="1"/>
-                            <rect x="20" y="75" width="8" height="20" rx="3" fill="#333"/>
-                            <rect x="122" y="75" width="8" height="20" rx="3" fill="#333"/>
+                        <g transform="translate(630, 5)">
+                            <text x="75" y="10" class="car-title">ВИД СЗАДИ</text>
+                            <path d="M 25 75 C 25 60, 35 42, 45 37 C 55 32, 95 32, 105 37 C 115 42, 125 60, 125 75 C 125 80, 120 85, 75 85 C 30 85, 25 80, 25 75 Z" class="car-part"/>
+                            <path d="M 42 40 Q 75 36 108 40 L 104 56 Q 75 53 46 56 Z" class="car-glass"/>
+                            <path d="M 30 62 L 120 62 L 118 67 L 32 67 Z" fill="#dc3545" stroke="#333" stroke-width="1"/>
+                            <rect x="58" y="69" width="34" height="10" rx="1" fill="#fff" stroke="#333" stroke-width="1"/>
+                            <rect x="20" y="66" width="7" height="18" rx="2" fill="#333"/>
+                            <rect x="123" y="66" width="7" height="18" rx="2" fill="#333"/>
                         </g>
 
                         <!-- LEFT SIDE VIEW -->
-                        <g transform="translate(25, 135)">
-                            <text x="175" y="10" class="car-title">ЛЕВЫЙ БОРТ</text>
-                            <path d="M 20 75
-                                     C 25 70, 35 65, 60 63
-                                     C 90 61, 110 35, 140 27
-                                     C 180 20, 260 20, 290 30
-                                     C 315 40, 330 60, 340 65
-                                     C 348 69, 350 77, 345 83
-                                     L 340 87
-                                     L 20 87 Z" class="car-part" />
-                            <path d="M 115 37 L 142 29 Q 200 25 248 28 L 280 39 Q 240 38 185 38 Z" class="car-glass"/>
-                            <path d="M 115 40 L 180 40 L 180 60 L 102 60 Z" class="car-glass"/>
-                            <path d="M 185 40 L 275 40 L 255 60 L 185 60 Z" class="car-glass"/>
-                            <line x1="182" y1="40" x2="182" y2="85" class="car-detail"/>
-                            <path d="M 102 60 Q 100 70 95 85" class="car-detail"/>
-                            <path d="M 255 60 Q 265 70 275 85" class="car-detail"/>
-                            <rect x="165" y="63" width="12" height="3" rx="1" fill="#333"/>
-                            <rect x="235" y="63" width="12" height="3" rx="1" fill="#333"/>
-                            <!-- Wheels -->
-                            <path d="M 50 87 A 20 20 0 0 1 90 87" fill="#fff" stroke="#2c3e50" stroke-width="1.8"/>
-                            <circle cx="70" cy="87" r="16" class="car-wheel"/>
-                            <circle cx="70" cy="87" r="7" fill="#adb5bd"/>
-
-                            <path d="M 260 87 A 20 20 0 0 1 300 87" fill="#fff" stroke="#2c3e50" stroke-width="1.8"/>
-                            <circle cx="280" cy="87" r="16" class="car-wheel"/>
-                            <circle cx="280" cy="87" r="7" fill="#adb5bd"/>
+                        <g transform="translate(20, 110)">
+                            <text x="160" y="10" class="car-title">ЛЕВАЯ СТОРОНА</text>
+                            <path d="M 20 65 C 25 60, 35 55, 60 53 C 90 51, 110 30, 140 23 C 180 17, 250 17, 280 25 C 305 33, 318 50, 325 55 C 332 58, 335 65, 330 70 L 325 73 L 20 73 Z" class="car-part" />
+                            <path d="M 115 32 L 142 25 Q 190 22, 235 24 L 265 33 Q 230 32, 175 32 Z" class="car-glass"/>
+                            <path d="M 115 35 L 170 35 L 170 52 L 102 52 Z" class="car-glass"/>
+                            <path d="M 175 35 L 260 35 L 242 52 L 175 52 Z" class="car-glass"/>
+                            <line x1="172" y1="35" x2="172" y2="72" class="car-detail"/>
+                            <rect x="155" y="55" width="10" height="3" rx="1" fill="#333"/>
+                            <rect x="220" y="55" width="10" height="3" rx="1" fill="#333"/>
+                            <circle cx="65" cy="73" r="14" class="car-wheel"/>
+                            <circle cx="265" cy="73" r="14" class="car-wheel"/>
                         </g>
 
                         <!-- RIGHT SIDE VIEW -->
-                        <g transform="translate(425, 135)">
-                            <text x="175" y="10" class="car-title">ПРАВЫЙ БОРТ</text>
-                            <path d="M 330 75
-                                     C 325 70, 315 65, 290 63
-                                     C 260 61, 240 35, 210 27
-                                     C 170 20, 90 20, 60 30
-                                     C 35 40, 20 60, 10 65
-                                     C 2 69, 0 77, 5 83
-                                     L 10 87
-                                     L 330 87 Z" class="car-part" />
-                            <path d="M 235 37 L 208 29 Q 150 25 102 28 L 70 39 Q 110 38 165 38 Z" class="car-glass"/>
-                            <path d="M 235 40 L 170 40 L 170 60 L 248 60 Z" class="car-glass"/>
-                            <path d="M 165 40 L 75 40 L 95 60 L 165 60 Z" class="car-glass"/>
-                            <line x1="168" y1="40" x2="168" y2="85" class="car-detail"/>
-                            <path d="M 248 60 Q 250 70 255 85" class="car-detail"/>
-                            <path d="M 95 60 Q 85 70 75 85" class="car-detail"/>
-                            <rect x="173" y="63" width="12" height="3" rx="1" fill="#333"/>
-                            <rect x="103" y="63" width="12" height="3" rx="1" fill="#333"/>
-                            <!-- Wheels -->
-                            <path d="M 300 87 A 20 20 0 0 0 260 87" fill="#fff" stroke="#2c3e50" stroke-width="1.8"/>
-                            <circle cx="280" cy="87" r="16" class="car-wheel"/>
-                            <circle cx="280" cy="87" r="7" fill="#adb5bd"/>
-
-                            <path d="M 90 87 A 20 20 0 0 0 50 87" fill="#fff" stroke="#2c3e50" stroke-width="1.8"/>
-                            <circle cx="70" cy="87" r="16" class="car-wheel"/>
-                            <circle cx="70" cy="87" r="7" fill="#adb5bd"/>
+                        <g transform="translate(440, 110)">
+                            <text x="160" y="10" class="car-title">ПРАВАЯ СТОРОНА</text>
+                            <path d="M 320 65 C 315 60, 305 55, 280 53 C 250 51, 230 30, 200 23 C 160 17, 90 17, 60 25 C 35 33, 22 50, 15 55 C 8 58, 5 65, 10 70 L 15 73 L 320 73 Z" class="car-part" />
+                            <path d="M 225 32 L 198 25 Q 150 22, 105 24 L 75 33 Q 110 32, 165 32 Z" class="car-glass"/>
+                            <path d="M 225 35 L 170 35 L 170 52 L 238 52 Z" class="car-glass"/>
+                            <path d="M 165 35 L 80 35 L 98 52 L 165 52 Z" class="car-glass"/>
+                            <line x1="168" y1="35" x2="168" y2="72" class="car-detail"/>
+                            <rect x="175" y="55" width="10" height="3" rx="1" fill="#333"/>
+                            <rect x="110" y="55" width="10" height="3" rx="1" fill="#333"/>
+                            <circle cx="275" cy="73" r="14" class="car-wheel"/>
+                            <circle cx="75" cy="73" r="14" class="car-wheel"/>
                         </g>
                     </svg>
                 </div>
             </div>
 
-            <!-- Checklist -->
-            <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">Комплектация и первичный осмотр</h6>
-            <table class="table table-bordered table-sm mb-3 small">
-                <thead class="table-light">
-                    <tr>
-                        <th>Элемент проверки</th>
-                        <th class="text-center" style="width: 150px;">Состояние / Наличие</th>
-                        <th>Примечания / Дополнительно</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Кузов и ЛКП (царапины, сколы, вмятины)</td>
-                        <td class="text-center">Согласно схеме выше</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Салон и элементы интерьера</td>
-                        <td class="text-center">Чистый / Загрязнён</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Зарядный кабель 220V / Type 2 / GB/T</td>
-                        <td class="text-center">Есть [ ] / Нет [ ]</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Комплект ключей</td>
-                        <td class="text-center">1 шт [ ] / 2 шт [ ] / Карта [ ]</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Запасное колесо / Ремкомплект / Компрессор</td>
-                        <td class="text-center">Есть [ ] / Нет [ ]</td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
+            <!-- Tires & Customer Parts -->
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <div class="section-header">СОСТОЯНИЕ ШИН</div>
+                    <table class="table table-bordered table-sm mb-0 doc-table" style="font-size: 9px;">
+                        <thead>
+                            <tr>
+                                <th>Позиция</th>
+                                <th>Протектор, мм</th>
+                                <th>Повреждения</th>
+                                <th>В порядке</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Переднее левое</td><td>______</td><td>[ ] Да &nbsp; [ ] Нет</td><td>[ ] Да &nbsp; [ ] Нет</td></tr>
+                            <tr><td>Переднее правое</td><td>______</td><td>[ ] Да &nbsp; [ ] Нет</td><td>[ ] Да &nbsp; [ ] Нет</td></tr>
+                            <tr><td>Заднее левое</td><td>______</td><td>[ ] Да &nbsp; [ ] Нет</td><td>[ ] Да &nbsp; [ ] Нет</td></tr>
+                            <tr><td>Заднее правое</td><td>______</td><td>[ ] Да &nbsp; [ ] Нет</td><td>[ ] Да &nbsp; [ ] Нет</td></tr>
+                            <tr><td>Запасное колесо</td><td>______</td><td>[ ] Да &nbsp; [ ] Нет</td><td>[ ] Да &nbsp; [ ] Нет</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-6">
+                    <div class="section-header">ЗАПЧАСТИ ЗАКАЗЧИКА (ПЕРЕДАННЫЕ)</div>
+                    <table class="table table-bordered table-sm mb-0 doc-table" style="font-size: 9px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">№</th>
+                                <th>Наименование</th>
+                                <th style="width: 15%;">Кол-во</th>
+                                <th>Примечание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td></td><td></td><td></td></tr>
+                            <tr><td>2</td><td></td><td></td><td></td></tr>
+                            <tr><td>3</td><td></td><td></td><td></td></tr>
+                            <tr><td>4</td><td></td><td></td><td></td></tr>
+                            <tr><td>5</td><td></td><td></td><td></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
             <!-- Reported Issues -->
-            <div class="mb-3">
-                <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">Заявленные неисправности и пожелания заказчика:</h6>
-                <div class="border rounded p-2 bg-light" style="min-height: 55px;"></div>
+            <div class="mb-2">
+                <div class="section-header">ЗАЯВЛЕННЫЕ НЕИСПРАВНОСТИ / ЖАЛОБЫ КЛИЕНТА</div>
+                <div class="border border-top-0 p-2 bg-light" style="min-height: 45px; font-size: 10px;"></div>
             </div>
 
-            <!-- Terms & Conditions / Delayed Vehicle Clause -->
-            <div class="terms-box mb-3 text-muted">
-                <div class="fw-bold text-dark mb-1">УСЛОВИЯ ПРИЕМА АВТОМОБИЛЯ И СОГЛАСОВАНИЕ СРОКОВ:</div>
-                <ol class="mb-0 ps-3">
-                    <li>Заказчик подтверждает правильность зафиксированных данных о комплектации, пробеге и видимых повреждениях автомобиля.</li>
-                    <li>Исполнитель не несет ответственности за ценные вещи, оставленные в салоне автомобиля и не сданные по описи.</li>
-                    <li><strong>Форс-мажор и задержка автомобиля:</strong> В случае возникновения форс-мажорных обстоятельств (задержка поставки необходимых запчастей, отключение электроэнергии, выявление скрытых дефектов в процессе ремонта и т.д.), автомобиль может задержаться на автосервисе на срок <strong>до 3 (трёх) рабочих дней</strong>. Исполнитель обязуется своевременно уведомить Заказчика о задержке по телефону или мессенджеру.</li>
-                    <li>Заказчик обязуется забрать автомобиль в течение 3-х дней после уведомления о готовности. За последующее хранение может взиматься плата согласно тарифу сервиса.</li>
-                </ol>
+            <!-- Additional Agreement & Force Majeure -->
+            <div class="mb-2">
+                <div class="section-header">ДОПОЛНИТЕЛЬНОЕ СОГЛАШЕНИЕ / ПРИМЕЧАНИЯ</div>
+                <div class="border border-top-0 p-2 terms-text">
+                    1. Автомобиль принят в ремонт в состоянии, указанном в настоящем акте. С описанием повреждений, комплектацией и неисправностями согласен.<br>
+                    2. Исполнитель не несет ответственности за деньги и ценные вещи, оставленные в салоне автомобиля.<br>
+                    3. <strong>Форс-мажор и задержка:</strong> В случае возникновения форс-мажорных обстоятельств (задержка поставки запчастей, отключение электроэнергии, выявление скрытых дефектов), автомобиль может задержаться на сервисе <strong>до 3 (трёх) рабочих дней</strong> с обязательным уведомлением Заказчика.
+                </div>
             </div>
 
-            <!-- Signatures -->
-            <div class="row mt-4 pt-2 border-top small">
+            <!-- Signatures Block -->
+            <div class="row pt-3 mt-2 border-top align-items-end" style="font-size: 10px;">
                 <div class="col-6">
-                    <p class="mb-1"><strong>Автомобиль принял (Мастер):</strong></p>
-                    <p class="mb-0">Подпись: ___________________ ({{ car.created_by or 'Мастер-приёмщик' }})</p>
+                    <div><strong>Автомобиль сдал (Клиент):</strong></div>
+                    <div class="mt-3">ФИО: ____________________________________</div>
+                    <div class="mt-2">Подпись: __________________ Дата: _________</div>
                 </div>
                 <div class="col-6 text-end">
-                    <p class="mb-1"><strong>Автомобиль сдал (Заказчик):</strong></p>
-                    <p class="mb-0">Подпись: ___________________ ({{ car.owner.full_name }})</p>
+                    <div><strong>Автомобиль принял (BYD Help Service):</strong></div>
+                    <div class="mt-3">ФИО: <strong>{{ car.created_by or 'Мастер-приёмщик' }}</strong></div>
+                    <div class="mt-2">Подпись: __________________ Дата: _________</div>
                 </div>
+            </div>
+
+            <!-- Footer Logo Text -->
+            <div class="text-center mt-3 pt-2 border-top text-muted fw-bold" style="font-size: 9px; letter-spacing: 1px;">
+                BYD HELP SERVICE — ПРОФЕССИОНАЛЬНЫЙ СЕРВИС ДЛЯ ВАШЕГО BYD
             </div>
         </div>
     </div>
