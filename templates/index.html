@@ -84,7 +84,7 @@
         {% endfor %}
     </div>
 
-    <!-- Статистика и Касса -->
+    <!-- Статистика -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-title">СЕЙЧАС В СЕРВИСЕ (НЕ ВЫДАНО)</div>
@@ -108,6 +108,7 @@
             <div style="font-size: 12px; color: #aaa;">За всё время</div>
         </div>
 
+        <!-- КАССА / ВЫРУЧКА ВИДНА ТОЛЬКО АДМИНИСТРАТОРУ -->
         {% if current_user.is_admin %}
         <div class="stat-card" style="border-color: #4CAF50; background: #1a251a;">
             <div class="stat-title" style="color: #81c784;">📊 ВЫРУЧКА / КАССА ЗА ДЕНЬ</div>
