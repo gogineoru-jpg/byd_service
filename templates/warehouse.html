@@ -45,25 +45,26 @@
         </div>
     </div>
 
-    <!-- Форма добавления запчасти -->
-    <div class="card">
-        <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #fff;">➕ Приход запчасти на склад</h3>
+    <!-- Форма добавления запчасти (ТОЛЬКО ДЛЯ АДМИНИСТРАТОРА) -->
+    {% if current_user.is_admin %}
+    <div class="card" style="border-color: #d32f2f;">
+        <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #ff5252;">👑 Приход запчасти на склад (Администратор)</h3>
         <form action="/warehouse/add" method="post">
             <div class="form-grid">
                 <div>
                     <label style="font-size: 11px; color: #aaa;">Наименование:</label>
-                    <input type="text" name="name" placeholder="например, Фильтр салона BYD Song" required>
+                    <input type="text" name="name" placeholder="например, Масло 0W-20 BYD" required>
                 </div>
                 <div>
                     <label style="font-size: 11px; color: #aaa;">Артикул / Код:</label>
-                    <input type="text" name="part_code" placeholder="BYD-48190">
+                    <input type="text" name="part_code" placeholder="BYD1124">
                 </div>
                 <div>
                     <label style="font-size: 11px; color: #aaa;">Количество (шт):</label>
-                    <input type="number" name="quantity" value="1" min="0" required>
+                    <input type="number" name="quantity" value="10" min="0" required>
                 </div>
                 <div>
-                    <label style="font-size: 11px; color: #aaa;">Цена (сум):</label>
+                    <label style="font-size: 11px; color: #aaa;">Цена за ед. (сум):</label>
                     <input type="number" name="price" value="0" step="1000" min="0" required>
                 </div>
                 <div>
@@ -75,9 +76,14 @@
                     </select>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Добавить на склад</button>
+            <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Добавить приход на склад</button>
         </form>
     </div>
+    {% else %}
+    <div style="background: #1e1e1e; padding: 12px 18px; border-radius: 6px; border: 1px solid #333; margin-bottom: 20px; font-size: 13px; color: #aaa;">
+        ℹ️ <b>Режим просмотра остатков:</b> Пополнение и приход запчастей на склад выполняет администратор.
+    </div>
+    {% endif %}
 
     <!-- Фильтр и поиск -->
     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -102,10 +108,10 @@
                     <th>Наименование запчасти</th>
                     <th>Артикул</th>
                     <th>Филиал</th>
-                    <th>Кол-во (шт)</th>
+                    <th>Остаток (шт)</th>
                     <th>Цена за шт</th>
-                    <th>Обновит остаток</th>
                     {% if current_user.is_admin %}
+                    <th>Редактировать остаток</th>
                     <th>Удалить</th>
                     {% endif %}
                 </tr>
@@ -120,7 +126,8 @@
                     <td class="{% if part.quantity > 0 %}in-stock{% else %}out-of-stock{% endif %}">
                         {{ part.quantity }} шт.
                     </td>
-                    <td>{{ "{:,.0f}".format(part.price or 0).replace(',', ' ') }} сум</td>
+                    <td><b>{{ "{:,.0f}".format(part.price or 0).replace(',', ' ') }}</b> сум</td>
+                    {% if current_user.is_admin %}
                     <td>
                         <form action="/warehouse/update/{{ part.id }}" method="post" style="display: flex; gap: 5px;">
                             <input type="number" name="quantity" value="{{ part.quantity }}" style="width: 70px; padding: 3px 6px;">
@@ -128,7 +135,6 @@
                             <button type="submit" class="btn btn-secondary" style="padding: 3px 8px; font-size: 11px;">Сохранить</button>
                         </form>
                     </td>
-                    {% if current_user.is_admin %}
                     <td>
                         <form action="/warehouse/delete/{{ part.id }}" method="post" onsubmit="return confirm('Удалить позицию со склада?');">
                             <button type="submit" class="btn btn-primary" style="padding: 3px 8px; font-size: 11px; background: #c62828;">🗑️</button>
@@ -138,7 +144,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="8" style="text-align: center; color: #666; padding: 20px;">Запчасти на складе не найдены</td>
+                    <td colspan="7" style="text-align: center; color: #666; padding: 20px;">Запчасти на складе не найдены</td>
                 </tr>
                 {% endfor %}
             </tbody>
