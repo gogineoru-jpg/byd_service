@@ -97,6 +97,8 @@ class Car(Base):
     vin_code = Column(String, index=True)
     engine_type = Column(String)
     mileage = Column(Integer, default=0)
+    ev_mileage = Column(Integer, default=0)
+    hev_mileage = Column(Integer, default=0)
     soh_percent = Column(Float, default=100.0)
     manufacture_year = Column(Integer, default=2023)
     status = Column(String, default="Принято")
@@ -144,7 +146,9 @@ migrations = [
     "UPDATE cars SET status = 'Принято' WHERE status IS NULL;",
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS filial VARCHAR DEFAULT 'Филиал Сергели';",
     "UPDATE cars SET filial = 'Филиал Сергели' WHERE filial IS NULL;",
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS discount_percent FLOAT DEFAULT 0.0;"
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS discount_percent FLOAT DEFAULT 0.0;",
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS ev_mileage INTEGER DEFAULT 0;",
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS hev_mileage INTEGER DEFAULT 0;"
 ]
 
 for statement in migrations:
@@ -218,7 +222,6 @@ def warehouse_page(
                 WarehousePart.part_code.ilike(s)
             )
         )
-    # Сортировка строго по ID (#1, #2, #3, #4...):
     parts = query.order_by(WarehousePart.id.asc()).all()
     
     return templates.TemplateResponse(
@@ -376,6 +379,8 @@ def create_entry(
     plate_number: str = Form(...),
     vin_code: str = Form(...),
     engine_type: str = Form(...),
+    ev_mileage: int = Form(0),
+    hev_mileage: int = Form(0),
     mileage: int = Form(0),
     manufacture_year: int = Form(2023),
     soh_percent: float = Form(100.0),
@@ -385,17 +390,9 @@ def create_entry(
 ):
     plate_number = plate_number.strip().upper()
     vin_code = vin_code.strip().upper()
-    
-    existing_car = db.query(Car).filter(
-        Car.plate_number == plate_number,
-        Car.vin_code == vin_code,
-        Car.status == "Принято"
-    ).order_by(Car.id.desc()).first()
 
-    if existing_car and existing_car.created_at:
-        time_diff = (datetime.now() - existing_car.created_at).total_seconds()
-        if time_diff < 60:
-            return RedirectResponse(url=f"/act/{existing_car.id}", status_code=303)
+    # Рассчитываем общий пробег, если он не передан напрямую
+    total_odo = mileage if mileage > 0 else (ev_mileage + hev_mileage)
 
     client = db.query(Client).filter(Client.phone == phone).first()
     if not client:
@@ -413,7 +410,9 @@ def create_entry(
         plate_number=plate_number,
         vin_code=vin_code,
         engine_type=engine_type,
-        mileage=mileage,
+        ev_mileage=ev_mileage,
+        hev_mileage=hev_mileage,
+        mileage=total_odo,
         manufacture_year=manufacture_year,
         soh_percent=soh_percent,
         status="Принято",
@@ -478,6 +477,8 @@ def update_car(
     plate_number: str = Form(...),
     vin_code: str = Form(...),
     engine_type: str = Form(...),
+    ev_mileage: int = Form(0),
+    hev_mileage: int = Form(0),
     mileage: int = Form(0),
     manufacture_year: int = Form(2023),
     soh_percent: float = Form(100.0),
@@ -490,11 +491,15 @@ def update_car(
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
     
+    total_odo = mileage if mileage > 0 else (ev_mileage + hev_mileage)
+
     car.brand_model = brand_model
     car.plate_number = plate_number.strip().upper()
     car.vin_code = vin_code.strip().upper()
     car.engine_type = engine_type
-    car.mileage = mileage
+    car.ev_mileage = ev_mileage
+    car.hev_mileage = hev_mileage
+    car.mileage = total_odo
     car.manufacture_year = manufacture_year
     car.soh_percent = soh_percent
     car.status = status
