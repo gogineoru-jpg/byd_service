@@ -9,14 +9,29 @@
     <style>
         @media print {
             .no-print { display: none !important; }
-            body { background-color: #fff !important; font-size: 12px; }
+            body { background-color: #fff !important; font-size: 11px; }
             .card { border: none !important; box-shadow: none !important; }
+            .print-p-0 { padding: 0 !important; }
         }
         .brand-red { color: #dc3545; font-weight: 800; }
+        .car-schema {
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fafafa;
+        }
+        .terms-box {
+            font-size: 10px;
+            line-height: 1.3;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 8px 12px;
+        }
     </style>
 </head>
 <body class="bg-light">
-    <div class="container my-4" style="max-width: 900px;">
+    <div class="container my-3" style="max-width: 900px;">
         <div class="d-flex justify-content-between align-items-center mb-3 no-print">
             <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> На главную</a>
             <div>
@@ -27,7 +42,7 @@
 
         <div class="card shadow border-0 p-4 bg-white">
             <!-- Header -->
-            <div class="row border-bottom pb-3 mb-3 align-items-center">
+            <div class="row border-bottom pb-2 mb-3 align-items-center">
                 <div class="col-6">
                     <h3 class="mb-0 fw-bold"><span class="brand-red">BYD</span> help</h3>
                     <div class="fw-bold text-dark fs-6">{{ car.filial or 'Филиал Сергели' }}</div>
@@ -41,78 +56,155 @@
                     </div>
                 </div>
                 <div class="col-6 text-end">
-                    <h4 class="fw-bold text-uppercase mb-0">Акт приёма-передачи №{{ car.id }}</h4>
-                    <div class="text-muted small">Дата: {{ car.created_at.strftime('%d.%m.%Y %H:%M') if car.created_at else '' }}</div>
+                    <h4 class="fw-bold text-uppercase mb-0">Акт приема-передачи №{{ car.id }}</h4>
+                    <div class="text-muted small">Дата приема: {{ car.created_at.strftime('%d.%m.%Y %H:%M') if car.created_at else '' }}</div>
                 </div>
             </div>
 
             <!-- Customer and Car Info -->
-            <div class="row g-3 mb-4 small">
+            <div class="row g-3 mb-3 small">
                 <div class="col-6 border-end">
-                    <h6 class="fw-bold text-uppercase text-muted mb-2">Клиент / Владелец:</h6>
+                    <h6 class="fw-bold text-uppercase text-muted mb-2">Заказчик / Владелец:</h6>
                     <div><strong>ФИО:</strong> {{ car.owner.full_name }}</div>
                     <div><strong>Телефон:</strong> {{ car.owner.phone }}</div>
                 </div>
                 <div class="col-6">
                     <h6 class="fw-bold text-uppercase text-muted mb-2">Автомобиль:</h6>
                     <div><strong>Модель:</strong> {{ car.brand_model }} ({{ car.manufacture_year }})</div>
-                    <div><strong>Гос. номер:</strong> <span class="badge bg-dark">{{ car.plate_number }}</span></div>
-                    <div><strong>VIN:</strong> {{ car.vin_code }}</div>
-                    <div><strong>Пробег:</strong> {{ car.mileage }} км | <strong>SOH:</strong> {{ car.soh_percent }}%</div>
+                    <div><strong>Гос. номер:</strong> <span class="badge bg-dark">{{ car.plate_number }}</span> | <strong>VIN:</strong> {{ car.vin_code }}</div>
+                    <div><strong>Пробег:</strong> {{ car.mileage }} км | <strong>SOH АКБ:</strong> {{ car.soh_percent }}%</div>
+                </div>
+            </div>
+
+            <!-- Car Inspection Schema (Кузов / Схема повреждений) -->
+            <div class="mb-3">
+                <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">Схема осмотра кузова и повреждений (X - царапина, O - вмятина, V - скол)</h6>
+                <div class="car-schema text-center">
+                    <svg viewBox="0 0 800 280" width="100%" height="210" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Top View -->
+                        <g stroke="#333" stroke-width="2" fill="none">
+                            <!-- Car Outline Top -->
+                            <rect x="250" y="80" width="300" height="120" rx="30" ry="30" stroke="#555" stroke-width="2" fill="#fff"/>
+                            <!-- Front Windshield -->
+                            <path d="M 320 85 Q 330 140 320 195" />
+                            <!-- Rear Windshield -->
+                            <path d="M 480 85 Q 470 140 480 195" />
+                            <!-- Roof Lines -->
+                            <line x1="335" y1="82" x2="465" y2="82" stroke-dashedarray="4"/>
+                            <line x1="335" y1="198" x2="465" y2="198" stroke-dashedarray="4"/>
+                            <!-- Hood Line -->
+                            <line x1="280" y1="85" x2="280" y2="195" stroke="#ccc"/>
+                            <!-- Trunk Line -->
+                            <line x1="520" y1="85" x2="520" y2="195" stroke="#ccc"/>
+                            <!-- Mirrors -->
+                            <rect x="330" y="65" width="20" height="12" rx="3" fill="#eee"/>
+                            <rect x="330" y="203" width="20" height="12" rx="3" fill="#eee"/>
+                        </g>
+
+                        <!-- Left Side View -->
+                        <g stroke="#333" stroke-width="2" fill="none">
+                            <path d="M 30 180 L 50 150 L 90 130 L 170 130 L 200 150 L 220 180 Z" />
+                            <!-- Wheels Left -->
+                            <circle cx="70" cy="180" r="16" fill="#fff"/>
+                            <circle cx="180" cy="180" r="16" fill="#fff"/>
+                            <text x="100" y="210" font-size="12" fill="#777" stroke="none">ЛЕВЫЙ БОРТ</text>
+                        </g>
+
+                        <!-- Right Side View -->
+                        <g stroke="#333" stroke-width="2" fill="none">
+                            <path d="M 580 180 L 600 150 L 640 130 L 720 130 L 750 150 L 770 180 Z" />
+                            <!-- Wheels Right -->
+                            <circle cx="620" cy="180" r="16" fill="#fff"/>
+                            <circle cx="730" cy="180" r="16" fill="#fff"/>
+                            <text x="640" y="210" font-size="12" fill="#777" stroke="none">ПРАВЫЙ БОРТ</text>
+                        </g>
+
+                        <!-- Front View -->
+                        <g stroke="#333" stroke-width="2" fill="none">
+                            <rect x="70" y="30" width="110" height="60" rx="10" />
+                            <rect x="85" y="35" width="80" height="25" rx="5" fill="#eef" />
+                            <circle cx="85" cy="70" r="8" />
+                            <circle cx="165" cy="70" r="8" />
+                            <text x="105" y="15" font-size="12" fill="#777" stroke="none">СПЕРЕДИ</text>
+                        </g>
+
+                        <!-- Rear View -->
+                        <g stroke="#333" stroke-width="2" fill="none">
+                            <rect x="620" y="30" width="110" height="60" rx="10" />
+                            <rect x="635" y="35" width="80" height="25" rx="5" fill="#fee" />
+                            <rect x="630" y="65" width="20" height="8" rx="2" fill="#dc3545" />
+                            <rect x="700" y="65" width="20" height="8" rx="2" fill="#dc3545" />
+                            <text x="655" y="15" font-size="12" fill="#777" stroke="none">СЗАДИ</text>
+                        </g>
+                    </svg>
                 </div>
             </div>
 
             <!-- Checklist -->
             <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">Комплектация и первичный осмотр</h6>
-            <table class="table table-bordered table-sm mb-4 small">
+            <table class="table table-bordered table-sm mb-3 small">
                 <thead class="table-light">
                     <tr>
                         <th>Элемент проверки</th>
-                        <th class="text-center" style="width: 120px;">Состояние</th>
-                        <th>Примечания / Дефекты</th>
+                        <th class="text-center" style="width: 140px;">Состояние / Наличие</th>
+                        <th>Примечания / Дополнительно</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Кузов и ЛКП (царапины, сколы, вмятины)</td>
-                        <td class="text-center">Осмотрено</td>
+                        <td class="text-center">Согласно схеме выше</td>
                         <td></td>
                     </tr>
                     <tr>
                         <td>Салон и элементы интерьера</td>
-                        <td class="text-center">Осмотрено</td>
+                        <td class="text-center">Чистый / Загрязнён</td>
                         <td></td>
                     </tr>
                     <tr>
-                        <td>Зарядный кабель / Зарядное устройство</td>
-                        <td class="text-center">Принято / Нет</td>
+                        <td>Зарядный кабель 220V / Type 2 / GB/T</td>
+                        <td class="text-center">Есть [ ] / Нет [ ]</td>
                         <td></td>
                     </tr>
                     <tr>
                         <td>Комплект ключей</td>
-                        <td class="text-center">1 шт / 2 шт</td>
+                        <td class="text-center">1 шт [ ] / 2 шт [ ] / Карта [ ]</td>
                         <td></td>
                     </tr>
                     <tr>
-                        <td>Запасное колесо / Ремкомплект</td>
-                        <td class="text-center">Есть / Нет</td>
+                        <td>Запасное колесо / Ремкомплект / Компрессор</td>
+                        <td class="text-center">Есть [ ] / Нет [ ]</td>
                         <td></td>
                     </tr>
                 </tbody>
             </table>
 
-            <div class="mb-4">
-                <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">Заявленные неисправности и пожелания клиента:</h6>
-                <div class="border rounded p-3 bg-light" style="min-height: 80px;"></div>
+            <!-- Reported Issues -->
+            <div class="mb-3">
+                <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-2">Заявленные неисправности и пожелания заказчика:</h6>
+                <div class="border rounded p-2 bg-light" style="min-height: 65px;"></div>
+            </div>
+
+            <!-- Terms & Conditions / Delayed Vehicle Clause -->
+            <div class="terms-box mb-3 text-muted">
+                <div class="fw-bold text-dark mb-1">УСЛОВИЯ ПРИЕМА АВТОМОБИЛЯ И СОГЛАСОВАНИЕ:</div>
+                <ol class="mb-0 ps-3">
+                    <li>Заказчик подтверждает правильность зафиксированных данных о комплектации, пробеге и видимых повреждениях автомобиля.</li>
+                    <li>Исполнитель не несет ответственности за ценные вещи, оставленные в салоне автомобиля и не сданные по описи.</li>
+                    <li><strong>Согласование сроков и стоимости:</strong> При необходимости проведения дополнительных диагностических/ремонтных работ, задержки автомобиля в связи с поставкой запчастей или сложностью ремонта, мастер-приемщик информирует Заказчика и согласовывает новые сроки и стоимость по телефону или мессенджеру.</li>
+                    <li>Заказчик обязуется забрать автомобиль в течение 3-х календарных дней после уведомления о завершении работ. За последующее хранение может взиматься плата согласно тарифу автосервиса.</li>
+                </ol>
             </div>
 
             <!-- Signatures -->
-            <div class="row mt-5 pt-3 border-top small">
+            <div class="row mt-4 pt-2 border-top small">
                 <div class="col-6">
-                    <p class="mb-4">Принял (Мастер): ___________________ ({{ car.created_by or 'Мастер-приёмщик' }})</p>
+                    <p class="mb-1"><strong>Автомобиль принял (Мастер):</strong></p>
+                    <p class="mb-0">Подпись: ___________________ ({{ car.created_by or 'Мастер-приёмщик' }})</p>
                 </div>
                 <div class="col-6 text-end">
-                    <p class="mb-4">Сдал (Клиент): ___________________ ({{ car.owner.full_name }})</p>
+                    <p class="mb-1"><strong>Автомобиль сдал (Заказчик):</strong></p>
+                    <p class="mb-0">Подпись: ___________________ ({{ car.owner.full_name }})</p>
                 </div>
             </div>
         </div>
