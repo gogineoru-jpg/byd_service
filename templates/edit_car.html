@@ -3,105 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Редактирование - BYD help</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title>Редактирование записи №{{ car.id }} — BYD Help</title>
     <style>
-        .brand-red { color: #dc3545; font-weight: 800; }
-        .brand-help { color: #ffffff; font-weight: 400; font-style: italic; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { margin: 0; background-color: #121212; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 750px; margin: 0 auto; }
+        
+        .card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
+        .card-header { background: #222; border-bottom: 2px solid #2196F3; padding: 15px 20px; font-weight: bold; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .form-body { padding: 25px; }
+        .section-title { font-size: 11px; text-transform: uppercase; color: #888; font-weight: bold; margin-bottom: 12px; margin-top: 15px; letter-spacing: 0.5px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .section-title:first-child { margin-top: 0; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .full-width { grid-column: span 2; }
+        
+        label { display: block; font-size: 12px; color: #ccc; margin-bottom: 6px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px 12px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 14px; }
+        input:focus, select:focus { border-color: #2196F3; outline: none; }
+
+        .btn-submit { width: 100%; padding: 12px; background: #2196F3; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 25px; }
+        .btn-submit:hover { background: #1976D2; }
+        
+        .btn-back { color: #888; text-decoration: none; font-size: 13px; font-weight: normal; }
+        .btn-back:hover { color: #fff; }
+
+        .calc-box { background: #262626; border: 1px solid #3d3d3d; padding: 12px; border-radius: 6px; margin-top: 10px; }
     </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand fs-4" href="/">
-                <i class="bi bi-ev-front me-2 text-danger"></i><span class="brand-red">BYD</span> <span class="brand-help">help</span>
-            </a>
-            <a href="/" class="btn btn-outline-light btn-sm"><i class="bi bi-arrow-left me-1"></i> На главную</a>
+<body>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <span>✏️ Редактирование карточки №{{ car.id }}</span>
+            <a href="/" class="btn-back">← На главную</a>
         </div>
-    </nav>
-
-    <div class="container mb-5" style="max-width: 800px;">
-        <div class="card shadow border-0">
-            <div class="card-header bg-dark text-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2 text-warning"></i> Редактирование записи №{{ car.id }}</h5>
+        
+        <form action="/update-car/{{ car.id }}" method="post" class="form-body">
+            
+            <div class="section-title">📍 Филиал и Статус</div>
+            <div class="form-grid">
+                <div>
+                    <label>Филиал обслуживания</label>
+                    <select name="filial">
+                        {% for f in filials %}
+                        <option value="{{ f }}" {% if car.filial == f %}selected{% endif %}>{{ f }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Статус ремонта</label>
+                    <select name="status">
+                        <option value="Принято" {% if car.status == 'Принято' %}selected{% endif %}>Принято</option>
+                        <option value="В работе" {% if car.status == 'В работе' %}selected{% endif %}>В работе</option>
+                        <option value="Готово" {% if car.status == 'Готово' %}selected{% endif %}>Готово</option>
+                        <option value="Выдано" {% if car.status == 'Выдано' %}selected{% endif %}>Выдано</option>
+                    </select>
+                </div>
             </div>
-            <div class="card-body p-4">
-                <form action="/update-car/{{ car.id }}" method="post">
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-danger">Филиал</label>
-                            <select name="filial" class="form-select fw-bold">
-                                {% for f in filials %}
-                                    <option value="{{ f }}" {% if car.filial == f %}selected{% endif %}>{{ f }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Текущий статус</label>
-                            <select name="status" class="form-select fw-bold">
-                                <option value="Принято" {% if car.status == 'Принято' %}selected{% endif %}>🔵 Принято</option>
-                                <option value="В работе" {% if car.status == 'В работе' %}selected{% endif %}>🟡 В работе</option>
-                                <option value="Готово" {% if car.status == 'Готово' %}selected{% endif %}>🟢 Готово</option>
-                                <option value="Выдано" {% if car.status == 'Выдано' %}selected{% endif %}>⚪ Выдано</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <h6 class="fw-bold text-uppercase text-muted border-bottom pb-2 mb-3">Данные владельца</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">ФИО Клиента *</label>
-                            <input type="text" name="full_name" class="form-control" value="{{ car.owner.full_name if car.owner else '' }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Номер телефона *</label>
-                            <input type="text" name="phone" class="form-control" value="{{ car.owner.phone if car.owner else '' }}" required>
-                        </div>
-                    </div>
-
-                    <h6 class="fw-bold text-uppercase text-muted border-bottom pb-2 mb-3">Данные автомобиля</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Марка и Модель *</label>
-                            <input type="text" name="brand_model" class="form-control" value="{{ car.brand_model }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Гос. Номер *</label>
-                            <input type="text" name="plate_number" class="form-control font-monospace" value="{{ car.plate_number }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">VIN-код *</label>
-                            <input type="text" name="vin_code" class="form-control font-monospace" value="{{ car.vin_code }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Тип привода</label>
-                            <select name="engine_type" class="form-select">
-                                <option value="Электро (EV)" {% if car.engine_type == 'Электро (EV)' %}selected{% endif %}>Электро (EV)</option>
-                                <option value="Гибрид (DM-i)" {% if car.engine_type == 'Гибрид (DM-i)' %}selected{% endif %}>Гибрид (DM-i)</option>
-                                <option value="Гибрид (DM-p)" {% if car.engine_type == 'Гибрид (DM-p)' %}selected{% endif %}>Гибрид (DM-p)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Пробег (км)</label>
-                            <input type="number" name="mileage" class="form-control" value="{{ car.mileage }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Год выпуска</label>
-                            <input type="number" name="manufacture_year" class="form-control" value="{{ car.manufacture_year }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">SOH Батареи (%)</label>
-                            <input type="number" step="0.1" name="soh_percent" class="form-control" value="{{ car.soh_percent }}">
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-dark btn-lg fw-bold"><i class="bi bi-save me-1"></i> Сохранить изменения</button>
-                    </div>
-                </form>
+            <div class="section-title">ДАННЫЕ ВЛАДЕЛЬЦА</div>
+            <div class="form-grid">
+                <div>
+                    <label>ФИО Клиента *</label>
+                    <input type="text" name="full_name" value="{{ car.owner.full_name if car.owner else '' }}" required>
+                </div>
+                <div>
+                    <label>Номер телефона *</label>
+                    <input type="text" name="phone" value="{{ car.owner.phone if car.owner else '' }}" required>
+                </div>
             </div>
-        </div>
+
+            <div class="section-title">ДАННЫЕ АВТОМОБИЛЯ</div>
+            <div class="form-grid">
+                <div>
+                    <label>Марка и Модель *</label>
+                    <input type="text" name="brand_model" value="{{ car.brand_model }}" required>
+                </div>
+                <div>
+                    <label>Гос. Номер *</label>
+                    <input type="text" name="plate_number" value="{{ car.plate_number }}" required style="text-transform: uppercase;">
+                </div>
+
+                <div>
+                    <label>VIN-код *</label>
+                    <input type="text" name="vin_code" value="{{ car.vin_code }}" required style="text-transform: uppercase;">
+                </div>
+                <div>
+                    <label>Тип привода / Двигателя</label>
+                    <select name="engine_type">
+                        <option value="Гибрид (DM-i / DM-p)" {% if 'Гибрид' in car.engine_type or 'DM' in car.engine_type %}selected{% endif %}>Гибрид (DM-i / DM-p)</option>
+                        <option value="Электро (EV)" {% if 'Электро' in car.engine_type or 'EV' in car.engine_type %}selected{% endif %}>Электро (EV)</option>
+                        <option value="ДВС (Бензин)" {% if 'ДВС' in car.engine_type or 'Бензин' in car.engine_type %}selected{% endif %}>ДВС (Бензин)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Год выпуска</label>
+                    <input type="number" name="manufacture_year" value="{{ car.manufacture_year }}" required>
+                </div>
+                <div>
+                    <label>SOH Батареи (%)</label>
+                    <input type="number" name="soh_percent" value="{{ car.soh_percent or 100.0 }}" step="0.1" required>
+                </div>
+            </div>
+
+            <div class="section-title">ПОКАЗАНИЯ ПРОБЕГА (КМ)</div>
+            <div class="calc-box">
+                <div class="form-grid">
+                    <div>
+                        <label style="color: #4fc3f7;">⚡ EV Пробег (Электро, км)</label>
+                        <input type="number" id="ev_mileage" name="ev_mileage" value="{{ car.ev_mileage or 0 }}" min="0" oninput="calcTotalOdo()">
+                    </div>
+                    <div>
+                        <label style="color: #ffb74d;">⛽ HEV Пробег (Гибрид/ДВС, км)</label>
+                        <input type="number" id="hev_mileage" name="hev_mileage" value="{{ car.hev_mileage or 0 }}" min="0" oninput="calcTotalOdo()">
+                    </div>
+                    <div class="full-width">
+                        <label style="color: #81c784;">📊 Общий пробег (ODO, км) *</label>
+                        <input type="number" id="mileage" name="mileage" value="{{ car.mileage or 0 }}" min="0" style="font-size: 16px; font-weight: bold; background: #1a271a; border-color: #4caf50;">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">💾 Сохранить изменения</button>
+        </form>
     </div>
+</div>
+
+<script>
+function calcTotalOdo() {
+    const ev = parseInt(document.getElementById('ev_mileage').value) || 0;
+    const hev = parseInt(document.getElementById('hev_mileage').value) || 0;
+    document.getElementById('mileage').value = ev + hev;
+}
+</script>
+
 </body>
 </html>
