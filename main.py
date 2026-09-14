@@ -1,22 +1,3 @@
-# --- ПОДСЧЕТ ВЫРУЧКИ ПО ДНЯМ ДЛЯ АДМИНА ---
-@app.route('/api/admin/daily-sum', methods=['GET'])
-@login_required
-def get_daily_sum():
-    if getattr(current_user, 'role', None) != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
-
-    selected_date = request.args.get('date')
-    if not selected_date:
-        return jsonify({'error': 'Date is required'}), 400
-
-    total_sum = db.session.query(func.sum(Car.price))\
-        .filter(func.date(Car.created_at) == selected_date)\
-        .scalar() or 0
-
-    return jsonify({
-        'date': selected_date,
-        'total': float(total_sum)
-    })
 import os
 import uvicorn
 import secrets
@@ -25,7 +6,7 @@ from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, or_, text
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, or_, text, func
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./byd_service.db")
@@ -182,6 +163,29 @@ def get_db():
 def admin_login(user: dict = Depends(require_admin)):
     return RedirectResponse(url="/", status_code=303)
 
+# --- АПИ ДЛЯ ПОЛУЧЕНИЯ ВЫРУЧКИ ЗА ДЕНЬ (ДЛЯ АДМИНА) ---
+@app.get("/api/admin/daily-sum")
+def get_daily_sum(
+    date_str: str = "",
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin)
+):
+    if not date_str:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+    cars = db.query(Car).filter(func.date(Car.created_at) == date_str).all()
+    total_sum = 0.0
+    for car in cars:
+        works_sum = sum(w.price for w in car.works if w.price)
+        parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
+        total_sum += (works_sum + parts_sum)
+
+    return {
+        "date": date_str,
+        "total": total_sum,
+        "cars_count": len(cars)
+    }
+
 @app.get("/", response_class=HTMLResponse)
 def index(
     request: Request, 
@@ -221,8 +225,17 @@ def index(
         grouped_cars[date_str].append(car)
 
     today_str = datetime.now().strftime("%d.%m.%Y")
-    today_count = len(grouped_cars.get(today_str, []))
+    today_date_iso = datetime.now().strftime("%Y-%m-%d")
+    today_cars = grouped_cars.get(today_str, [])
+    today_count = len(today_cars)
     total_count = len(cars)
+
+    # Расчет сегодняшней выручки
+    today_revenue = sum(
+        sum(w.price for w in car.works if w.price) + 
+        sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
+        for car in today_cars
+    )
 
     accepted_count = sum(1 for c in cars if (c.status == "Принято" or not c.status))
     in_progress_count = sum(1 for c in cars if c.status == "В работе")
@@ -239,6 +252,8 @@ def index(
             "filials": FILIALS,
             "current_user": user,
             "today_count": today_count,
+            "today_revenue": today_revenue,
+            "today_date_iso": today_date_iso,
             "total_count": total_count,
             "today_str": today_str,
             "in_service_count": in_service_count,
