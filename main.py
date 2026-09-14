@@ -23,7 +23,6 @@ Base = declarative_base()
 
 security = HTTPBasic()
 
-# Полные названия филиалов
 FILIALS = ["Филиал Сергели", "Филиал Циолковский"]
 
 USERS = {
@@ -181,6 +180,7 @@ def get_db():
 def admin_login(user: dict = Depends(require_admin)):
     return RedirectResponse(url="/", status_code=303)
 
+# Разделенный подсчет выручки за день (Работы отдельно, Запчасти отдельно)
 @app.get("/api/admin/daily-sum")
 def get_daily_sum(
     date_str: str = "",
@@ -191,18 +191,30 @@ def get_daily_sum(
         date_str = datetime.now().strftime("%Y-%m-%d")
 
     cars = db.query(Car).filter(func.date(Car.created_at) == date_str).all()
+    total_works = 0.0
+    total_parts = 0.0
     total_sum = 0.0
+
     for car in cars:
         works_sum = sum(w.price for w in car.works if w.price)
         parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
         subtotal = works_sum + parts_sum
+        
         disc = min(10.0, max(0.0, car.discount_percent or 0.0))
-        disc_amount = (subtotal * disc) / 100.0
-        total_sum += (subtotal - disc_amount)
+        
+        # Пропорциональное применение скидки или раздельный учёт
+        if subtotal > 0:
+            ratio = (subtotal - (subtotal * disc / 100.0)) / subtotal
+            total_works += works_sum * ratio
+            total_parts += parts_sum * ratio
+        
+        total_sum += (subtotal - (subtotal * disc / 100.0))
 
     return {
         "date": date_str,
         "total": total_sum,
+        "works_total": total_works,
+        "parts_total": total_parts,
         "cars_count": len(cars)
     }
 
@@ -332,13 +344,23 @@ def index(
     total_count = len(cars)
 
     today_revenue = 0.0
+    today_works_revenue = 0.0
+    today_parts_revenue = 0.0
+
     if user["is_admin"]:
         for car in today_cars:
             w_sum = sum(w.price for w in car.works if w.price)
             p_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
             subt = w_sum + p_sum
             disc = min(10.0, max(0.0, car.discount_percent or 0.0))
-            today_revenue += (subt - (subt * disc / 100.0))
+            
+            final_car_sum = subt - (subt * disc / 100.0)
+            today_revenue += final_car_sum
+
+            if subt > 0:
+                ratio = final_car_sum / subt
+                today_works_revenue += w_sum * ratio
+                today_parts_revenue += p_sum * ratio
 
     accepted_count = sum(1 for c in cars if (c.status == "Принято" or not c.status))
     in_progress_count = sum(1 for c in cars if c.status == "В работе")
@@ -356,6 +378,8 @@ def index(
             "current_user": user,
             "today_count": today_count,
             "today_revenue": today_revenue,
+            "today_works_revenue": today_works_revenue,
+            "today_parts_revenue": today_parts_revenue,
             "today_date_iso": today_date_iso,
             "total_count": total_count,
             "today_str": today_str,
