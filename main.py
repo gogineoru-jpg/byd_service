@@ -174,7 +174,6 @@ def get_db():
 def admin_login(user: dict = Depends(require_admin)):
     return RedirectResponse(url="/", status_code=303)
 
-# Эндпоинт подсчета выручки за день — ТОЛЬКО ДЛЯ АДМИНИСТРАТОРА
 @app.get("/api/admin/daily-sum")
 def get_daily_sum(
     date_str: str = "",
@@ -219,7 +218,9 @@ def warehouse_page(
                 WarehousePart.part_code.ilike(s)
             )
         )
-    parts = query.order_by(WarehousePart.name.asc()).all()
+    # Сортировка строго по ID (#1, #2, #3, #4...):
+    parts = query.order_by(WarehousePart.id.asc()).all()
+    
     return templates.TemplateResponse(
         request=request,
         name="warehouse.html",
@@ -324,7 +325,6 @@ def index(
     today_count = len(today_cars)
     total_count = len(cars)
 
-    # Выручка рассчитывается ТОЛЬКО если вошел Администратор
     today_revenue = 0.0
     if user["is_admin"]:
         for car in today_cars:
