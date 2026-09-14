@@ -103,6 +103,7 @@ class Car(Base):
     filial = Column(String, default="Филиал Сергели")
     created_by = Column(String, default="Мастер-приёмщик")
     created_at = Column(DateTime, default=datetime.now)
+    discount_percent = Column(Float, default=0.0)
     owner = relationship("Client", back_populates="cars")
     works = relationship("WorkItem", back_populates="car", cascade="all, delete-orphan")
     parts = relationship("SparePart", back_populates="car", cascade="all, delete-orphan")
@@ -142,7 +143,8 @@ migrations = [
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'Принято';",
     "UPDATE cars SET status = 'Принято' WHERE status IS NULL;",
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS filial VARCHAR DEFAULT 'Филиал Сергели';",
-    "UPDATE cars SET filial = 'Филиал Сергели' WHERE filial IS NULL;"
+    "UPDATE cars SET filial = 'Филиал Сергели' WHERE filial IS NULL;",
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS discount_percent FLOAT DEFAULT 0.0;"
 ]
 
 for statement in migrations:
@@ -186,7 +188,10 @@ def get_daily_sum(
     for car in cars:
         works_sum = sum(w.price for w in car.works if w.price)
         parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
-        total_sum += (works_sum + parts_sum)
+        subtotal = works_sum + parts_sum
+        disc = min(10.0, max(0.0, car.discount_percent or 0.0))
+        disc_amount = (subtotal * disc) / 100.0
+        total_sum += (subtotal - disc_amount)
 
     return {
         "date": date_str,
@@ -226,6 +231,7 @@ def warehouse_page(
         }
     )
 
+# Приход на склад — ТОЛЬКО для администратора
 @app.post("/warehouse/add")
 def add_warehouse_part(
     name: str = Form(...),
@@ -234,7 +240,7 @@ def add_warehouse_part(
     price: float = Form(0.0),
     filial: str = Form("Филиал Сергели"),
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin)
 ):
     part = WarehousePart(
         name=name.strip(),
@@ -253,7 +259,7 @@ def update_warehouse_part(
     quantity: int = Form(...),
     price: float = Form(...),
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin)
 ):
     part = db.query(WarehousePart).filter(WarehousePart.id == part_id).first()
     if part:
@@ -318,11 +324,13 @@ def index(
     today_count = len(today_cars)
     total_count = len(cars)
 
-    today_revenue = sum(
-        sum(w.price for w in car.works if w.price) + 
-        sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
-        for car in today_cars
-    )
+    today_revenue = 0.0
+    for car in today_cars:
+        w_sum = sum(w.price for w in car.works if w.price)
+        p_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
+        subt = w_sum + p_sum
+        disc = min(10.0, max(0.0, car.discount_percent or 0.0))
+        today_revenue += (subt - (subt * disc / 100.0))
 
     accepted_count = sum(1 for c in cars if (c.status == "Принято" or not c.status))
     in_progress_count = sum(1 for c in cars if c.status == "В работе")
@@ -417,6 +425,25 @@ def create_entry(
 
     return RedirectResponse(url=f"/act/{car.id}", status_code=303)
 
+@app.post("/update-discount/{car_id}")
+def update_discount(
+    car_id: int,
+    discount_percent: float = Form(0.0),
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    # Ограничение скидки не более 10%
+    if discount_percent < 0:
+        discount_percent = 0.0
+    if discount_percent > 10.0:
+        discount_percent = 10.0
+
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if car:
+        car.discount_percent = discount_percent
+        db.commit()
+    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+
 @app.post("/update-status/{car_id}")
 def update_status(
     car_id: int,
@@ -454,7 +481,7 @@ def update_car(
     manufacture_year: int = Form(2023),
     soh_percent: float = Form(100.0),
     status: str = Form("Принято"),
-    filial: str = Form("Филиал Сергели"),
+    filial: str = Form("Ф利ал Сергели"),
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
@@ -516,7 +543,6 @@ def add_part(
     car = db.query(Car).filter(Car.id == car_id).first()
     car_filial = car.filial if car else "Филиал Сергели"
 
-    # Ищем позицию по НАЗВАНИЮ или по АРТИКУЛУ (part_code)
     wh_part = db.query(WarehousePart).filter(
         or_(
             func.lower(WarehousePart.name) == name_clean.lower(),
@@ -536,14 +562,9 @@ def add_part(
     part_display_name = name_clean
 
     if wh_part:
-        # Автоматически подставляем правильное имя с названия товара
         part_display_name = wh_part.name
-        
-        # Если цена была не введена (0), берем её со склада
         if parsed_price == 0.0:
             parsed_price = wh_part.price
-            
-        # Списываем со склада
         wh_part.quantity = max(0, wh_part.quantity - quantity)
 
     part = SparePart(car_id=car_id, name=part_display_name, quantity=quantity, price=parsed_price)
@@ -568,7 +589,6 @@ def delete_part(part_id: int, db: Session = Depends(get_db), user: dict = Depend
         car = db.query(Car).filter(Car.id == car_id).first()
         car_filial = car.filial if car else "Филиал Сергели"
 
-        # При удалении возвращаем списанное кол-во обратно на склад
         wh_part = db.query(WarehousePart).filter(
             or_(
                 func.lower(WarehousePart.name) == part.name.lower(),
@@ -606,9 +626,13 @@ def print_act(request: Request, car_id: int, db: Session = Depends(get_db), user
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
     
-    works_sum = sum(w.price for w in car.works)
-    parts_sum = sum(p.price * p.quantity for p in car.parts)
-    total_sum = works_sum + parts_sum
+    works_sum = sum(w.price for w in car.works if w.price)
+    parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
+    subtotal = works_sum + parts_sum
+    
+    discount_percent = min(10.0, max(0.0, car.discount_percent or 0.0))
+    discount_amount = (subtotal * discount_percent) / 100.0
+    total_sum = subtotal - discount_amount
     
     return templates.TemplateResponse(
         request=request,
@@ -617,6 +641,9 @@ def print_act(request: Request, car_id: int, db: Session = Depends(get_db), user
             "car": car, 
             "works_sum": works_sum,
             "parts_sum": parts_sum,
+            "subtotal": subtotal,
+            "discount_percent": discount_percent,
+            "discount_amount": discount_amount,
             "total_sum": total_sum, 
             "current_user": user
         }
