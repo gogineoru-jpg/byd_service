@@ -2,456 +2,629 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Акт приема-передачи №{{ car.id }}</title>
+    <title>Акт приёмки - передачи автомобиля в ремонт №{{ car.id }}</title>
     <style>
         @page {
             size: A4 portrait;
-            margin: 6mm 10mm;
+            margin: 6mm 8mm;
         }
         * {
             box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            font-size: 9px;
-            color: #000;
-            background: #fff;
             margin: 0;
             padding: 0;
+            background: #fff;
+            color: #000;
+            font-size: 8.5px;
         }
-        .a4-page {
+        .page {
             width: 100%;
             max-width: 210mm;
             margin: 0 auto;
-            background: #fff;
         }
 
-        /* Header Layout */
-        .header-table {
-            width: 100%;
-            border-collapse: collapse;
-            border-bottom: 2px solid #000;
-            padding-bottom: 4px;
+        /* Top Branding Header */
+        .brand-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .brand-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .byd-oval {
+            border: 2.5px solid #d32f2f;
+            border-radius: 50px;
+            padding: 2px 10px;
+            font-size: 18px;
+            font-weight: 900;
+            color: #d32f2f;
+            letter-spacing: 1px;
+            display: inline-block;
+        }
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .brand-name {
+            font-size: 20px;
+            font-weight: 900;
+            color: #000;
+            line-height: 1;
+        }
+        .brand-sub {
+            font-size: 7px;
+            color: #555;
+            font-weight: bold;
+            margin-top: 3px;
+            letter-spacing: 0.2px;
+        }
+        .brand-right {
+            text-align: right;
+            font-size: 7px;
+            color: #444;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        /* Document Title Bar */
+        .title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 6px;
         }
-        .company-title {
-            font-size: 16px;
+        .title-black-box {
+            background: #111;
+            color: #fff;
+            font-size: 12px;
             font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -0.3px;
-        }
-        .company-sub {
-            font-size: 9.5px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        /* Title */
-        .doc-header {
-            text-align: center;
-            margin: 6px 0;
-        }
-        .doc-title {
-            font-size: 13px;
-            font-weight: 800;
-            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 4px;
             letter-spacing: 0.5px;
+            flex-grow: 1;
+            margin-right: 10px;
+            text-transform: uppercase;
         }
-        .doc-subtitle {
-            font-size: 10.5px;
-            font-weight: 700;
-            margin-top: 2px;
+        .title-number-box {
+            border: 1px solid #111;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 9.5px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        /* 2 Column Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1.15fr;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        /* Section Block Styling */
+        .block-box {
+            border: 1px solid #111;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .block-header {
+            background: #111;
+            color: #fff;
+            font-size: 8.5px;
+            font-weight: bold;
+            padding: 3px 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .block-content {
+            padding: 4px 6px;
         }
 
         /* Form Lines */
-        .info-grid {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 8px;
-        }
-        .info-grid td {
-            padding: 2px 3px;
-            vertical-align: bottom;
-        }
-        .field-label {
-            font-size: 9px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .field-value {
-            border-bottom: 1px solid #000;
-            font-weight: 700;
-            font-size: 9.5px;
-            padding-left: 4px;
-            width: 100%;
-            min-height: 14px;
-        }
-
-        /* Section Title */
-        .section-title {
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            background: #eee;
-            padding: 3px 6px;
-            border: 1px solid #000;
-            margin-top: 6px;
-            margin-bottom: 6px;
-        }
-
-        /* Car SVG Diagrams Layout */
-        .diagram-grid {
-            display: grid;
-            grid-template-columns: 1.1fr 1.2fr 1.7fr;
-            gap: 6px;
-            border: 1px solid #000;
-            padding: 6px;
-            background: #fff;
-        }
-        .diagram-col {
+        .form-row {
             display: flex;
-            flex-direction: column;
-            justify-content: space-around;
+            align-items: flex-end;
+            margin-bottom: 3px;
+            font-size: 8px;
+        }
+        .form-row:last-child {
+            margin-bottom: 0;
+        }
+        .form-label {
+            white-space: nowrap;
+            color: #111;
+            padding-right: 3px;
+        }
+        .form-line {
+            border-bottom: 1px solid #111;
+            flex-grow: 1;
+            font-weight: bold;
+            padding-left: 4px;
+            min-height: 11px;
+            font-size: 8.5px;
+        }
+
+        /* Checkboxes Grid */
+        .check-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2px 6px;
+            font-size: 8px;
+        }
+        .check-item {
+            display: flex;
             align-items: center;
+            justify-content: space-between;
+        }
+        .square-box {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border: 1px solid #000;
+            margin-right: 2px;
+            vertical-align: middle;
+        }
+
+        /* Inspection Diagram Header & Legend */
+        .inspection-header {
+            background: #111;
+            color: #fff;
+            padding: 3px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 3px 3px 0 0;
+        }
+        .inspection-title {
+            font-size: 8.5px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .inspection-legend {
+            display: flex;
+            gap: 6px;
+            font-size: 7px;
+            color: #fff;
+            font-weight: bold;
+        }
+        .legend-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        /* Car Views Grid */
+        .car-views-container {
+            border: 1px solid #111;
+            border-top: none;
+            padding: 6px 4px 2px 4px;
+            display: grid;
+            grid-template-columns: 1fr 1.3fr 0.9fr 1.3fr 1fr;
+            gap: 4px;
+            align-items: flex-end;
+            text-align: center;
+            margin-bottom: 6px;
         }
         .view-label {
             font-size: 7.5px;
-            font-weight: 700;
-            text-align: center;
-            color: #444;
-            margin-top: 1px;
+            font-weight: bold;
+            margin-top: 2px;
         }
 
-        /* Checklist Table */
-        .check-table {
+        /* Tables */
+        .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8.5px;
-            margin-bottom: 6px;
-        }
-        .check-table td, .check-table th {
-            border: 1px solid #000;
-            padding: 2px 4px;
-            text-align: center;
-        }
-        .check-table th {
-            background: #f0f0f0;
-            font-weight: 700;
-        }
-
-        /* Legend Marks */
-        .legend-box {
-            border: 1px solid #000;
-            padding: 4px 6px;
-            font-size: 8px;
-            margin-top: 4px;
-            margin-bottom: 6px;
-            background: #fafafa;
-        }
-        .legend-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2px 6px;
-            font-weight: 600;
-        }
-
-        /* Ruled Lines for Notes */
-        .notes-box {
-            border: 1px solid #000;
-            padding: 4px;
-            margin-bottom: 6px;
-        }
-        .ruled-line {
-            border-bottom: 1px solid #999;
-            height: 16px;
-        }
-
-        /* Legal / Terms / Force Majeure */
-        .legal-block {
-            border: 1px solid #000;
-            padding: 5px 7px;
             font-size: 7.5px;
-            line-height: 1.25;
-            background: #fff;
-            margin-bottom: 6px;
         }
-        .legal-block strong {
+        .data-table th {
+            border: 1px solid #111;
+            background: #f0f0f0;
+            padding: 2px 3px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .data-table td {
+            border: 1px solid #111;
+            padding: 2px 3px;
+            text-align: center;
+        }
+
+        /* Signatures */
+        .sig-block {
+            margin-top: 6px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
             font-size: 8px;
         }
-
-        /* Signatures Layout */
-        .sig-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 8.5px;
-        }
-        .sig-table td {
-            padding: 3px 2px;
-            vertical-align: bottom;
-        }
-        .sig-line {
-            border-bottom: 1px solid #000;
-            display: inline-block;
-            width: 110px;
+        .sig-line-item {
+            display: flex;
+            align-items: flex-end;
+            margin-top: 10px;
         }
 
-        /* Print Controls */
         @media print {
             .no-print { display: none !important; }
             body { background: #fff; }
-            .a4-page { max-width: 100%; border: none; }
+            .page { max-width: 100%; }
         }
     </style>
 </head>
 <body>
 
-    <div class="no-print" style="background: #333; padding: 8px; text-align: right; margin-bottom: 10px;">
-        <button onclick="window.print()" style="padding: 6px 18px; font-weight: bold; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+    <!-- Print Button -->
+    <div class="no-print" style="background: #222; padding: 6px; text-align: right; margin-bottom: 8px;">
+        <button onclick="window.print()" style="background: #e53935; color: #fff; border: none; padding: 5px 15px; font-weight: bold; cursor: pointer; border-radius: 3px;">
             🖨️ Печать Акта
         </button>
     </div>
 
-    <div class="a4-page">
+    <div class="page">
         <!-- Header -->
-        <table class="header-table">
-            <tr>
-                <td>
-                    <div class="company-title">BYD HELP SERVICE / АВТОЦЕНТР</div>
-                    <div class="company-sub">Официальный сервис • {{ car.filial or 'Ташкент, Сергели' }}</div>
-                </td>
-                <td style="text-align: right; width: 60px;">
-                    <svg width="46" height="46" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="44" fill="none" stroke="#000" stroke-width="5"/>
-                        <path d="M 25 35 L 42 68 L 50 50 L 58 68 L 75 35" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <text x="50" y="85" font-size="14" font-weight="900" text-anchor="middle" font-family="sans-serif">SERVICE</text>
-                    </svg>
-                </td>
-            </tr>
-        </table>
-
-        <!-- Document Title -->
-        <div class="doc-header">
-            <div class="doc-title">Акт приёма-передачи автомобиля № {{ car.id }}</div>
-            <div class="doc-subtitle">
-                к Заказ-наряду № <u>&nbsp;{{ car.id }}&nbsp;</u> от «<u>&nbsp;{{ car.created_at.strftime('%d') if car.created_at else '___' }}&nbsp;</u>» <u>&nbsp;{{ car.created_at.strftime('%B %Y') if car.created_at else '20__ г.' }}&nbsp;</u>
+        <div class="brand-header">
+            <div class="brand-left">
+                <div class="byd-oval">BYD</div>
+                <div class="brand-text">
+                    <div class="brand-name">BYD Help Service</div>
+                    <div class="brand-sub">ДИАГНОСТИКА • РЕМОНТ • ЗАПЧАСТИ • ЗАБОТА О ВАШЕМ АВТО</div>
+                </div>
+            </div>
+            <div class="brand-right">
+                НАДЕЖНОСТЬ<br>
+                ТЕХНОЛОГИИ<br>
+                ДВИЖЕНИЕ ВПЕРЕД<br>
+                <strong style="font-size: 8px; color: #000;">BUILD YOUR DREAMS</strong>
             </div>
         </div>
 
-        <!-- Car & Owner Information -->
-        <table class="info-grid">
-            <tr>
-                <td class="field-label" style="width: 110px;">Ф.И.О. владельца:</td>
-                <td style="width: 40%;"><div class="field-value">{{ car.owner.full_name }}</div></td>
-                <td class="field-label" style="width: 120px; padding-left: 10px;">Ф.И.О. доверенного:</td>
-                <td><div class="field-value"></div></td>
-            </tr>
-            <tr>
-                <td class="field-label">Контактный телефон:</td>
-                <td><div class="field-value">{{ car.owner.phone }}</div></td>
-                <td class="field-label" style="padding-left: 10px;">Марка, модель а/м:</td>
-                <td><div class="field-value">{{ car.brand_model }}</div></td>
-            </tr>
-        </table>
-
-        <table class="info-grid">
-            <tr>
-                <td class="field-label" style="width: 65px;">Гос. номер:</td>
-                <td style="width: 18%;"><div class="field-value">{{ car.plate_number }}</div></td>
-                <td class="field-label" style="width: 35px; padding-left: 6px;">VIN:</td>
-                <td style="width: 32%;"><div class="field-value">{{ car.vin_code }}</div></td>
-                <td class="field-label" style="width: 50px; padding-left: 6px;">Пробег:</td>
-                <td style="width: 18%;"><div class="field-value">{{ car.mileage }} км</div></td>
-                <td class="field-label" style="width: 60px; padding-left: 6px;">АКБ / Бензин:</td>
-                <td style="width: 12%;"><div class="field-value">{{ car.soh_percent }}%</div></td>
-            </tr>
-        </table>
-
-        <!-- Completeness Checklist -->
-        <table class="check-table">
-            <thead>
-                <tr>
-                    <th colspan="8">Комплектность и состояние при приёме</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Ключ от а/м [ {{ 'V' if car.key_count else '1' }} ]</td>
-                    <td>Запасное колесо [ ]</td>
-                    <td>Сервисная книжка [ ]</td>
-                    <td>Зарядный кабель [ ]</td>
-                </tr>
-                <tr>
-                    <td>Коврики салона [ ]</td>
-                    <td>Домкрат / инстр. [ ]</td>
-                    <td>Аптечка / Знак [ ]</td>
-                    <td>Щетка / Скребок [ ]</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Inspection Diagrams -->
-        <div class="section-title">Схема осмотра внешних повреждений кузова</div>
-
-        <div class="diagram-grid">
-            <!-- Top View -->
-            <div class="diagram-col">
-                <svg viewBox="0 0 100 185" height="155">
-                    <g stroke="#111" stroke-width="1.2" fill="none" stroke-linejoin="round" stroke-linecap="round">
-                        <!-- Outer body -->
-                        <path d="M 22 30 C 22 12, 38 8, 50 8 C 62 8, 78 12, 78 30 L 78 150 C 78 170, 62 174, 50 174 C 38 174, 22 170, 22 150 Z" />
-                        <!-- Windshield -->
-                        <path d="M 28 48 C 42 42, 58 42, 72 48 L 68 70 C 52 66, 48 66, 32 70 Z" fill="#f8f8f8"/>
-                        <!-- Panorama Roof -->
-                        <rect x="31" y="74" width="38" height="52" rx="4" fill="#f0f0f0"/>
-                        <!-- Rear Glass -->
-                        <path d="M 31 130 C 46 127, 54 127, 69 130 L 66 145 C 52 143, 48 143, 34 145 Z" fill="#f8f8f8"/>
-                        <!-- Hood Cut lines -->
-                        <path d="M 25 32 Q 50 38 75 32" stroke="#444" stroke-width="0.8"/>
-                        <!-- Side Mirrors -->
-                        <path d="M 22 52 L 10 46 C 8 46, 8 58, 10 58 L 22 56 Z" fill="#222"/>
-                        <path d="M 78 52 L 90 46 C 92 46, 92 58, 90 58 L 78 56 Z" fill="#222"/>
-                    </g>
-                </svg>
-                <div class="view-label">Вид сверху</div>
+        <!-- Title Bar -->
+        <div class="title-bar">
+            <div class="title-black-box">Акт приёмки - передачи автомобиля в ремонт</div>
+            <div class="title-number-box">
+                № <u style="padding: 0 10px;">{{ car.id }}</u> от «<u>{{ car.created_at.strftime('%d') if car.created_at else '__' }}</u>» <u>{{ car.created_at.strftime('%m') if car.created_at else '__' }}</u> 20<u>{{ car.created_at.strftime('%y') if car.created_at else '__' }}</u> г.
             </div>
+        </div>
 
-            <!-- Front & Rear Views -->
-            <div class="diagram-col">
-                <div>
-                    <svg viewBox="0 0 160 70" height="68">
-                        <g stroke="#111" stroke-width="1.2" fill="none" stroke-linejoin="round" stroke-linecap="round">
-                            <!-- Body outline -->
-                            <path d="M 20 52 C 18 42, 22 24, 38 18 C 50 12, 110 12, 122 18 C 138 24, 142 42, 140 52 L 140 60 C 140 64, 134 66, 80 66 C 26 66, 20 64, 20 60 Z"/>
-                            <!-- Windshield -->
-                            <path d="M 38 20 C 50 14, 110 14, 122 20 L 115 36 C 85 33, 75 33, 45 36 Z" fill="#f8f8f8"/>
-                            <!-- Headlights -->
-                            <path d="M 24 40 Q 45 38 56 46 Q 38 50 24 40 Z" fill="#eee"/>
-                            <path d="M 136 40 Q 115 38 104 46 Q 122 50 136 40 Z" fill="#eee"/>
-                            <!-- License Plate & Grille -->
-                            <rect x="62" y="48" width="36" height="10" rx="1" fill="#fff"/>
-                            <!-- Tires -->
-                            <rect x="14" y="48" width="7" height="14" rx="2" fill="#222"/>
-                            <rect x="139" y="48" width="7" height="14" rx="2" fill="#222"/>
-                        </g>
-                    </svg>
-                    <div class="view-label">Спереди</div>
-                </div>
-                <div>
-                    <svg viewBox="0 0 160 70" height="68">
-                        <g stroke="#111" stroke-width="1.2" fill="none" stroke-linejoin="round" stroke-linecap="round">
-                            <!-- Body outline -->
-                            <path d="M 20 52 C 18 42, 22 24, 38 18 C 50 12, 110 12, 122 18 C 138 24, 142 42, 140 52 L 140 60 C 140 64, 134 66, 80 66 C 26 66, 20 64, 20 60 Z"/>
-                            <!-- Rear Window -->
-                            <path d="M 38 20 C 50 14, 110 14, 122 20 L 115 36 C 85 33, 75 33, 45 36 Z" fill="#f8f8f8"/>
-                            <!-- Taillights -->
-                            <path d="M 22 38 L 138 38 L 136 46 L 24 46 Z" fill="#f0f0f0"/>
-                            <!-- License Plate -->
-                            <rect x="62" y="48" width="36" height="10" rx="1" fill="#fff"/>
-                            <!-- Tires -->
-                            <rect x="14" y="48" width="7" height="14" rx="2" fill="#222"/>
-                            <rect x="139" y="48" width="7" height="14" rx="2" fill="#222"/>
-                        </g>
-                    </svg>
-                    <div class="view-label">Сзади</div>
+        <!-- Block 1: Customer Data & Car Info -->
+        <div class="grid-2">
+            <!-- Customer Data -->
+            <div class="block-box">
+                <div class="block-header">Данные клиента</div>
+                <div class="block-content">
+                    <div class="form-row">
+                        <span class="form-label">ФИО / Наименование:</span>
+                        <div class="form-line">{{ car.owner.full_name }}</div>
+                    </div>
+                    <div class="form-row">
+                        <span class="form-label">Телефон:</span>
+                        <div class="form-line">{{ car.owner.phone }}</div>
+                    </div>
+                    <div class="form-row">
+                        <span class="form-label">Адрес:</span>
+                        <div class="form-line"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Side Views -->
-            <div class="diagram-col">
-                <div>
-                    <svg viewBox="0 0 220 70" height="68">
-                        <g stroke="#111" stroke-width="1.2" fill="none" stroke-linejoin="round" stroke-linecap="round">
-                            <!-- Body Silhouette Right -->
-                            <path d="M 8 46 C 14 38, 32 36, 54 33 C 72 30, 86 14, 114 10 C 156 4, 184 8, 198 18 C 208 24, 214 38, 208 50 L 198 54 L 8 54 Z"/>
-                            <!-- Windows -->
-                            <path d="M 92 14 L 118 10 C 152 8, 178 12, 186 20 L 176 30 C 136 30, 92 30, 92 14 Z" fill="#f8f8f8"/>
-                            <path d="M 88 14 L 88 30 L 52 30 L 68 18 Z" fill="#f8f8f8"/>
-                            <!-- Wheels -->
-                            <circle cx="46" cy="54" r="12" fill="#fff" stroke-width="1.8"/>
-                            <circle cx="164" cy="54" r="12" fill="#fff" stroke-width="1.8"/>
-                            <circle cx="46" cy="54" r="4" fill="#000"/>
-                            <circle cx="164" cy="54" r="4" fill="#000"/>
-                        </g>
-                    </svg>
-                    <div class="view-label">Правый бок</div>
-                </div>
-                <div>
-                    <svg viewBox="0 0 220 70" height="68">
-                        <g stroke="#111" stroke-width="1.2" fill="none" stroke-linejoin="round" stroke-linecap="round">
-                            <!-- Body Silhouette Left -->
-                            <path d="M 212 46 C 206 38, 188 36, 166 33 C 148 30, 134 14, 106 10 C 64 4, 36 8, 22 18 C 12 24, 6 38, 12 50 L 22 54 L 212 54 Z"/>
-                            <!-- Windows -->
-                            <path d="M 128 14 L 102 10 C 68 8, 42 12, 34 20 L 44 30 C 84 30, 128 30, 128 14 Z" fill="#f8f8f8"/>
-                            <path d="M 132 14 L 132 30 L 168 30 L 152 18 Z" fill="#f8f8f8"/>
-                            <!-- Wheels -->
-                            <circle cx="174" cy="54" r="12" fill="#fff" stroke-width="1.8"/>
-                            <circle cx="56" cy="54" r="12" fill="#fff" stroke-width="1.8"/>
-                            <circle cx="174" cy="54" r="4" fill="#000"/>
-                            <circle cx="56" cy="54" r="4" fill="#000"/>
-                        </g>
-                    </svg>
-                    <div class="view-label">Левый бок</div>
+            <!-- Car Info -->
+            <div class="block-box">
+                <div class="block-header">Информация об автомобиле</div>
+                <div class="block-content">
+                    <div class="form-row">
+                        <span class="form-label">Марка / Модель:</span>
+                        <div class="form-line" style="flex-grow: 1.2;">{{ car.brand_model }}</div>
+                        <span class="form-label" style="padding-left: 4px;">Гос. номер:</span>
+                        <div class="form-line">{{ car.plate_number }}</div>
+                    </div>
+                    <div class="form-row">
+                        <span class="form-label">Год выпуска:</span>
+                        <div class="form-line"></div>
+                        <span class="form-label" style="padding-left: 4px;">Пробег, км:</span>
+                        <div class="form-line">{{ car.mileage }}</div>
+                    </div>
+                    <div class="form-row">
+                        <span class="form-label">Цвет:</span>
+                        <div class="form-line"></div>
+                        <span class="form-label" style="padding-left: 4px;">Кузов №:</span>
+                        <div class="form-line"></div>
+                    </div>
+                    <div class="form-row">
+                        <span class="form-label">VIN:</span>
+                        <div class="form-line" style="flex-grow: 1.5; font-family: monospace; font-size: 9px;">{{ car.vin_code }}</div>
+                        <span class="form-label" style="padding-left: 4px;">Двигатель №:</span>
+                        <div class="form-line"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Legend Marks -->
-        <div class="legend-box">
-            <div class="legend-grid">
-                <div><b>✕</b> — Скол / Повреждение</div>
-                <div><b>◯</b> — Вмятина кузова</div>
-                <div><b>△</b> — Царапина</div>
-                <div><b>П</b> — Потёртость ЛКП</div>
-                <div><b>Т</b> — Трещина стекла / фары</div>
-                <div><b>Р</b> — Разбито / Отсутствует</div>
+        <!-- Block 2: Technical Data & Completeness -->
+        <div class="grid-2">
+            <!-- Tech Data -->
+            <div class="block-box">
+                <div class="block-header">Технические данные</div>
+                <div class="block-content">
+                    <div class="form-row" style="margin-bottom: 4px;">
+                        <span class="form-label">Тип двигателя:</span>
+                        <span style="font-size: 7.5px;">
+                            <span class="square-box"></span>Бензин &nbsp;
+                            <span class="square-box"></span>Дизель &nbsp;
+                            <span class="square-box"></span>Гибрид &nbsp;
+                            <span class="square-box" style="background:#000;"></span>Электро
+                        </span>
+                    </div>
+                    <div class="form-row">
+                        <span class="form-label">Объём, л / Мощность, кВт:</span>
+                        <div class="form-line"></div>
+                    </div>
+                    <div class="form-row" style="margin-bottom: 4px; margin-top: 3px;">
+                        <span class="form-label">Тип КПП:</span>
+                        <span style="font-size: 7.5px;">
+                            <span class="square-box"></span>МКПП &nbsp;
+                            <span class="square-box" style="background:#000;"></span>АКПП &nbsp;
+                            <span class="square-box"></span>Вариатор
+                        </span>
+                    </div>
+                    <div class="form-row">
+                        <span class="form-label">Привод:</span>
+                        <span style="font-size: 7.5px;">
+                            <span class="square-box"></span>Передний &nbsp;
+                            <span class="square-box"></span>Задний &nbsp;
+                            <span class="square-box" style="background:#000;"></span>Полный
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completeness -->
+            <div class="block-box">
+                <div class="block-header">Комплектность автомобиля</div>
+                <div class="block-content">
+                    <div class="check-grid">
+                        <div class="check-item">
+                            <span>Ключи (шт.): <b>{{ car.key_count or '1' }}</b></span>
+                        </div>
+                        <div class="check-item">
+                            <span>Аптечка:</span>
+                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                        </div>
+                        <div class="check-item">
+                            <span>Брелок:</span>
+                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                        </div>
+                        <div class="check-item">
+                            <span>Огнетушитель:</span>
+                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                        </div>
+                        <div class="check-item">
+                            <span>Документы:</span>
+                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                        </div>
+                        <div class="check-item">
+                            <span>Знак авар. остановки:</span>
+                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                        </div>
+                        <div class="check-item">
+                            <span>Запасное колесо:</span>
+                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                        </div>
+                        <div class="check-item">
+                            <span>Компрессор:</span>
+                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                        </div>
+                        <div class="check-item">
+                            <span>Домкрат:</span>
+                            <span><span class="square-box"></span>Да <span class="square-box"></span>Нет</span>
+                        </div>
+                        <div class="check-item">
+                            <span>Зарядное устройство:</span>
+                            <span><span class="square-box" style="background:#000;"></span>Да <span class="square-box"></span>Нет</span>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top: 3px;">
+                        <span class="form-label">Другое:</span>
+                        <div class="form-line"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Notes Section -->
-        <div class="notes-box">
-            <div style="font-weight: 700;">Примечания / Особые замечания Заказчика при сдаче:</div>
-            <div class="ruled-line"></div>
-            <div class="ruled-line"></div>
-            <div class="ruled-line"></div>
+        <!-- Block 3: External Inspection & Car Views -->
+        <div>
+            <div class="inspection-header">
+                <div class="inspection-title">Наружный осмотр состояния автомобиля</div>
+                <div class="inspection-legend">
+                    <span class="legend-tag"><span style="color:#2e7d32;">🟢</span> В - Вмятина</span>
+                    <span class="legend-tag"><span style="color:#1565c0;">🟦</span> С - Скол</span>
+                    <span class="legend-tag"><span style="color:#c62828;">🔺</span> Ц - Цараина</span>
+                    <span class="legend-tag"><span style="color:#d32f2f;">❌</span> Р - Разбито</span>
+                    <span class="legend-tag"><span style="color:#fbc02d;">🟡</span> О - Отсутствует</span>
+                    <span class="legend-tag">П - Повреждение</span>
+                    <span class="legend-tag">Т - Трещина</span>
+                </div>
+            </div>
+
+            <div class="car-views-container">
+                <!-- Front View -->
+                <div>
+                    <svg viewBox="0 0 160 110" width="100%" height="78">
+                        <g stroke="#111" stroke-width="1.3" fill="none" stroke-linejoin="round">
+                            <path d="M 25 75 C 22 62, 26 35, 42 24 C 54 16, 106 16, 118 24 C 134 35, 138 62, 135 75 C 135 84, 128 88, 80 88 C 32 88, 25 84, 25 75 Z" fill="#fff"/>
+                            <path d="M 42 26 C 54 18, 106 18, 118 26 L 112 48 C 88 44, 72 44, 48 48 Z" fill="#f4f4f4"/>
+                            <path d="M 28 54 Q 48 50 58 60 Q 38 66 28 54 Z" fill="#eee"/>
+                            <path d="M 132 54 Q 112 50 102 60 Q 122 66 132 54 Z" fill="#eee"/>
+                            <rect x="62" y="68" width="36" height="12" rx="1" fill="#fff"/>
+                            <rect x="18" y="68" width="7" height="16" rx="2" fill="#222"/>
+                            <rect x="135" y="68" width="7" height="16" rx="2" fill="#222"/>
+                        </g>
+                    </svg>
+                    <div class="view-label">Вид спереди</div>
+                </div>
+
+                <!-- Left Side View -->
+                <div>
+                    <svg viewBox="0 0 220 100" width="100%" height="78">
+                        <g stroke="#111" stroke-width="1.3" fill="none" stroke-linejoin="round">
+                            <path d="M 10 60 C 16 50, 34 46, 56 42 C 74 38, 88 18, 116 14 C 158 8, 186 12, 200 24 C 210 32, 214 48, 208 62 L 198 68 L 10 68 Z" fill="#fff"/>
+                            <path d="M 94 18 L 120 14 C 154 12, 180 16, 188 28 L 178 40 C 138 40, 94 40, 94 18 Z" fill="#f4f4f4"/>
+                            <path d="M 90 18 L 90 40 L 54 40 L 70 24 Z" fill="#f4f4f4"/>
+                            <circle cx="48" cy="68" r="14" fill="#fff" stroke-width="2"/>
+                            <circle cx="166" cy="68" r="14" fill="#fff" stroke-width="2"/>
+                            <circle cx="48" cy="68" r="5" fill="#111"/>
+                            <circle cx="166" cy="68" r="5" fill="#111"/>
+                        </g>
+                    </svg>
+                    <div class="view-label">Левая сторона</div>
+                </div>
+
+                <!-- Top View -->
+                <div>
+                    <svg viewBox="0 0 100 180" width="100%" height="95">
+                        <g stroke="#111" stroke-width="1.3" fill="none" stroke-linejoin="round">
+                            <rect x="20" y="8" width="60" height="164" rx="26" fill="#fff"/>
+                            <path d="M 28 42 C 42 36, 58 36, 72 42 L 68 64 C 52 60, 48 60, 32 64 Z" fill="#f4f4f4"/>
+                            <rect x="30" y="68" width="40" height="54" rx="4" fill="#eee"/>
+                            <path d="M 30 130 C 46 126, 54 126, 70 130 L 66 144 C 52 142, 48 142, 34 144 Z" fill="#f4f4f4"/>
+                            <path d="M 20 48 L 10 42 L 10 56 Z" fill="#111"/>
+                            <path d="M 80 48 L 90 42 L 90 56 Z" fill="#111"/>
+                        </g>
+                    </svg>
+                    <div class="view-label">Вид сверху</div>
+                </div>
+
+                <!-- Right Side View -->
+                <div>
+                    <svg viewBox="0 0 220 100" width="100%" height="78">
+                        <g stroke="#111" stroke-width="1.3" fill="none" stroke-linejoin="round">
+                            <path d="M 210 60 C 204 50, 186 46, 164 42 C 146 38, 132 18, 104 14 C 62 8, 34 12, 20 24 C 10 32, 6 48, 12 62 L 22 68 L 210 68 Z" fill="#fff"/>
+                            <path d="M 126 18 L 100 14 C 66 12, 40 16, 32 28 L 42 40 C 82 40, 126 40, 126 18 Z" fill="#f4f4f4"/>
+                            <path d="M 130 18 L 130 40 L 166 40 L 150 24 Z" fill="#f4f4f4"/>
+                            <circle cx="172" cy="68" r="14" fill="#fff" stroke-width="2"/>
+                            <circle cx="54" cy="68" r="14" fill="#fff" stroke-width="2"/>
+                            <circle cx="172" cy="68" r="5" fill="#111"/>
+                            <circle cx="54" cy="68" r="5" fill="#111"/>
+                        </g>
+                    </svg>
+                    <div class="view-label">Правая сторона</div>
+                </div>
+
+                <!-- Rear View -->
+                <div>
+                    <svg viewBox="0 0 160 110" width="100%" height="78">
+                        <g stroke="#111" stroke-width="1.3" fill="none" stroke-linejoin="round">
+                            <path d="M 25 75 C 22 62, 26 35, 42 24 C 54 16, 106 16, 118 24 C 134 35, 138 62, 135 75 C 135 84, 128 88, 80 88 C 32 88, 25 84, 25 75 Z" fill="#fff"/>
+                            <path d="M 42 26 C 54 18, 106 18, 118 26 L 112 48 C 88 44, 72 44, 48 48 Z" fill="#f4f4f4"/>
+                            <path d="M 27 52 L 133 52 L 130 60 L 30 60 Z" fill="#d32f2f"/>
+                            <rect x="62" y="68" width="36" height="12" rx="1" fill="#fff"/>
+                            <rect x="18" y="68" width="7" height="16" rx="2" fill="#222"/>
+                            <rect x="135" y="68" width="7" height="16" rx="2" fill="#222"/>
+                        </g>
+                    </svg>
+                    <div class="view-label">Вид сзади</div>
+                </div>
+            </div>
         </div>
 
-        <!-- Full Legal Terms & Force Majeure Section -->
-        <div class="legal-block">
-            <strong>ОСОБЫЕ УСЛОВИЯ, ФОРС-МАЖОР И ОГРАНИЧЕНИЕ ОТВЕТСТВЕННОСТИ:</strong><br>
-            1. <strong>Ценные вещи:</strong> Исполнитель НЕ несет ответственности за сохранность денежных средств, документов, мобильных телефонов, драгоценностей и иных ценных вещей, оставленных в салоне или багажнике автомобиля.<br>
-            2. <strong>Скрытые дефекты и загрязнения:</strong> При сдаче автомобиля в грязном виде, а также при наличии дефектов внутренних узлов/агрегатов, осмотр производится поверхностно. Исполнитель не несет ответственности за скрытые повреждения кузова, ЛКП и стекол, выявленные после мойки или в процессе ремонта.<br>
-            3. <strong>Форс-мажор:</strong> Стороны освобождаются от ответственности за частичное или полное неисполнение обязательств по настоящему договору, если оно явилось следствием обстоятельств непреодолимой силы (стихийные бедствия, пожар, военные действия, отключение электроэнергии/коммуникаций, решения государственных органов), возникших после приёма ТС.<br>
-            4. <strong>Согласие Заказчика:</strong> Заказчик подтверждает, что ознакомлен и согласен с прейскурантом, правилами оказания услуг и условиями проведения работ. Разрешает проведение технологической мойки и тестовой поездки.
+        <!-- Block 4: Tire Condition & Customer Spare Parts -->
+        <div class="grid-2">
+            <!-- Tire Condition -->
+            <div class="block-box">
+                <div class="block-header">Состояние шин</div>
+                <div style="padding: 2px;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Позиция</th>
+                                <th>Глубина протектора, мм</th>
+                                <th>Внешние повреждения</th>
+                                <th>Шина в порядке</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align: left;">Переднее левое</td>
+                                <td></td>
+                                <td><span class="square-box"></span>Да <span class="square-box"></span>Нет</td>
+                                <td><span class="square-box" style="background:#000;"></span>Да <span class="square-box"></span>Нет</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">Переднее правое</td>
+                                <td></td>
+                                <td><span class="square-box"></span>Да <span class="square-box"></span>Нет</td>
+                                <td><span class="square-box" style="background:#000;"></span>Да <span class="square-box"></span>Нет</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">Заднее левое</td>
+                                <td></td>
+                                <td><span class="square-box"></span>Да <span class="square-box"></span>Нет</td>
+                                <td><span class="square-box" style="background:#000;"></span>Да <span class="square-box"></span>Нет</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left;">Заднее правое</td>
+                                <td></td>
+                                <td><span class="square-box"></span>Да <span class="square-box"></span>Нет</td>
+                                <td><span class="square-box" style="background:#000;"></span>Да <span class="square-box"></span>Нет</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Customer Spare Parts -->
+            <div class="block-box">
+                <div class="block-header">Запчасти заказчика (переданные с автомобилем)</div>
+                <div style="padding: 2px;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 20px;">№</th>
+                                <th>Наименование</th>
+                                <th style="width: 45px;">Кол-во</th>
+                                <th>Примечание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td></td><td></td><td></td></tr>
+                            <tr><td>2</td><td></td><td></td><td></td></tr>
+                            <tr><td>3</td><td></td><td></td><td></td></tr>
+                            <tr><td>4</td><td></td><td></td><td></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disclaimer Note -->
+        <div style="font-size: 7px; color: #333; margin-top: 4px; line-height: 1.2;">
+            <b>Примечание:</b> За оставленные в салоне ценные вещи исполнитель ответственности не несет. Автомобиль принят в грязном виде, возможны скрытые повреждения ЛКП. С правилами оказания услуг заказчик ознакомлен и согласен.
         </div>
 
         <!-- Signatures Block -->
-        <table class="sig-table">
-            <tr>
-                <td style="width: 50%;">
-                    <strong>Сдал (Заказчик):</strong> <span class="sig-line"></span><br>
-                    <span style="font-size: 7px; color: #444; padding-left: 95px;">(Подпись / Ф.И.О.)</span>
-                </td>
-                <td style="width: 50%;">
-                    <strong>Принял (Исполнитель):</strong> <span class="sig-line"></span><br>
-                    <span style="font-size: 7px; color: #444; padding-left: 110px;">(Подпись / Ф.И.О. мастера)</span>
-                </td>
-            </tr>
-            <tr>
-                <td style="padding-top: 8px;">
-                    <strong>Автомобиль сдал (Исполнитель):</strong> <span class="sig-line"></span><br>
-                    <span style="font-size: 7px; color: #444; padding-left: 140px;">(Подпись / Ф.И.О. мастера)</span>
-                </td>
-                <td style="padding-top: 8px;">
-                    <strong>Автомобиль принял (Заказчик):</strong> <span class="sig-line"></span><br>
-                    <span style="font-size: 7px; color: #444; padding-left: 140px;">(Претензий к качеству не имею)</span>
-                </td>
-            </tr>
-        </table>
-
-        <!-- Footer -->
-        <div style="border-top: 1px solid #aaa; margin-top: 8px; pt: 3px; font-size: 7.5px; text-align: center; color: #444;">
-            Сервисный центр: {{ car.filial or 'Ташкент, Сергели' }} • Телефон поддержки: +998 (95) 881-63-93
+        <div class="sig-block">
+            <div>
+                <div class="sig-line-item">
+                    <span>Автомобиль сдал (Заказчик):</span>
+                    <div class="form-line"></div>
+                </div>
+                <div style="font-size: 6.5px; color: #555; text-align: right; padding-right: 20px;">(Подпись / Расшифровка)</div>
+            </div>
+            <div>
+                <div class="sig-line-item">
+                    <span>Автомобиль принял (Мастер):</span>
+                    <div class="form-line"></div>
+                </div>
+                <div style="font-size: 6.5px; color: #555; text-align: right; padding-right: 20px;">(Подпись / Расшифровка)</div>
+            </div>
         </div>
+
     </div>
 
 </body>
