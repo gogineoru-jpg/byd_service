@@ -32,6 +32,10 @@
 
         .out-of-stock { color: #ff5252; font-weight: bold; }
         .in-stock { color: #4CAF50; font-weight: bold; }
+
+        .filial-tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; display: inline-block; }
+        .filial-sergeli { background: #1976D2; } /* Синий */
+        .filial-tsiolkovsky { background: #D32F2F; } /* Красный */
     </style>
 </head>
 <body>
@@ -45,7 +49,6 @@
         </div>
     </div>
 
-    <!-- Форма добавления запчасти (ТОЛЬКО ДЛЯ АДМИНИСТРАТОРА) -->
     {% if current_user.is_admin %}
     <div class="card" style="border-color: #d32f2f;">
         <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #ff5252;">👑 Приход запчасти на склад (Администратор)</h3>
@@ -85,7 +88,6 @@
     </div>
     {% endif %}
 
-    <!-- Фильтр и поиск -->
     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
         <form method="get" action="/warehouse" style="display: flex; gap: 10px; width: 100%;">
             <input type="text" name="search" value="{{ search }}" placeholder="Поиск по названию или артикулу..." style="max-width: 350px;">
@@ -99,7 +101,6 @@
         </form>
     </div>
 
-    <!-- Таблица остатков -->
     <div class="table-container">
         <table>
             <thead>
@@ -122,7 +123,11 @@
                     <td><b>#{{ part.id }}</b></td>
                     <td><b>{{ part.name }}</b></td>
                     <td style="font-family: monospace;">{{ part.part_code or '-' }}</td>
-                    <td>{{ part.filial }}</td>
+                    <td>
+                        <span class="filial-tag {% if 'Сергели' in part.filial %}filial-sergeli{% else %}filial-tsiolkovsky{% endif %}">
+                            {{ part.filial }}
+                        </span>
+                    </td>
                     <td class="{% if part.quantity > 0 %}in-stock{% else %}out-of-stock{% endif %}">
                         {{ part.quantity }} шт.
                     </td>
