@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анализ и отчёты — BYD Help</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { margin: 0; background-color: #121212; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #d32f2f; padding-bottom: 15px; margin-bottom: 20px; }
+        .brand { font-size: 22px; font-weight: 900; letter-spacing: 1px; }
+        .brand span { color: #d32f2f; }
+        
+        .btn { padding: 8px 16px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 13px; display: inline-block; }
+        .btn-secondary { background: #333; color: #fff; border: 1px solid #555; }
+        .btn-secondary:hover { background: #444; }
+        .btn-primary { background: #2196F3; color: #fff; }
+        .btn-primary:hover { background: #1976D2; }
+
+        .filter-card { background: #1e1e1e; border: 1px solid #333; border-radius: 6px; padding: 20px; margin-bottom: 25px; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: flex-end; }
+        label { display: block; font-size: 11px; text-transform: uppercase; color: #888; font-weight: bold; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 8px 12px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 14px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: #1e1e1e; border: 1px solid #333; border-radius: 6px; padding: 20px; }
+        .stat-title { font-size: 11px; text-transform: uppercase; color: #888; font-weight: bold; }
+        .stat-value { font-size: 26px; font-weight: bold; color: #fff; margin: 8px 0; }
+
+        .table-container { background: #1e1e1e; border-radius: 6px; border: 1px solid #333; overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        th { background: #2a2a2a; color: #bbb; padding: 12px; font-weight: 600; border-bottom: 1px solid #333; }
+        td { padding: 12px; border-bottom: 1px solid #2a2a2a; }
+        tr:hover { background: #252525; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="brand"><span>BYD</span> HELP — АНАЛИТИКА И ОТЧЁТЫ</div>
+        <div>
+            <a href="/" class="btn btn-secondary">← На главную</a>
+        </div>
+    </div>
+
+    <!-- Форма выбора периода -->
+    <div class="filter-card">
+        <h3 style="margin: 0 0 15px 0; font-size: 15px; color: #fff;">📅 Выберите период для анализа</h3>
+        <form method="get" action="/analytics">
+            <div class="filter-grid">
+                <div>
+                    <label>С даты:</label>
+                    <input type="date" name="start_date" value="{{ start_date }}" required>
+                </div>
+                <div>
+                    <label>По дату:</label>
+                    <input type="date" name="end_date" value="{{ end_date }}" required>
+                </div>
+                <div>
+                    <label>Филиал:</label>
+                    <select name="filial">
+                        <option value="all" {% if current_filial == 'all' %}selected{% endif %}>Все филиалы</option>
+                        {% for f in filials %}
+                        <option value="{{ f }}" {% if current_filial == f %}selected{% endif %}>{{ f }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 9px;">📊 Сформировать отчёт</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Финансовые итоги за период -->
+    <div class="stats-grid">
+        <div class="stat-card" style="border-color: #2196F3;">
+            <div class="stat-title">ОБЩАЯ ВЫРУЧКА ЗА ПЕРИОД</div>
+            <div class="stat-value" style="color: #64B5F6;">{{ "{:,.0f}".format(total_revenue).replace(',', ' ') }} <span style="font-size: 14px;">сум</span></div>
+            <div style="font-size: 12px; color: #aaa;">Обслужено автомобилей: <b>{{ total_cars }}</b></div>
+        </div>
+
+        <div class="stat-card" style="border-color: #4CAF50;">
+            <div class="stat-title">🛠️ ВЫРУЧКА ЗА РАБОТЫ</div>
+            <div class="stat-value" style="color: #81C784;">{{ "{:,.0f}".format(total_works_revenue).replace(',', ' ') }} <span style="font-size: 14px;">сум</span></div>
+            <div style="font-size: 12px; color: #aaa;">Услуги и диагностика сервиса</div>
+        </div>
+
+        <div class="stat-card" style="border-color: #FF9800;">
+            <div class="stat-title">📦 ВЫРУЧКА ЗА ЗАПЧАСТИ</div>
+            <div class="stat-value" style="color: #FFB74D;">{{ "{:,.0f}".format(total_parts_revenue).replace(',', ' ') }} <span style="font-size: 14px;">сум</span></div>
+            <div style="font-size: 12px; color: #aaa;">Реализация со склада</div>
+        </div>
+    </div>
+
+    <!-- Анализ по востребованности услуг -->
+    <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #fff;">🏆 Анализ востребованности услуг и работ за выбранный период</div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50px;">№</th>
+                    <th>Наименование услуги / работы</th>
+                    <th style="width: 150px; text-align: center;">Количество заказов</th>
+                    <th style="width: 200px; text-align: right;">Сумма выручки (сум)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for work_name, data in sorted_works %}
+                <tr>
+                    <td><b>#{{ loop.index }}</b></td>
+                    <td><b>{{ work_name }}</b></td>
+                    <td style="text-align: center;"><span style="background: #2a2a2a; padding: 3px 10px; border-radius: 4px; border: 1px solid #444;">{{ data.count }} раз(а)</span></td>
+                    <td style="text-align: right; color: #81C784; font-weight: bold;">{{ "{:,.0f}".format(data.sum).replace(',', ' ') }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #666; padding: 30px;">За выбранный период работы не выполнялись</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>
