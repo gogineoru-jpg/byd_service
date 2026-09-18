@@ -1,226 +1,458 @@
 <!DOCTYPE html>
+
 <html lang="ru">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Акт приёма-передачи № {{ car.id }}</title>
+
     <style>
+
         * { box-sizing: border-box; font-family: 'Helvetica Neue', Arial, sans-serif; }
+
         body { background: #e0e0e0; color: #000; padding: 15px; margin: 0; }
+
         .page { background: #fff; max-width: 820px; margin: 0 auto; padding: 25px 35px; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+
         
+
         .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 14px; }
+
         .header h1 { margin: 0; font-size: 17px; text-transform: uppercase; letter-spacing: 1px; }
+
         .header p { margin: 3px 0 0; font-size: 11px; color: #333; }
 
+
+
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px; }
+
         .block-title { font-weight: bold; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 6px; color: #000; }
+
         
+
         table.data-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+
         table.data-table td { padding: 2px 0; vertical-align: top; }
+
         table.data-table td.label { font-weight: bold; color: #444; width: 42%; }
 
+
+
         .car-schema-section { margin-bottom: 12px; }
+
         .car-schema-container { 
+
             display: flex; 
+
             justify-content: space-between; 
+
             align-items: center; 
+
             border: 1px solid #888; 
+
             padding: 8px 10px; 
+
             border-radius: 4px; 
+
             background: #fafafa; 
+
         }
+
         .schema-card { text-align: center; }
+
         .schema-label { font-size: 10px; font-weight: bold; margin-bottom: 4px; color: #222; text-transform: uppercase; }
+
         .car-svg { stroke: #000; stroke-width: 1.5; fill: none; }
 
+
+
         .inspection-section { margin-bottom: 12px; }
+
         .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 10.5px; border: 1px solid #888; padding: 8px; border-radius: 4px; background: #fafafa; }
+
         .checklist-item { display: flex; align-items: center; gap: 5px; }
 
+
+
         .terms-section { font-size: 9.5px; line-height: 1.3; color: #111; margin-bottom: 15px; border-top: 1px solid #000; padding-top: 8px; }
+
         .terms-section h3 { margin: 0 0 4px; font-size: 10.5px; text-transform: uppercase; text-align: center; }
+
         .terms-section p { margin: 0 0 4px; text-align: justify; }
+
         .terms-section ol { margin: 0; padding-left: 14px; }
+
         .terms-section ul { margin: 2px 0 3px; padding-left: 14px; }
+
         .terms-section li { margin-bottom: 2px; text-align: justify; }
 
+
+
         .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 18px; font-size: 10.5px; }
+
         .sig-box { border-top: 1px solid #000; padding-top: 5px; text-align: center; }
 
+
+
         .no-print { text-align: center; margin-bottom: 12px; }
+
         .btn-print { background: #d32f2f; color: white; padding: 8px 20px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
 
+
+
         @media print {
+
             body { background: none; padding: 0; }
+
             .page { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+
             .no-print { display: none; }
+
         }
+
     </style>
+
 </head>
+
 <body>
 
+
+
 <div class="no-print">
+
     <button onclick="window.print()" class="btn-print">🖨️ Распечатать Акт приёма-передачи</button>
+
 </div>
+
+
 
 <div class="page">
+
     <div class="header">
+
         <h1>АКТ ПРИЁМА-ПЕРЕДАЧИ ТРАНСПОРТНОГО СРЕДСТВА № {{ car.id }}</h1>
+
         <p>Приложение к заказу-наряду | {{ car.filial }}</p>
+
     </div>
+
+
 
     <div class="info-grid">
+
         <div>
+
             <div class="block-title">Заказчик (Владелец):</div>
+
             <table class="data-table">
+
                 <tr><td class="label">Ф.И.О.:</td><td><b>{{ car.owner.full_name if car.owner else 'Не указан' }}</b></td></tr>
+
                 <tr><td class="label">Телефон:</td><td>{{ car.owner.phone if car.owner else '-' }}</td></tr>
+
                 <tr><td class="label">Дата и время:</td><td>{{ car.created_at.strftime('%d.%m.%Y %H:%M') if car.created_at else '-' }}</td></tr>
+
                 <tr><td class="label">Мастер:</td><td>{{ car.created_by or 'Мастер-приёмщик' }}</td></tr>
+
             </table>
+
         </div>
+
         <div>
+
             <div class="block-title">Транспортное средство:</div>
+
             <table class="data-table">
+
                 <tr><td class="label">Марка / Модель:</td><td>{{ car.brand_model }} ({{ car.manufacture_year }} г.)</td></tr>
+
                 <tr><td class="label">Гос. номер:</td><td><b>{{ car.plate_number }}</b></td></tr>
+
                 <tr><td class="label">VIN-код:</td><td>{{ car.vin_code }}</td></tr>
+
                 <tr><td class="label">Тип привода / Бат.:</td><td>{{ car.engine_type or '-' }} | SOH: {{ car.soh_percent or 100 }}%</td></tr>
+
                 <tr><td class="label">Пробег EV / HEV:</td><td>EV: {{ "{:,.0f}".format(car.ev_mileage or 0).replace(',', ' ') }} км | HEV: {{ "{:,.0f}".format(car.hev_mileage or 0).replace(',', ' ') }} км</td></tr>
+
                 <tr><td class="label">Общий пробег (ODO):</td><td><b>{{ "{:,.0f}".format(car.mileage or 0).replace(',', ' ') }} км</b></td></tr>
+
             </table>
+
         </div>
+
     </div>
+
+
 
     <div class="car-schema-section">
+
         <div class="block-title">Схема осмотра кузова (Обозначения: Х — царапина, О — вмятина, V — скол, Т — трещина):</div>
+
         <div class="car-schema-container">
+
             <div class="schema-card">
+
                 <div class="schema-label">Спереди</div>
+
                 <svg class="car-svg" viewBox="0 0 120 80" width="90" height="60">
+
                     <path d="M 20 28 L 30 8 L 90 8 L 100 28 Z" />
+
                     <rect x="8" y="28" width="104" height="38" rx="2" />
+
                     <rect x="14" y="34" width="20" height="14" />
+
                     <rect x="86" y="34" width="20" height="14" />
+
                     <rect x="40" y="34" width="40" height="14" />
+
                     <rect x="10" y="58" width="100" height="10" rx="2" />
+
                     <rect x="12" y="68" width="18" height="8" fill="#333" />
+
                     <rect x="90" y="68" width="18" height="8" fill="#333" />
+
                 </svg>
+
             </div>
 
+
+
             <div class="schema-card">
+
                 <div class="schema-label">Слева</div>
+
                 <svg class="car-svg" viewBox="0 0 180 80" width="160" height="70">
+
                     <path d="M 8 52 L 8 38 L 35 38 L 56 10 L 142 10 L 165 24 L 165 52 Z" />
+
                     <polygon points="58,14 92,14 92,35 43,35" />
+
                     <polygon points="98,14 136,14 154,26 98,35" />
+
                     <line x1="95" y1="14" x2="95" y2="56" />
+
                     <line x1="40" y1="35" x2="40" y2="56" />
+
                     <line x1="148" y1="35" x2="148" y2="56" />
+
                     <line x1="82" y1="39" x2="91" y2="39" stroke-width="2.5" />
+
                     <line x1="134" y1="39" x2="143" y2="39" stroke-width="2.5" />
+
                     <circle cx="44" cy="54" r="13" fill="#fff" />
+
                     <circle cx="44" cy="54" r="8" />
+
                     <circle cx="134" cy="54" r="13" fill="#fff" />
+
                     <circle cx="134" cy="54" r="8" />
+
                 </svg>
+
             </div>
 
+
+
             <div class="schema-card">
+
                 <div class="schema-label">Сверху</div>
+
                 <svg class="car-svg" viewBox="0 0 80 140" width="55" height="95">
+
                     <rect x="10" y="8" width="60" height="124" rx="4" />
+
                     <line x1="10" y1="38" x2="70" y2="38" />
+
                     <polygon points="14,41 66,41 62,54 18,54" />
+
                     <rect x="16" y="56" width="48" height="42" />
+
                     <polygon points="18,100 62,100 66,112 14,112" />
+
                     <line x1="10" y1="118" x2="70" y2="118" />
+
                     <rect x="14" y="8" width="12" height="4" fill="#333" />
+
                     <rect x="54" y="8" width="12" height="4" fill="#333" />
+
                 </svg>
+
             </div>
 
+
+
             <div class="schema-card">
+
                 <div class="schema-label">Справа</div>
+
                 <svg class="car-svg" viewBox="0 0 180 80" width="160" height="70">
+
                     <path d="M 172 52 L 172 38 L 145 38 L 124 10 L 38 10 L 15 24 L 15 52 Z" />
+
                     <polygon points="122,14 88,14 88,35 137,35" />
+
                     <polygon points="82,14 44,14 26,26 82,35" />
+
                     <line x1="85" y1="14" x2="85" y2="56" />
+
                     <line x1="140" y1="35" x2="140" y2="56" />
+
                     <line x1="32" y1="35" x2="32" y2="56" />
+
                     <line x1="98" y1="39" x2="89" y2="39" stroke-width="2.5" />
+
                     <line x1="46" y1="39" x2="37" y2="39" stroke-width="2.5" />
+
                     <circle cx="136" cy="54" r="13" fill="#fff" />
+
                     <circle cx="136" cy="54" r="8" />
+
                     <circle cx="46" cy="54" r="13" fill="#fff" />
+
                     <circle cx="46" cy="54" r="8" />
+
                 </svg>
+
             </div>
 
+
+
             <div class="schema-card">
+
                 <div class="schema-label">Сзади</div>
+
                 <svg class="car-svg" viewBox="0 0 120 80" width="90" height="60">
+
                     <path d="M 20 28 L 30 8 L 90 8 L 100 28 Z" />
+
                     <rect x="8" y="28" width="104" height="38" rx="2" />
+
                     <rect x="14" y="34" width="20" height="14" />
+
                     <rect x="86" y="34" width="20" height="14" />
+
                     <rect x="42" y="40" width="36" height="12" stroke-dasharray="2 2" />
+
                     <rect x="10" y="58" width="100" height="10" rx="2" />
+
                     <rect x="12" y="68" width="18" height="8" fill="#333" />
+
                     <rect x="90" y="68" width="18" height="8" fill="#333" />
+
                 </svg>
+
             </div>
+
         </div>
+
     </div>
+
+
 
     <div class="inspection-section">
+
         <div class="block-title">Комплектация и внешнее состояние:</div>
+
         <div class="checklist-grid">
+
             <div class="checklist-item">☐ Техпаспорт / СТС</div>
+
             <div class="checklist-item">☐ Ключ от авто (____ шт.)</div>
+
             <div class="checklist-item">☐ Зарядное устройство / Кабель</div>
+
             <div class="checklist-item">☐ Запасное колесо / Ремкомплект</div>
+
             <div class="checklist-item">☐ Щётки стеклоочистителя</div>
+
             <div class="checklist-item">☐ Комплект ковриков</div>
+
             <div class="checklist-item">☐ Сколы / Царапины ЛКП</div>
+
             <div class="checklist-item">☐ Повреждения стёкол / Оптики</div>
+
             <div class="checklist-item">☐ Загрязнения салона / Кузова</div>
+
         </div>
+
     </div>
+
+
 
     <div class="terms-section">
+
         <h3>Условия оказания услуг, ответственность и форс-мажор</h3>
+
         <ol>
+
             <li><b>Ответственность за имущество:</b> Автосервис несет ответственность за сохранность ТС только в период его нахождения на территории автосервиса. Автосервис НЕ несет ответственности за ценные вещи, денежные средства, антиквариат и документы, оставленные в салоне ТС и не сданные по отдельной письменной описи.</li>
+
             <li><b>Порядок выгрузки и хранения:</b> Заказчик обязуется забрать ТС и подписать выполненные работы в течение 24 часов с момента уведомления о готовности. В случае просрочки автосервис оставляет за собой право начислить плату за ответственное хранение ТС согласно действующему прейскуранту.</li>
+
             <li><b>Форс-мажорные обстоятельства (Обстоятельства непреодолимой силы):</b>
+
                 Стороны освобождаются от ответственности за частичное или полное неисполнение обязательств по настоящему Акту, а также за повреждение, порчу или гибель ТС, если это явилось следствием событий непреодолимой силы, которые Стороны не могли предвидеть или предотвратить разумными мерами:
+
                 <ul>
+
                     <li>Стихийные бедствия: землетрясения, наводнения, пожары природного или техногенного характера, оползни, ураганы, град, молнии и другие опасные природные явления;</li>
+
                     <li>Военные действия любого характера, теракты, диверсии, массовые беспорядки, введение военного или чрезвычайного положения, комендантского часа;</li>
+
                     <li>Аварии на городском/региональном уровне: аварийные отключения и перепады электроэнергии, водоснабжения, газоснабжения или линий связи;</li>
+
                     <li>Нормативные акты и действия органов государственной власти, блокирующие или существенно затрудняющие производственную деятельность Сервиса;</li>
+
                     <li>Иные техногенные и катастрофические события вне зоны контроля и ответственности Исполнителя.</li>
+
                 </ul>
+
             </li>
+
             <li>При наступлении форс-мажорных обстоятельств срок выполнения работ соразмерно сдвигается на период действия указанных обстоятельств и их последствий.</li>
+
         </ol>
+
     </div>
+
+
 
     <div class="signatures">
+
         <div class="sig-box">
+
             <b>Сдал (Заказчик):</b><br><br><br>
+
             ______________________ / {{ car.owner.full_name if car.owner else 'Заказчик' }} /
+
         </div>
+
         <div class="sig-box">
+
             <b>Принял (Исполнитель):</b><br><br><br>
+
             ______________________ / {{ car.created_by or 'Мастер-приёмщик' }} /
+
         </div>
+
     </div>
+
 </div>
 
+
+
 </body>
+
 </html>
+
+
+
+
+
+
+
+dobav kod suda 
+
