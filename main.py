@@ -3,7 +3,7 @@ import uvicorn
 import secrets
 from datetime import datetime, date
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
-from fastapi.templating import Jinja2Templates
+from fastapi.templating import Jinja2templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, or_, text, func
