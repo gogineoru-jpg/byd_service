@@ -687,6 +687,9 @@ def delete_work(work_id: int, db: Session = Depends(get_db), user: dict = Depend
         db.delete(work)
         db.commit()
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+    @app.route('/defect-act')
+def defect_act():
+    return render_template('inspection_act.html')
 
 @app.post("/delete-part/{part_id}")
 def delete_part(part_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
