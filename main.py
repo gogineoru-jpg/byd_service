@@ -167,7 +167,7 @@ for statement in migrations:
                 pass
 
 app = FastAPI(title="BYD help CRM")
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="шаблоны") # Убедитесь, что папка называется шаблоны или templates
 
 def get_db():
     db = SessionLocal()
@@ -215,7 +215,6 @@ def get_daily_sum(
         "cars_count": len(cars)
     }
 
-# Страница финансовой и услуговой аналитики за период
 @app.get("/analytics", response_class=HTMLResponse)
 def analytics_page(
     request: Request,
@@ -227,7 +226,7 @@ def analytics_page(
 ):
     today_str = datetime.now().strftime("%Y-%m-%d")
     if not start_date:
-        start_date = datetime.now().strftime("%Y-%m-01") # с 1 числа текущего месяца
+        start_date = datetime.now().strftime("%Y-%m-01")
     if not end_date:
         end_date = today_str
 
@@ -244,7 +243,7 @@ def analytics_page(
     total_revenue = 0.0
     total_works_revenue = 0.0
     total_parts_revenue = 0.0
-    works_stats = {} # { "Наименование работы": {"count": кол-во, "sum": сумма} }
+    works_stats = {}
 
     for car in cars:
         w_sum = sum(w.price for w in car.works if w.price)
@@ -265,7 +264,6 @@ def analytics_page(
         total_works_revenue += w_final
         total_parts_revenue += p_final
 
-        # Собираем статистику по популярности работ
         for work in car.works:
             desc = work.description.strip()
             if desc not in works_stats:
@@ -273,12 +271,11 @@ def analytics_page(
             works_stats[desc]["count"] += 1
             works_stats[desc]["sum"] += (work.price * (w_final / w_sum) if w_sum > 0 else 0)
 
-    # Сортируем работы по популярности (количеству заказов)
     sorted_works = sorted(works_stats.items(), key=lambda x: x[1]["count"], reverse=True)
 
     return templates.TemplateResponse(
         request=request,
-        name="analytics.html",
+        name="аналитика.html",
         context={
             "current_user": user,
             "filials": FILIALS,
@@ -316,7 +313,7 @@ def warehouse_page(
     
     return templates.TemplateResponse(
         request=request,
-        name="warehouse.html",
+        name="склад.html",
         context={
             "parts": parts,
             "search": search,
@@ -687,9 +684,15 @@ def delete_work(work_id: int, db: Session = Depends(get_db), user: dict = Depend
         db.delete(work)
         db.commit()
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
-    @app.route('/defect-act')
-def defect_act():
-    return render_template('inspection_act.html')
+
+# Правильный эндпоинт для дефектовочного акта (использует ваш файл inspection_act.html)
+@app.get("/defect-act", response_class=HTMLResponse)
+def defect_act(request: Request, user: dict = Depends(get_current_user)):
+    return templates.TemplateResponse(
+        request=request,
+        name="inspection_act.html",
+        context={"current_user": user}
+    )
 
 @app.post("/delete-part/{part_id}")
 def delete_part(part_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
