@@ -3,6 +3,7 @@ import uvicorn
 import secrets
 from datetime import datetime, date
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, or_, text, func
@@ -166,7 +167,7 @@ for statement in migrations:
                 pass
 
 app = FastAPI(title="BYD help CRM")
-templates = Jinja2Templates(directory="шаблоны") # Убедитесь, что папка называется шаблоны или templates
+templates = Jinja2Templates(directory="templates")  # Убедитесь, что папка называется templates (или поменяйте на "шаблоны")
 
 def get_db():
     db = SessionLocal()
@@ -684,7 +685,6 @@ def delete_work(work_id: int, db: Session = Depends(get_db), user: dict = Depend
         db.commit()
     return RedirectResponse(url=f"/act/{car_id}", status_code=303)
 
-# Правильный эндпоинт для дефектовочного акта (использует ваш файл inspection_act.html)
 @app.get("/defect-act", response_class=HTMLResponse)
 def defect_act(request: Request, user: dict = Depends(get_current_user)):
     return templates.TemplateResponse(
