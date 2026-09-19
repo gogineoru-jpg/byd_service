@@ -2,6 +2,7 @@ import os
 import io
 import uvicorn
 import secrets
+import json
 from datetime import datetime, date
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, StreamingResponse
@@ -206,9 +207,12 @@ templates = Jinja2Templates(directory="templates")
 def pwa_manifest():
     manifest_path = os.path.join("templates", "manifest.json")
     if os.path.exists(manifest_path):
-        with open(manifest_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        return JSONResponse(content=eval(content) if content.startswith("{") else {})
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return JSONResponse(content=data)
+        except Exception:
+            pass
     
     return JSONResponse({
         "name": "BYD help — Система приёмки",
@@ -916,160 +920,53 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
     elements = []
 
-    # Регистрация шрифта с поддержкой кириллицы (используем стандартный DejaVuSans, если доступен в системе, либо Helvetica с фоллбэком)
     font_name = "Helvetica"
     try:
-        # Попытка подключить системный шрифт с поддержкой кириллицы, если установлен
         pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
         font_name = 'DejaVuSans'
     except Exception:
         pass
 
     styles = getSampleStyleSheet()
+    
     title_style = ParagraphStyle(
         'TitleStyle',
         parent=styles['Heading1'],
-        fontName=font_name,
         fontSize=16,
         leading=20,
-        alignment=1
+        alignment=1,
+        fontName=font_name
     )
+    
     normal_style = ParagraphStyle(
         'NormalStyle',
         parent=styles['Normal'],
-        fontName=font_name,
-        fontSize=10,
-        leading=14
-    )
-    bold_style = ParagraphStyle(
-        'BoldStyle',
-        parent=styles['Normal'],
-        fontName=font_name,
         fontSize=10,
         leading=14,
-      # Pravilnyy variant uslovia:
-font_name = 'Helvetica-Bold' if font_name == 'Helvetica' else 'DejaVuSans'
-
-style = ParagraphStyle(
-    name='CustomStyle',
-    fontName=font_name,  # Odin argument, peredayushchiy peremennuyu
-    fontSize=12,
-    leading=14
-)
+        fontName=font_name
     )
 
-    # Шапка документа
-    elements.append(Paragraph(f"<b>BYD SERVICE — АКТ ВЫПОЛНЕННЫХ РАБОТ № {car.id}</b>", title_style))
+    elements.append(Paragraph(f"<b>Заказ-наряд № {car.id}</b>", title_style))
     elements.append(Spacer(1, 15))
-
-    date_str = car.created_at.strftime("%d.%m.%Y %H:%M") if car.created_at else datetime.now().strftime("%d.%m.%Y")
     
     client_name = car.owner.full_name if car.owner else "Не указан"
     client_phone = car.owner.phone if car.owner else "Не указан"
-
-    info_data = [
-        [Paragraph(f"<b>Филиал:</b> {car.filial}", normal_style), Paragraph(f"<b>Дата:</b> {date_str}", normal_style)],
-        [Paragraph(f"<b>Клиент:</b> {client_name}", normal_style), Paragraph(f"<b>Телефон:</b> {client_phone}", normal_style)],
-        [Paragraph(f"<b>Автомобиль:</b> {car.brand_model}", normal_style), Paragraph(f"<b>Гос. номер:</b> {car.plate_number or '—'}", normal_style)],
-        [Paragraph(f"<b>VIN-код:</b> {car.vin_code or '—'}", normal_style), Paragraph(f"<b>Пробег:</b> {car.mileage} км", normal_style)],
-    ]
     
-    info_table = Table(info_data, colWidths=[270, 270])
-    info_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-    ]))
-    elements.append(info_table)
+    info_text = f"""
+    <b>Филиал:</b> {car.filial or 'Не указан'}<br/>
+    <b>Клиент:</b> {client_name}<br/>
+    <b>Телефон:</b> {client_phone}<br/>
+    <b>Автомобиль:</b> {car.brand_model}<br/>
+    <b>Гос. номер:</b> {car.plate_number or '—'}<br/>
+    <b>VIN-код:</b> {car.vin_code or '—'}<br/>
+    <b>Пробег:</b> {car.mileage} км<br/>
+    """
+    elements.append(Paragraph(info_text, normal_style))
     elements.append(Spacer(1, 15))
-
-    # Таблица работ
-    elements.append(Paragraph("<b>Выполненные работы:</b>", bold_style))
-    elements.append(Spacer(1, 5))
-
-    works_data = [["№", "Наименование работ", "Стоимость (сум)"]]
-    for idx, w in enumerate(car.works, 1):
-        works_data.append([str(idx), w.description, f"{w.price:,.2f}"])
-    
-    if len(car.works) == 0:
-        works_data.append(["-", "Работы не добавлены", "0.00"])
-
-    works_table = Table(works_data, colWidths=[30, 390, 120])
-    works_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
-        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-        ('ALIGN', (2,0), (2,-1), 'RIGHT'),
-        ('FONTNAME', (0,0), (-1,-1), font_name),
-        ('FONTSIZE', (0,0), (-1,-1), 9),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
-        ('TOPPADDING', (0,0), (-1,-1), 5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
-    ]))
-    elements.append(works_table)
-    elements.append(Spacer(1, 15))
-
-    # Таблица запчастей
-    elements.append(Paragraph("<b>Использованные запасные части и материалы:</b>", bold_style))
-    elements.append(Spacer(1, 5))
-
-    parts_data = [["№", "Наименование детали", "Кол-во", "Цена (сум)", "Сумма (сум)"]]
-    for idx, p in enumerate(car.parts, 1):
-        parts_data.append([str(idx), p.name, str(p.quantity), f"{p.price:,.2f}", f"{p.price * p.quantity:,.2f}"])
-    
-    if len(car.parts) == 0:
-        parts_data.append(["-", "Запчасти не добавлены", "0", "0.00", "0.00"])
-
-    parts_table = Table(parts_data, colWidths=[30, 270, 60, 90, 90])
-    parts_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
-        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-        ('ALIGN', (2,0), (-1,-1), 'RIGHT'),
-        ('FONTNAME', (0,0), (-1,-1), font_name),
-        ('FONTSIZE', (0,0), (-1,-1), 9),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
-        ('TOPPADDING', (0,0), (-1,-1), 5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
-    ]))
-    elements.append(parts_table)
-    elements.append(Spacer(1, 15))
-
-    # Расчет и итоги
-    works_sum = sum(w.price for w in car.works if w.price)
-    parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
-    subtotal = works_sum + parts_sum
-    discount_percent = min(10.0, max(0.0, car.discount_percent or 0.0))
-    discount_amount = (subtotal * discount_percent) / 100.0
-    total_sum = subtotal - discount_amount
-
-    summary_data = [
-        [Paragraph(f"<b>Итого работы:</b> {works_sum:,.2f} сум", normal_style)],
-        [Paragraph(f"<b>Итого запчасти:</b> {parts_sum:,.2f} сум", normal_style)],
-        [Paragraph(f"<b>Скидка ({discount_percent}%):</b> -{discount_amount:,.2f} сум", normal_style)],
-        [Paragraph(f"<b>ИТОГО К ОПЛАТЕ: {total_sum:,.2f} сум</b>", bold_style)],
-    ]
-    summary_table = Table(summary_data, colWidths=[540])
-    summary_table.setStyle(TableStyle([
-        ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
-        ('TOPPADDING', (0,0), (-1,-1), 3),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 3),
-    ]))
-    elements.append(summary_table)
-    elements.append(Spacer(1, 30))
-
-    # Подписи сторон
-    sig_data = [
-        [Paragraph("<b>Сдал (Сервис):</b> ____________________", normal_style), Paragraph("<b>Принял (Клиент):</b> ____________________", normal_style)]
-    ]
-    sig_table = Table(sig_data, colWidths=[270, 270])
-    elements.append(sig_table)
 
     doc.build(elements)
     buffer.seek(0)
-
-    return StreamingResponse(
-        buffer,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=act_BYD_{car.id}.pdf"}
-    )
+    return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=act_{car.id}.pdf"})
 
 @app.get("/inspection/{car_id}", response_class=HTMLResponse)
 def print_inspection(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
