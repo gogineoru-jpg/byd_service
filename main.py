@@ -188,31 +188,32 @@ for statement in migrations:
 
 app = FastAPI(title="BYD help CRM")
 
-# Подключение папки static (если она существует)
+# Подключение папки static
 if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-# Автоматический маршрут для PWA Manifest (работает даже без папки static)
+# Поддержка файла манифеста из корня templates или как резервный JSON
 @app.get("/manifest.json")
 def pwa_manifest():
+    manifest_path = os.path.join("templates", "manifest.json")
+    if os.path.exists(manifest_path):
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return JSONResponse(content=eval(content) if content.startswith("{") else {})
+    
     return JSONResponse({
-        "name": "BYD Service CRM",
+        "name": "BYD help — Система приёмки",
         "short_name": "BYD CRM",
         "start_url": "/",
         "display": "standalone",
-        "background_color": "#ffffff",
-        "theme_color": "#1976d2",
+        "background_color": "#121212",
+        "theme_color": "#121212",
         "icons": [
             {
-                "src": "https://img.icons8.com/color/192/car--v1.png",
+                "src": "/static/icon.png",
                 "sizes": "192x192",
-                "type": "image/png"
-            },
-            {
-                "src": "https://img.icons8.com/color/512/car--v1.png",
-                "sizes": "512x512",
                 "type": "image/png"
             }
         ]
