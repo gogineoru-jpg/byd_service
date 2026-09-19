@@ -3,9 +3,10 @@ import uvicorn
 import secrets
 from datetime import datetime, date
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, or_, text, func
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 
@@ -146,10 +147,10 @@ class Appointment(Base):
     phone = Column(String, index=True, nullable=False)
     car_model = Column(String, default="BYD")
     plate_number = Column(String, index=True)
-    appointment_date = Column(String, nullable=False)  # Формат YYYY-MM-DD
-    time_slot = Column(String, nullable=False)         # Например, "09:00 - 10:00"
+    appointment_date = Column(String, nullable=False)
+    time_slot = Column(String, nullable=False)
     filial = Column(String, default="Филиал Сергели")
-    status = Column(String, default="Запланировано")     # Запланировано, Подтверждено, Отменено, Завершено
+    status = Column(String, default="Запланировано")
     comment = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
 
@@ -186,7 +187,36 @@ for statement in migrations:
                 pass
 
 app = FastAPI(title="BYD help CRM")
+
+# Подключение папки static (если она существует)
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+
 templates = Jinja2Templates(directory="templates")
+
+# Автоматический маршрут для PWA Manifest (работает даже без папки static)
+@app.get("/manifest.json")
+def pwa_manifest():
+    return JSONResponse({
+        "name": "BYD Service CRM",
+        "short_name": "BYD CRM",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#ffffff",
+        "theme_color": "#1976d2",
+        "icons": [
+            {
+                "src": "https://img.icons8.com/color/192/car--v1.png",
+                "sizes": "192x192",
+                "type": "image/png"
+            },
+            {
+                "src": "https://img.icons8.com/color/512/car--v1.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            }
+        ]
+    })
 
 def get_db():
     db = SessionLocal()
