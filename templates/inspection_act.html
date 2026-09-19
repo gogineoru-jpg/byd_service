@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Дефектовочный акт №5 — BYD Help</title>
+    <title>Defektovochnyy akt — BYD Help</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
         body { margin: 0; background-color: #121212; color: #e0e0e0; padding: 20px; }
@@ -41,7 +41,6 @@
         .sig-box { width: 45%; }
         .sig-line { border-bottom: 1px solid #777; margin-top: 40px; margin-bottom: 5px; }
 
-        /* Stili dlya pechati v PDF / na bumage */
         @media print {
             body { background: #fff; color: #000; padding: 0; }
             .container { border: none; background: #fff; color: #000; padding: 0; max-width: 100%; }
@@ -58,173 +57,144 @@
 
 <div class="container">
     <div class="top-bar">
-        <h2>📋 Дефектовочный акт №5</h2>
+        <h2>📋 Defektovochnyy akt</h2>
         <div style="display: flex; gap: 10px;">
             <a href="/" class="btn btn-secondary">← Na glavnuyu</a>
             <button onclick="window.print()" class="btn btn-primary">🖨️ Pechat / PDF</button>
         </div>
     </div>
 
-    <!-- Informatsiya ob ispolniteli i zakazchike -->
+    <!-- Rekvizity ispolnitelya i zakazchika -->
     <div class="header-info">
         <div>
-            <b>Исполнитель:</b> ООО “BYD HELP”<br>
-            Адрес: Юнусабадский р-н, Ташкент<br>
-            Телефон: +998 90 176 27 85<br>
-            Диспетчер: G’ulomov Dilshod
+            <b>Ispolnitel:</b> <input type="text" value="OOO “BYD HELP”" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
+            <b>Adres:</b> <input type="text" value="Yuqori Darhon MFY, Uzgarish ko’chasi" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
+            <b>Telefon:</b> <input type="text" value="+998958816393" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
+            <b>Dispetcher:</b> <input type="text" value="Abduganiyev Abdulaziz" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%;">
         </div>
         <div>
-            <b>Заказчик:</b> {{ car.owner.full_name if car and car.owner else 'HAMKORBANK ATB' }}<br>
-            Телефон: {{ car.owner.phone if car and car.owner else '+998 99 335 88 99' }}<br>
-            <b>Дата составления:</b> 14.03.2026
+            <b>Zakazchik:</b> <input type="text" placeholder="Vvedite imya klienta / organizaciyu" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
+            <b>Telefon:</b> <input type="text" placeholder="+998 __ ___ __ __" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
+            <b>Data sostavleniya:</b> <input type="date" id="doc_date" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%;">
         </div>
     </div>
 
     <form>
-        <!-- Dannye avtomobilya -->
-        <div class="section-title">Данные транспортного средства</div>
+        <div class="section-title">Dannye transportnogo sredstva</div>
         <div class="grid-2">
             <div class="form-group">
-                <label>Автомобиль / Модель</label>
-                <input type="text" value="{{ car.brand_model if car else 'SEAL' }}">
+                <label>Avtomobil / Model</label>
+                <input type="text" placeholder="Naprimer: BYD Song Plus / SEAL">
             </div>
             <div class="form-group">
-                <label>Пробег</label>
-                <input type="text" value="{{ car.mileage if car else '70 818' }} КМ">
+                <label>probeg</label>
+                <input type="text" placeholder="Naprimer: 0 KM">
             </div>
             <div class="form-group">
-                <label>Гос. номер</label>
-                <input type="text" value="{{ car.plate_number if car else '60896JCA' }}" style="font-weight: bold;">
+                <label>Gos. nomer</label>
+                <input type="text" placeholder="01 A 777 AA" style="font-weight: bold; text-transform: uppercase;">
             </div>
             <div class="form-group">
-                <label>VIN-код (Шасси)</label>
-                <input type="text" value="{{ car.vin_code if car else 'LGXCH6CD8N2186067' }}" style="font-family: monospace;">
+                <label>VIN-kod (Shassi)</label>
+                <input type="text" placeholder="LGX..." style="font-family: monospace;">
             </div>
         </div>
 
-        <!-- Tablica 1: Uslyugi i raboty -->
-        <div class="section-title">I. Выполненные работы (оказанные услуги)</div>
+        <div class="section-title">I. Vypolnennye raboty (okazannye uslugi)</div>
         <table id="worksTable">
             <thead>
                 <tr>
                     <th style="width: 30px;">№</th>
-                    <th>Наименование работ</th>
-                    <th style="width: 60px;">Ед. изм.</th>
-                    <th style="width: 60px;">Кол-во</th>
-                    <th style="width: 100px;">Цена с НДС</th>
-                    <th style="width: 100px;">Сумма (без НДС)</th>
-                    <th style="width: 80px;">НДС</th>
-                    <th style="width: 100px;">Всего сумма</th>
-                    <th class="no-print" style="width: 40px;">Действ.</th>
+                    <th>Naimenovanie rabot</th>
+                    <th style="width: 60px;">Ed. izm.</th>
+                    <th style="width: 60px;">Kol-vo</th>
+                    <th style="width: 100px;">Cena</th>
+                    <th style="width: 100px;">Summa</th>
+                    <th class="no-print" style="width: 40px;">Deystv.</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>1</td>
-                    <td><input type="text" class="table-input" value="КОМПЬЮТЕРНАЯ ДИАГНОСТИКА"></td>
-                    <td>н/ч</td>
-                    <td><input type="number" class="table-input" value="4"></td>
-                    <td><input type="text" class="table-input" value="200 000"></td>
-                    <td>714 286</td>
-                    <td>87 714</td>
-                    <td>800 000</td>
-                    <td class="no-print"><button type="button" onclick="removeRow(this)" style="background:none; border:none; color:#f55; cursor:pointer;">✕</button></td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td><input type="text" class="table-input" value="ДИАГНОСТИКА ЭЛЕКТРОПРОВОДКИ"></td>
-                    <td>н/ч</td>
-                    <td><input type="number" class="table-input" value="5"></td>
-                    <td><input type="text" class="table-input" value="200 000"></td>
-                    <td>892 857</td>
-                    <td>107 143</td>
-                    <td>1 000 000</td>
-                    <td class="no-print"><button type="button" onclick="removeRow(this)" style="background:none; border:none; color:#f55; cursor:pointer;">✕</button></td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td><input type="text" class="table-input" value="АККУМУЛЯТОР ВЫСОКОГО НАПРЯЖЕНИЯ СНЯТИЕ/УСТАНОВКА"></td>
-                    <td>н/ч</td>
-                    <td><input type="number" class="table-input" value="18"></td>
-                    <td><input type="text" class="table-input" value="200 000"></td>
-                    <td>3 214 286</td>
-                    <td>385 714</td>
-                    <td>3 600 000</td>
+                    <td><input type="text" class="table-input" placeholder="Vvedite naimenovanie raboty"></td>
+                    <td>n/ch</td>
+                    <td><input type="number" class="table-input" value="1"></td>
+                    <td><input type="text" class="table-input" value="0"></td>
+                    <td>0</td>
                     <td class="no-print"><button type="button" onclick="removeRow(this)" style="background:none; border:none; color:#f55; cursor:pointer;">✕</button></td>
                 </tr>
             </tbody>
         </table>
         <div class="no-print" style="margin-top: 8px;">
-            <button type="button" onclick="addWorkRow()" class="btn btn-secondary" style="font-size: 11px;">+ Добавить работу</button>
+            <button type="button" onclick="addWorkRow()" class="btn btn-secondary" style="font-size: 11px;">+ Dobavit rabotu</button>
         </div>
 
-        <!-- Tablica 2: Zapchasti -->
-        <div class="section-title">II. Запасные части и материалы</div>
+        <div class="section-title">II. Zapasnye chasti i materialy</div>
         <table id="partsTable">
             <thead>
                 <tr>
                     <th style="width: 30px;">№</th>
-                    <th style="width: 100px;">Артикул</th>
-                    <th>Наименование запасных частей</th>
-                    <th style="width: 50px;">Ед.</th>
-                    <th style="width: 60px;">Кол-во</th>
-                    <th style="width: 110px;">Цена с НДС</th>
-                    <th style="width: 100px;">Сумма</th>
-                    <th class="no-print" style="width: 40px;">Действ.</th>
+                    <th style="width: 100px;">Artikul</th>
+                    <th>Naimenovanie zapasnyh chastey</th>
+                    <th style="width: 50px;">Ed.</th>
+                    <th style="width: 60px;">Kol-vo</th>
+                    <th style="width: 110px;">Cena</th>
+                    <th style="width: 100px;">Summa</th>
+                    <th class="no-print" style="width: 40px;">Deystv.</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>1</td>
-                    <td><input type="text" class="table-input" value="13271395-00"></td>
-                    <td><input type="text" class="table-input" value="Аккумулятор высокого напряжения (SEAL)"></td>
-                    <td>шт</td>
+                    <td><input type="text" class="table-input" placeholder="Artikul"></td>
+                    <td><input type="text" class="table-input" placeholder="Naimenovanie detali"></td>
+                    <td>sht</td>
                     <td><input type="number" class="table-input" value="1"></td>
-                    <td><input type="text" class="table-input" value="181 500 000"></td>
-                    <td>181 500 000</td>
+                    <td><input type="text" class="table-input" value="0"></td>
+                    <td>0</td>
                     <td class="no-print"><button type="button" onclick="removeRow(this)" style="background:none; border:none; color:#f55; cursor:pointer;">✕</button></td>
                 </tr>
             </tbody>
         </table>
         <div class="no-print" style="margin-top: 8px;">
-            <button type="button" onclick="addPartRow()" class="btn btn-secondary" style="font-size: 11px;">+ Добавить запчасть</button>
+            <button type="button" onclick="addPartRow()" class="btn btn-secondary" style="font-size: 11px;">+ Dobavit zapast</button>
         </div>
 
-        <!-- Itogi -->
         <div class="totals-box">
-            <div>Всего без налогов: <b>173 382 358 сум</b></div>
-            <div>Сумма НДС: <b>23 397 642 сум</b></div>
-            <div style="font-size: 16px; color: #4CAF50; margin-top: 8px;">ИТОГО К ОПЛАТЕ: <b>189 050 000 сум</b></div>
+            <div>Vsego bez nalogov: <b>0 sum</b></div>
+            <div>Summa NDS: <b>0 sum</b></div>
+            <div style="font-size: 16px; color: #4CAF50; margin-top: 8px;">ITOGO K OPLATE: <b>0 sum</b></div>
         </div>
 
-        <!-- Podpisi -->
         <div class="signatures">
             <div class="sig-box">
-                <div style="font-size: 12px; color: #aaa;">Исполнитель (Диспетчер):</div>
+                <div style="font-size: 12px; color: #aaa;">Ispolnitel (Dispetcher):</div>
                 <div class="sig-line"></div>
-                <div style="font-size: 11px; color: #888;">G’ulomov Dilshod / М.П.</div>
+                <div style="font-size: 11px; color: #888;">(podpis / M.P.)</div>
             </div>
             <div class="sig-box">
-                <div style="font-size: 12px; color: #aaa;">Заказчик (Принял):</div>
+                <div style="font-size: 12px; color: #aaa;">Zakazchik (Prinyal):</div>
                 <div class="sig-line"></div>
-                <div style="font-size: 11px; color: #888;">должность / подпись / расшифровка</div>
+                <div style="font-size: 11px; color: #888;">dolzhnost / podpis / rasshifrovka</div>
             </div>
         </div>
     </form>
 </div>
 
 <script>
+    document.getElementById('doc_date').valueAsDate = new Date();
+
     function addWorkRow() {
         const tbody = document.querySelector('#worksTable tbody');
         const rowCount = tbody.rows.length + 1;
         const row = tbody.insertRow();
         row.innerHTML = `
             <td>${rowCount}</td>
-            <td><input type="text" class="table-input" placeholder="Наименование работ"></td>
-            <td>н/ч</td>
+            <td><input type="text" class="table-input" placeholder="Vvedite naimenovanie raboty"></td>
+            <td>n/ch</td>
             <td><input type="number" class="table-input" value="1"></td>
             <td><input type="text" class="table-input" value="0"></td>
-            <td>0</td><td>0</td><td>0</td>
+            <td>0</td>
             <td class="no-print"><button type="button" onclick="removeRow(this)" style="background:none; border:none; color:#f55; cursor:pointer;">✕</button></td>
         `;
     }
@@ -235,9 +205,9 @@
         const row = tbody.insertRow();
         row.innerHTML = `
             <td>${rowCount}</td>
-            <td><input type="text" class="table-input" placeholder="Артикул"></td>
-            <td><input type="text" class="table-input" placeholder="Наименование детали"></td>
-            <td>шт</td>
+            <td><input type="text" class="table-input" placeholder="Artikul"></td>
+            <td><input type="text" class="table-input" placeholder="Naimenovanie detali"></td>
+            <td>sht</td>
             <td><input type="number" class="table-input" value="1"></td>
             <td><input type="text" class="table-input" value="0"></td>
             <td>0</td>
