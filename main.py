@@ -1,14 +1,23 @@
 import os
+import io
 import uvicorn
 import secrets
 from datetime import datetime, date
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, or_, text, func
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
+
+# Импорты для генерации PDF через ReportLab
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./byd_service.db")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
@@ -188,13 +197,11 @@ for statement in migrations:
 
 app = FastAPI(title="BYD help CRM")
 
-# Подключение папки static
 if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-# Поддержка файла манифеста из корня templates или как резервный JSON
 @app.get("/manifest.json")
 def pwa_manifest():
     manifest_path = os.path.join("templates", "manifest.json")
@@ -897,6 +904,163 @@ def print_act(request: Request, car_id: int, db: Session = Depends(get_db), user
             "total_sum": total_sum, 
             "current_user": user
         }
+    )
+
+@app.get("/act/pdf/{car_id}")
+def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if not car:
+        raise HTTPException(status_code=404, detail="Запись не найдена")
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    elements = []
+
+    # Регистрация шрифта с поддержкой кириллицы (используем стандартный DejaVuSans, если доступен в системе, либо Helvetica с фоллбэком)
+    font_name = "Helvetica"
+    try:
+        # Попытка подключить системный шрифт с поддержкой кириллицы, если установлен
+        pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
+        font_name = 'DejaVuSans'
+    except Exception:
+        pass
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'TitleStyle',
+        parent=styles['Heading1'],
+        fontName=font_name,
+        fontSize=16,
+        leading=20,
+        alignment=1
+    )
+    normal_style = ParagraphStyle(
+        'NormalStyle',
+        parent=styles['Normal'],
+        fontName=font_name,
+        fontSize=10,
+        leading=14
+    )
+    bold_style = ParagraphStyle(
+        'BoldStyle',
+        parent=styles['Normal'],
+        fontName=font_name,
+        fontSize=10,
+        leading=14,
+        fontName='Helvetica-Bold' if font_name == 'Helvetica' else 'DejaVuSans'
+    )
+
+    # Шапка документа
+    elements.append(Paragraph(f"<b>BYD SERVICE — АКТ ВЫПОЛНЕННЫХ РАБОТ № {car.id}</b>", title_style))
+    elements.append(Spacer(1, 15))
+
+    date_str = car.created_at.strftime("%d.%m.%Y %H:%M") if car.created_at else datetime.now().strftime("%d.%m.%Y")
+    
+    client_name = car.owner.full_name if car.owner else "Не указан"
+    client_phone = car.owner.phone if car.owner else "Не указан"
+
+    info_data = [
+        [Paragraph(f"<b>Филиал:</b> {car.filial}", normal_style), Paragraph(f"<b>Дата:</b> {date_str}", normal_style)],
+        [Paragraph(f"<b>Клиент:</b> {client_name}", normal_style), Paragraph(f"<b>Телефон:</b> {client_phone}", normal_style)],
+        [Paragraph(f"<b>Автомобиль:</b> {car.brand_model}", normal_style), Paragraph(f"<b>Гос. номер:</b> {car.plate_number or '—'}", normal_style)],
+        [Paragraph(f"<b>VIN-код:</b> {car.vin_code or '—'}", normal_style), Paragraph(f"<b>Пробег:</b> {car.mileage} км", normal_style)],
+    ]
+    
+    info_table = Table(info_data, colWidths=[270, 270])
+    info_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 15))
+
+    # Таблица работ
+    elements.append(Paragraph("<b>Выполненные работы:</b>", bold_style))
+    elements.append(Spacer(1, 5))
+
+    works_data = [["№", "Наименование работ", "Стоимость (сум)"]]
+    for idx, w in enumerate(car.works, 1):
+        works_data.append([str(idx), w.description, f"{w.price:,.2f}"])
+    
+    if len(car.works) == 0:
+        works_data.append(["-", "Работы не добавлены", "0.00"])
+
+    works_table = Table(works_data, colWidths=[30, 390, 120])
+    works_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('ALIGN', (2,0), (2,-1), 'RIGHT'),
+        ('FONTNAME', (0,0), (-1,-1), font_name),
+        ('FONTSIZE', (0,0), (-1,-1), 9),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+    ]))
+    elements.append(works_table)
+    elements.append(Spacer(1, 15))
+
+    # Таблица запчастей
+    elements.append(Paragraph("<b>Использованные запасные части и материалы:</b>", bold_style))
+    elements.append(Spacer(1, 5))
+
+    parts_data = [["№", "Наименование детали", "Кол-во", "Цена (сум)", "Сумма (сум)"]]
+    for idx, p in enumerate(car.parts, 1):
+        parts_data.append([str(idx), p.name, str(p.quantity), f"{p.price:,.2f}", f"{p.price * p.quantity:,.2f}"])
+    
+    if len(car.parts) == 0:
+        parts_data.append(["-", "Запчасти не добавлены", "0", "0.00", "0.00"])
+
+    parts_table = Table(parts_data, colWidths=[30, 270, 60, 90, 90])
+    parts_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('ALIGN', (2,0), (-1,-1), 'RIGHT'),
+        ('FONTNAME', (0,0), (-1,-1), font_name),
+        ('FONTSIZE', (0,0), (-1,-1), 9),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+    ]))
+    elements.append(parts_table)
+    elements.append(Spacer(1, 15))
+
+    # Расчет и итоги
+    works_sum = sum(w.price for w in car.works if w.price)
+    parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
+    subtotal = works_sum + parts_sum
+    discount_percent = min(10.0, max(0.0, car.discount_percent or 0.0))
+    discount_amount = (subtotal * discount_percent) / 100.0
+    total_sum = subtotal - discount_amount
+
+    summary_data = [
+        [Paragraph(f"<b>Итого работы:</b> {works_sum:,.2f} сум", normal_style)],
+        [Paragraph(f"<b>Итого запчасти:</b> {parts_sum:,.2f} сум", normal_style)],
+        [Paragraph(f"<b>Скидка ({discount_percent}%):</b> -{discount_amount:,.2f} сум", normal_style)],
+        [Paragraph(f"<b>ИТОГО К ОПЛАТЕ: {total_sum:,.2f} сум</b>", bold_style)],
+    ]
+    summary_table = Table(summary_data, colWidths=[540])
+    summary_table.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
+        ('TOPPADDING', (0,0), (-1,-1), 3),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 30))
+
+    # Подписи сторон
+    sig_data = [
+        [Paragraph("<b>Сдал (Сервис):</b> ____________________", normal_style), Paragraph("<b>Принял (Клиент):</b> ____________________", normal_style)]
+    ]
+    sig_table = Table(sig_data, colWidths=[270, 270])
+    elements.append(sig_table)
+
+    doc.build(elements)
+    buffer.seek(0)
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=act_BYD_{car.id}.pdf"}
     )
 
 @app.get("/inspection/{car_id}", response_class=HTMLResponse)
