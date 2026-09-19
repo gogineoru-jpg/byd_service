@@ -1,0 +1,15 @@
+{
+  "name": "BYD help — Система приёмки",
+  "short_name": "BYD CRM",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "icons": [
+    {
+      "src": "/static/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
