@@ -106,6 +106,9 @@ class Car(Base):
     created_by = Column(String, default="Мастер-приёмщик")
     created_at = Column(DateTime, default=datetime.now)
     discount_percent = Column(Float, default=0.0)
+    appointment_date = Column(String, nullable=True)
+    time_slot = Column(String, nullable=True)
+    
     owner = relationship("Client", back_populates="cars")
     works = relationship("WorkItem", back_populates="car", cascade="all, delete-orphan")
     parts = relationship("SparePart", back_populates="car", cascade="all, delete-orphan")
@@ -136,6 +139,20 @@ class WarehousePart(Base):
     price = Column(Float, default=0.0)
     filial = Column(String, default="Филиал Сергели")
 
+class Appointment(Base):
+    __tablename__ = "appointments"
+    id = Column(Integer, primary_key=True, index=True)
+    client_name = Column(String, index=True, nullable=False)
+    phone = Column(String, index=True, nullable=False)
+    car_model = Column(String, default="BYD")
+    plate_number = Column(String, index=True)
+    appointment_date = Column(String, nullable=False)  # Формат YYYY-MM-DD
+    time_slot = Column(String, nullable=False)         # Например, "09:00 - 10:00"
+    filial = Column(String, default="Филиал Сергели")
+    status = Column(String, default="Запланировано")     # Запланировано, Подтверждено, Отменено, Завершено
+    comment = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+
 Base.metadata.create_all(bind=engine)
 
 migrations = [
@@ -149,6 +166,8 @@ migrations = [
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS discount_percent FLOAT DEFAULT 0.0;",
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS ev_mileage INTEGER DEFAULT 0;",
     "ALTER TABLE cars ADD COLUMN IF NOT EXISTS hev_mileage INTEGER DEFAULT 0;",
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS appointment_date VARCHAR;",
+    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS time_slot VARCHAR;",
     "UPDATE cars SET filial = 'Филиал Циолковский' WHERE filial = 'Циолковский' OR filial = 'Филиал Савковский';",
     "UPDATE warehouse_parts SET filial = 'Филиал Циолковский' WHERE filial = 'Циолковский' OR filial = 'Филиал Савковский';"
 ]
@@ -215,6 +234,90 @@ def get_daily_sum(
         "cars_count": len(cars)
     }
 
+@app.get("/appointments", response_class=HTMLResponse)
+def appointments_page(
+    request: Request, 
+    date_str: str = "",
+    filial: str = "all",
+    db: Session = Depends(get_db), 
+    user: dict = Depends(get_current_user)
+):
+    if not date_str:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        
+    query = db.query(Appointment).filter(Appointment.appointment_date == date_str)
+    if filial and filial != "all":
+        query = query.filter(Appointment.filial == filial)
+        
+    appointments = query.order_by(Appointment.time_slot.asc()).all()
+    
+    return templates.TemplateResponse(
+        request=request,
+        name="appointments.html",
+        context={
+            "current_user": user,
+            "filials": FILIALS,
+            "appointments": appointments,
+            "current_date": date_str,
+            "current_filial": filial
+        }
+    )
+
+@app.post("/appointments/create")
+def create_appointment(
+    client_name: str = Form(...),
+    phone: str = Form(...),
+    car_model: str = Form(...),
+    plate_number: str = Form(""),
+    appointment_date: str = Form(...),
+    time_slot: str = Form(...),
+    filial: str = Form("Филиал Сергели"),
+    comment: str = Form(""),
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    existing = db.query(Appointment).filter(
+        Appointment.appointment_date == appointment_date,
+        Appointment.time_slot == time_slot,
+        Appointment.filial == filial,
+        Appointment.status != "Отменено"
+    ).first()
+    
+    if existing:
+        raise HTTPException(
+            status_code=400, 
+            detail="Этот временной слот на выбранную дату уже занят! Выберите другое время."
+        )
+
+    appointment = Appointment(
+        client_name=client_name.strip(),
+        phone=phone.strip(),
+        car_model=car_model.strip(),
+        plate_number=plate_number.strip().upper(),
+        appointment_date=appointment_date,
+        time_slot=time_slot,
+        filial=filial,
+        comment=comment.strip()
+    )
+    db.add(appointment)
+    db.commit()
+    
+    return RedirectResponse(url=f"/appointments?date_str={appointment_date}", status_code=303)
+
+@app.post("/appointments/status/{app_id}")
+def update_appointment_status(
+    app_id: int,
+    status: str = Form(...),
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    app_item = db.query(Appointment).filter(Appointment.id == app_id).first()
+    if app_item:
+        app_item.status = status
+        db.commit()
+        return RedirectResponse(url=f"/appointments?date_str={app_item.appointment_date}", status_code=303)
+    return RedirectResponse(url="/appointments", status_code=303)
+
 @app.get("/analytics", response_class=HTMLResponse)
 def analytics_page(
     request: Request,
@@ -275,7 +378,7 @@ def analytics_page(
 
     return templates.TemplateResponse(
         request=request,
-        name="analytics.html", # ИСПРАВЛЕНО ЗДЕСЬ
+        name="analytics.html",
         context={
             "current_user": user,
             "filials": FILIALS,
@@ -313,7 +416,7 @@ def warehouse_page(
     
     return templates.TemplateResponse(
         request=request,
-        name="warehouse.html", # ИСПРАВЛЕНО ЗДЕСЬ
+        name="warehouse.html",
         context={
             "parts": parts,
             "search": search,
@@ -484,6 +587,8 @@ def create_entry(
     manufacture_year: int = Form(2023),
     soh_percent: float = Form(100.0),
     filial: str = Form("Филиал Сергели"),
+    appointment_date: str = Form(datetime.now().strftime("%Y-%m-%d")),
+    time_slot: str = Form("09:00 - 10:00"),
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
@@ -516,7 +621,9 @@ def create_entry(
         status="Принято",
         filial=filial,
         created_by=user["display_name"],
-        created_at=datetime.now()
+        created_at=datetime.now(),
+        appointment_date=appointment_date,
+        time_slot=time_slot
     )
     db.add(car)
     db.commit()
