@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Defektovochnyy akt — BYD Help</title>
+    <title>Дефектовочный акт — BYD Help</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
         body { margin: 0; background-color: #121212; color: #e0e0e0; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 30px; }
         
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #d32f2f; }
-        .top-bar h2 { margin: 0; font-size: 20px; color: #fff; }
+        .brand { font-size: 22px; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; color: #fff; }
+        .brand span { color: #d32f2f; }
         
         .btn { padding: 8px 16px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 13px; display: inline-block; }
         .btn-primary { background: #d32f2f; color: #fff; }
@@ -57,67 +58,69 @@
 
 <div class="container">
     <div class="top-bar">
-        <h2>📋 Defektovochnyy akt</h2>
-        <div style="display: flex; gap: 10px;">
-            <a href="/" class="btn btn-secondary">← Na glavnuyu</a>
-            <button onclick="window.print()" class="btn btn-primary">🖨️ Pechat / PDF</button>
+        <div class="brand">🚗 <span>BYD</span> help</div>
+        <div style="display: flex; gap: 10px;" class="no-print">
+            <a href="/" class="btn btn-secondary">← На главную</a>
+            <button onclick="window.print()" class="btn btn-primary">🖨️ Печать / PDF</button>
         </div>
     </div>
 
-    <!-- Rekvizity ispolnitelya i zakazchika -->
+    <h2 style="text-align: center; margin-bottom: 20px; letter-spacing: 0.5px;">ДЕФЕКТОВОЧНЫЙ АКТ</h2>
+
+    <!-- Реквизиты исполнителя и заказчика -->
     <div class="header-info">
         <div>
-            <b>Ispolnitel:</b> <input type="text" value="OOO “BYD HELP”" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
-            <b>Adres:</b> <input type="text" value="Yuqori Darhon MFY, Uzgarish ko’chasi" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
-            <b>Telefon:</b> <input type="text" value="+998958816393" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
-            <b>Dispetcher:</b> <input type="text" value="Abduganiyev Abdulaziz" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%;">
+            <b>Исполнитель:</b> <input type="text" value="ООО “BYD HELP”" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
+            <b>Адрес:</b> <input type="text" value="Yuqori Darhon MFY, Uzgarish ko’chasi" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
+            <b>Телефон:</b> <input type="text" value="+998958816393" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
+            <b>Диспетчер:</b> <input type="text" value="Abduganiyev Abdulaziz" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%;">
         </div>
         <div>
-            <b>Zakazchik:</b> <input type="text" placeholder="Vvedite imya klienta / organizaciyu" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
-            <b>Telefon:</b> <input type="text" placeholder="+998 __ ___ __ __" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
-            <b>Data sostavleniya:</b> <input type="date" id="doc_date" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%;">
+            <b>Заказчик:</b> <input type="text" placeholder="Введите имя клиента / организацию" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
+            <b>Телефон:</b> <input type="text" placeholder="+998 __ ___ __ __" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%; margin-bottom:4px;"><br>
+            <b>Дата составления:</b> <input type="date" id="doc_date" style="background:#2a2a2a; border:1px solid #444; color:#fff; padding:3px; width:80%;">
         </div>
     </div>
 
     <form>
-        <div class="section-title">Dannye transportnogo sredstva</div>
+        <div class="section-title">Данные транспортного средства</div>
         <div class="grid-2">
             <div class="form-group">
-                <label>Avtomobil / Model</label>
-                <input type="text" placeholder="Naprimer: BYD Song Plus / SEAL">
+                <label>Автомобиль / Модель</label>
+                <input type="text" placeholder="Например: BYD Song Plus / SEAL">
             </div>
             <div class="form-group">
-                <label>probeg</label>
-                <input type="text" placeholder="Naprimer: 0 KM">
+                <label>Пробег</label>
+                <input type="text" placeholder="Например: 0 КМ">
             </div>
             <div class="form-group">
-                <label>Gos. nomer</label>
+                <label>Гос. номер</label>
                 <input type="text" placeholder="01 A 777 AA" style="font-weight: bold; text-transform: uppercase;">
             </div>
             <div class="form-group">
-                <label>VIN-kod (Shassi)</label>
+                <label>VIN-код (Шасси)</label>
                 <input type="text" placeholder="LGX..." style="font-family: monospace;">
             </div>
         </div>
 
-        <div class="section-title">I. Vypolnennye raboty (okazannye uslugi)</div>
+        <div class="section-title">I. Выполненные работы (оказанные услуги)</div>
         <table id="worksTable">
             <thead>
                 <tr>
                     <th style="width: 30px;">№</th>
-                    <th>Naimenovanie rabot</th>
-                    <th style="width: 60px;">Ed. izm.</th>
-                    <th style="width: 60px;">Kol-vo</th>
-                    <th style="width: 100px;">Cena</th>
-                    <th style="width: 100px;">Summa</th>
-                    <th class="no-print" style="width: 40px;">Deystv.</th>
+                    <th>Наименование работ</th>
+                    <th style="width: 60px;">Ед. изм.</th>
+                    <th style="width: 60px;">Кол-во</th>
+                    <th style="width: 100px;">Цена</th>
+                    <th style="width: 100px;">Сумма</th>
+                    <th class="no-print" style="width: 40px;">Действ.</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>1</td>
-                    <td><input type="text" class="table-input" placeholder="Vvedite naimenovanie raboty"></td>
-                    <td>n/ch</td>
+                    <td><input type="text" class="table-input" placeholder="Введите наименование работы"></td>
+                    <td>н/ч</td>
                     <td><input type="number" class="table-input" value="1"></td>
                     <td><input type="text" class="table-input" value="0"></td>
                     <td>0</td>
@@ -126,29 +129,29 @@
             </tbody>
         </table>
         <div class="no-print" style="margin-top: 8px;">
-            <button type="button" onclick="addWorkRow()" class="btn btn-secondary" style="font-size: 11px;">+ Dobavit rabotu</button>
+            <button type="button" onclick="addWorkRow()" class="btn btn-secondary" style="font-size: 11px;">+ Добавить работу</button>
         </div>
 
-        <div class="section-title">II. Zapasnye chasti i materialy</div>
+        <div class="section-title">II. Запасные части и материалы</div>
         <table id="partsTable">
             <thead>
                 <tr>
                     <th style="width: 30px;">№</th>
-                    <th style="width: 100px;">Artikul</th>
-                    <th>Naimenovanie zapasnyh chastey</th>
-                    <th style="width: 50px;">Ed.</th>
-                    <th style="width: 60px;">Kol-vo</th>
-                    <th style="width: 110px;">Cena</th>
-                    <th style="width: 100px;">Summa</th>
-                    <th class="no-print" style="width: 40px;">Deystv.</th>
+                    <th style="width: 100px;">Артикул</th>
+                    <th>Наименование запасных частей</th>
+                    <th style="width: 50px;">Ед.</th>
+                    <th style="width: 60px;">Кол-во</th>
+                    <th style="width: 110px;">Цена</th>
+                    <th style="width: 100px;">Сумма</th>
+                    <th class="no-print" style="width: 40px;">Действ.</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>1</td>
-                    <td><input type="text" class="table-input" placeholder="Artikul"></td>
-                    <td><input type="text" class="table-input" placeholder="Naimenovanie detali"></td>
-                    <td>sht</td>
+                    <td><input type="text" class="table-input" placeholder="Артикул"></td>
+                    <td><input type="text" class="table-input" placeholder="Наименование детали"></td>
+                    <td>шт</td>
                     <td><input type="number" class="table-input" value="1"></td>
                     <td><input type="text" class="table-input" value="0"></td>
                     <td>0</td>
@@ -157,25 +160,25 @@
             </tbody>
         </table>
         <div class="no-print" style="margin-top: 8px;">
-            <button type="button" onclick="addPartRow()" class="btn btn-secondary" style="font-size: 11px;">+ Dobavit zapast</button>
+            <button type="button" onclick="addPartRow()" class="btn btn-secondary" style="font-size: 11px;">+ Добавить запчасть</button>
         </div>
 
         <div class="totals-box">
-            <div>Vsego bez nalogov: <b>0 sum</b></div>
-            <div>Summa NDS: <b>0 sum</b></div>
-            <div style="font-size: 16px; color: #4CAF50; margin-top: 8px;">ITOGO K OPLATE: <b>0 sum</b></div>
+            <div>Всего без налогов: <b>0 сум</b></div>
+            <div>Сумма НДС: <b>0 сум</b></div>
+            <div style="font-size: 16px; color: #4CAF50; margin-top: 8px;">ИТОГО К ОПЛАТЕ: <b>0 сум</b></div>
         </div>
 
         <div class="signatures">
             <div class="sig-box">
-                <div style="font-size: 12px; color: #aaa;">Ispolnitel (Dispetcher):</div>
+                <div style="font-size: 12px; color: #aaa;">Исполнитель (Диспетчер):</div>
                 <div class="sig-line"></div>
-                <div style="font-size: 11px; color: #888;">(podpis / M.P.)</div>
+                <div style="font-size: 11px; color: #888;">(подпись / М.П.)</div>
             </div>
             <div class="sig-box">
-                <div style="font-size: 12px; color: #aaa;">Zakazchik (Prinyal):</div>
+                <div style="font-size: 12px; color: #aaa;">Заказчик (Принял):</div>
                 <div class="sig-line"></div>
-                <div style="font-size: 11px; color: #888;">dolzhnost / podpis / rasshifrovka</div>
+                <div style="font-size: 11px; color: #888;">должность / подпись / расшифровка</div>
             </div>
         </div>
     </form>
@@ -190,8 +193,8 @@
         const row = tbody.insertRow();
         row.innerHTML = `
             <td>${rowCount}</td>
-            <td><input type="text" class="table-input" placeholder="Vvedite naimenovanie raboty"></td>
-            <td>n/ch</td>
+            <td><input type="text" class="table-input" placeholder="Введите наименование работы"></td>
+            <td>н/ч</td>
             <td><input type="number" class="table-input" value="1"></td>
             <td><input type="text" class="table-input" value="0"></td>
             <td>0</td>
@@ -205,9 +208,9 @@
         const row = tbody.insertRow();
         row.innerHTML = `
             <td>${rowCount}</td>
-            <td><input type="text" class="table-input" placeholder="Artikul"></td>
-            <td><input type="text" class="table-input" placeholder="Naimenovanie detali"></td>
-            <td>sht</td>
+            <td><input type="text" class="table-input" placeholder="Артикул"></td>
+            <td><input type="text" class="table-input" placeholder="Наименование детали"></td>
+            <td>шт</td>
             <td><input type="number" class="table-input" value="1"></td>
             <td><input type="text" class="table-input" value="0"></td>
             <td>0</td>
