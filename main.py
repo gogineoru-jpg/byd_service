@@ -947,7 +947,15 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
         fontName=font_name,
         fontSize=10,
         leading=14,
-        fontName='Helvetica-Bold' if font_name == 'Helvetica' else 'DejaVuSans'
+      # Pravilnyy variant uslovia:
+font_name = 'Helvetica-Bold' if font_name == 'Helvetica' else 'DejaVuSans'
+
+style = ParagraphStyle(
+    name='CustomStyle',
+    fontName=font_name,  # Odin argument, peredayushchiy peremennuyu
+    fontSize=12,
+    leading=14
+)
     )
 
     # Шапка документа
