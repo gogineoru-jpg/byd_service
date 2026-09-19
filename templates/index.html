@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BYD help — Система приёмки</title>
+    
+    <!-- PWA Meta Tags & Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BYD CRM">
+
     <style>
         .btn-defect {
             background-color: #2b313d;
@@ -28,7 +36,7 @@
         body { margin: 0; background-color: #121212; color: #e0e0e0; padding: 20px; }
         .container { max-width: 1300px; margin: 0 auto; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #d32f2f; padding-bottom: 15px; margin-bottom: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #d32f2f; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
         .brand { font-size: 22px; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
         .brand span { color: #d32f2f; }
         
@@ -45,7 +53,7 @@
         .btn-blue { background: #1976D2; color: #fff; border: none; }
         .btn-blue:hover { background: #1565C0; }
 
-        .filial-bar { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; background: #1e1e1e; padding: 10px 15px; border-radius: 6px; border: 1px solid #333; }
+        .filial-bar { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; background: #1e1e1e; padding: 10px 15px; border-radius: 6px; border: 1px solid #333; flex-wrap: wrap; }
         .filial-btn { padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; color: #ccc; background: #2a2a2a; border: 1px solid #444; }
         .filial-btn.active { background: #2196F3; color: white; border-color: #2196F3; }
 
@@ -66,7 +74,7 @@
         .date-header { background: #1a1a1a; color: #fff; padding: 10px 15px; border-radius: 6px 6px 0 0; border: 1px solid #333; border-bottom: none; display: flex; justify-content: space-between; align-items: center; }
         
         .table-container { background: #1e1e1e; border-radius: 0 0 6px 6px; border: 1px solid #333; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; min-width: 900px; }
         th { background: #2a2a2a; color: #bbb; padding: 12px; font-weight: 600; border-bottom: 1px solid #333; }
         td { padding: 12px; border-bottom: 1px solid #2a2a2a; vertical-align: middle; }
         tr:hover { background: #252525; }
@@ -83,8 +91,8 @@
         select.status-Готово { background: #388e3c; }
         select.status-Выдано { background: #616161; }
 
-        .action-btns { display: flex; gap: 5px; }
-        .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 4px; text-decoration: none; border: 1px solid #444; background: #2a2a2a; color: #fff; }
+        .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 4px; text-decoration: none; border: 1px solid #444; background: #2a2a2a; color: #fff; display: inline-flex; align-items: center; justify-content: center; }
         .btn-sm:hover { background: #3a3a3a; }
     </style>
 </head>
@@ -226,7 +234,7 @@
                                 <a href="/act/{{ car.id }}" class="btn-sm" style="border-color: #d32f2f; color: #ff5252;" title="Заказ-наряд">📝 Заказ-наряд</a>
                                 {% if current_user.is_admin %}
                                 <form action="/delete-car/{{ car.id }}" method="post" onsubmit="return confirm('Удалить эту запись?');" style="margin:0;">
-                                    <button type="submit" class="btn-sm" style="background: #c62828; border: none; cursor: pointer;">🗑️</button>
+                                    <button type="submit" class="btn-sm" style="background: #c62828; border: none; cursor: pointer; color: #fff;">🗑️</button>
                                 </form>
                                 {% endif %}
                             </div>
