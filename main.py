@@ -167,7 +167,7 @@ for statement in migrations:
                 pass
 
 app = FastAPI(title="BYD help CRM")
-templates = Jinja2Templates(directory="templates")  # Убедитесь, что папка называется templates (или поменяйте на "шаблоны")
+templates = Jinja2Templates(directory="templates")
 
 def get_db():
     db = SessionLocal()
@@ -275,7 +275,7 @@ def analytics_page(
 
     return templates.TemplateResponse(
         request=request,
-        name="аналитика.html",
+        name="analytics.html", # ИСПРАВЛЕНО ЗДЕСЬ
         context={
             "current_user": user,
             "filials": FILIALS,
@@ -313,7 +313,7 @@ def warehouse_page(
     
     return templates.TemplateResponse(
         request=request,
-        name="склад.html",
+        name="warehouse.html", # ИСПРАВЛЕНО ЗДЕСЬ
         context={
             "parts": parts,
             "search": search,
