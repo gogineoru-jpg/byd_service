@@ -224,8 +224,9 @@
                         <td>
                             <div class="action-btns">
                                 <a href="/edit-car/{{ car.id }}" class="btn-sm" title="Редактировать">✏️</a>
-                                <!-- Ссылка исправлена на Акт приёма-передачи / заказ-наряд -->
+                                <!-- Ссылка на Акт приёма-передачи -->
                                 <a href="/act/{{ car.id }}" class="btn-sm" title="Акт приёма-передачи">📋 Акт</a>
+                                <!-- Ссылка на Заказ-наряд -->
                                 <a href="/act/{{ car.id }}" class="btn-sm" style="border-color: #d32f2f; color: #ff5252;" title="Заказ-наряд">📝 Заказ-наряд</a>
                                 {% if current_user.is_admin %}
                                 <form action="/delete-car/{{ car.id }}" method="post" onsubmit="return confirm('Удалить эту запись?');" style="margin:0;">
