@@ -18,6 +18,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./byd_service.db")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
