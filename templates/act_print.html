@@ -59,7 +59,7 @@
     <div class="nav-bar no-print">
         <div style="display: flex; gap: 8px;">
             <a href="/" class="btn btn-sec">← На главную</a>
-            <a href="/inspection/{{ car.id }}" class="btn btn-blue">📋 Акт приёмки</a>
+            <a href="/defect-act/{{ car.id }}" class="btn btn-blue" target="_blank">📋 Дефектовочный акт</a>
         </div>
         <button onclick="window.print()" class="btn btn-red">🖨️ Печать Заказ-наряда (А4)</button>
     </div>
@@ -76,7 +76,7 @@
         </div>
     </div>
 
-    <div class="doc-title">ЗАКАЗ-НАРЯД № {{ car.id }}</div>
+    <div class="doc-title">АКТ ПРИЁМА-ПЕРЕДАЧИ / ЗАКАЗ-НАРЯД № {{ car.id }}</div>
 
     <div class="info-grid">
         <div class="info-cell">
@@ -164,7 +164,7 @@
     </table>
 
     <form action="/add-part/{{ car.id }}" method="post" class="add-form no-print">
-        <input type="text" name="name" placeholder="Наименование запчасти или артикул (например BYD1124)" style="flex: 2;" required>
+        <input type="text" name="name" placeholder="Наименование запчасти или артикул" style="flex: 2;" required>
         <input type="number" name="quantity" value="1" min="1" style="width: 70px; text-align: center;" required>
         <input type="number" name="price" placeholder="Цена (сум)" style="flex: 1;">
         <button type="submit" class="btn btn-sec" style="background: #222;">+ Добавить запчасть</button>
