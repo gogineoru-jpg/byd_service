@@ -16,7 +16,6 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
@@ -842,6 +841,17 @@ def defect_act(request: Request, user: dict = Depends(get_current_user)):
         context={"current_user": user}
     )
 
+@app.get("/defect-act/{car_id}", response_class=HTMLResponse)
+def defect_act_car(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if not car:
+        return HTMLResponse(content="Запись не найдена", status_code=404)
+    return templates.TemplateResponse(
+        request=request,
+        name="inspection_act.html",
+        context={"car": car, "current_user": user}
+    )
+
 @app.post("/delete-part/{part_id}")
 def delete_part(part_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
     part = db.query(SparePart).filter(SparePart.id == part_id).first()
@@ -951,34 +961,78 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
     
     client_name = car.owner.full_name if car.owner else "Не указан"
     client_phone = car.owner.phone if car.owner else "Не указан"
-    
-    info_text = f"""
-    <b>Филиал:</b> {car.filial or 'Не указан'}<br/>
-    <b>Клиент:</b> {client_name}<br/>
-    <b>Телефон:</b> {client_phone}<br/>
-    <b>Автомобиль:</b> {car.brand_model}<br/>
-    <b>Гос. номер:</b> {car.plate_number or '—'}<br/>
-    <b>VIN-код:</b> {car.vin_code or '—'}<br/>
-    <b>Пробег:</b> {car.mileage} км<br/>
-    """
-    elements.append(Paragraph(info_text, normal_style))
+
+    info_data = [
+        [Paragraph(f"<b>Клиент:</b> {client_name}", normal_style), Paragraph(f"<b>Марка/Модель:</b> {car.brand_model}", normal_style)],
+        [Paragraph(f"<b>Телефон:</b> {client_phone}", normal_style), Paragraph(f"<b>Гос. номер:</b> {car.plate_number}", normal_style)],
+        [Paragraph(f"<b>Филиал:</b> {car.filial}", normal_style), Paragraph(f"<b>VIN-код:</b> {car.vin_code}", normal_style)],
+        [Paragraph(f"<b>Дата приёмки:</b> {car.created_at.strftime('%d.%m.%Y %H:%M') if car.created_at else '-'}", normal_style), Paragraph(f"<b>Пробег:</b> {car.mileage} км", normal_style)]
+    ]
+
+    t_info = Table(info_data, colWidths=[250, 250])
+    t_info.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ]))
+    elements.append(t_info)
     elements.append(Spacer(1, 15))
+
+    elements.append(Paragraph("<b>Выполненные работы и запчасти:</b>", normal_style))
+    elements.append(Spacer(1, 8))
+
+    table_data = [["№", "Наименование", "Кол-во", "Цена (сум)", "Сумма (сум)"]]
+    idx = 1
+
+    for w in car.works:
+        table_data.append([str(idx), w.description, "1", f"{w.price:,.2f}", f"{w.price:,.2f}"])
+        idx += 1
+
+    for p in car.parts:
+        row_sum = p.price * p.quantity
+        table_data.append([str(idx), f"Запч: {p.name}", str(p.quantity), f"{p.price:,.2f}", f"{row_sum:,.2f}"])
+        idx += 1
+
+    if len(table_data) == 1:
+        table_data.append(["-", "Нет добавленных работ или запчастей", "-", "0.00", "0.00"])
+
+    t_works = Table(table_data, colWidths=[30, 240, 50, 90, 90])
+    t_works.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('ALIGN', (1,1), (1,-1), 'LEFT'),
+        ('FONTNAME', (0,0), (-1,-1), font_name),
+        ('FONTSIZE', (0,0), (-1,-1), 9),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+    ]))
+    elements.append(t_works)
+    elements.append(Spacer(1, 20))
+
+    works_sum = sum(w.price for w in car.works if w.price)
+    parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
+    subtotal = works_sum + parts_sum
+    disc = min(10.0, max(0.0, car.discount_percent or 0.0))
+    disc_sum = (subtotal * disc) / 100.0
+    total_to_pay = subtotal - disc_sum
+
+    totals_data = [
+        [Paragraph(f"<b>Итого работы:</b> {works_sum:,.2f} сум", normal_style)],
+        [Paragraph(f"<b>Итого запчасти:</b> {parts_sum:,.2f} сум", normal_style)],
+        [Paragraph(f"<b>Скидка ({disc}%):</b> -{disc_sum:,.2f} сум", normal_style)],
+        [Paragraph(f"<b>К ОПЛАТЕ ИТОГО:</b> {total_to_pay:,.2f} сум", normal_style)]
+    ]
+    t_totals = Table(totals_data, colWidths=[500])
+    t_totals.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('FONTNAME', (0,0), (-1,-1), font_name),
+    ]))
+    elements.append(t_totals)
 
     doc.build(elements)
     buffer.seek(0)
-    return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=act_{car.id}.pdf"})
-
-@app.get("/inspection/{car_id}", response_class=HTMLResponse)
-def print_inspection(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    car = db.query(Car).filter(Car.id == car_id).first()
-    if not car:
-        return HTMLResponse(content="Запись не найдена", status_code=404)
-    return templates.TemplateResponse(
-        request=request,
-        name="inspection_act.html",
-        context={"car": car, "current_user": user}
-    )
+    return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=zakaz_naryad_{car.id}.pdf"})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
