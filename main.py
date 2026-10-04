@@ -1,926 +1,3 @@
-import os
-import io
-import uvicorn
-import secrets
-import json
-from datetime import datetime, date
-from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, StreamingResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.staticfiles import StaticFiles
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, or_, text, func
-from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
-
-# Импорты для генерации PDF через ReportLab
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./byd_service.db")
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
-if DATABASE_URL and DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-else:
-    engine = create_engine(DATABASE_URL)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-security = HTTPBasic()
-
-FILIALS = ["Филиал Сергели", "Филиал Циолковский"]
-
-USERS = {
-    "master1": {
-        "password": os.environ.get("MASTER1_PASS", "byd101"),
-        "name": "Абдулазиз (Мастер-приёмщик)",
-        "is_admin": False
-    },
-    "master2": {
-        "password": os.environ.get("MASTER2_PASS", "byd102"),
-        "name": "Ровшан (Мастер-приёмщик)",
-        "is_admin": False
-    },
-    "master3": {
-        "password": os.environ.get("MASTER3_PASS", "byd103"),
-        "name": "Шохрух (Мастер-приёмщик)",
-        "is_admin": False
-    },
-    "master4": {
-        "password": os.environ.get("MASTER4_PASS", "byd104"),
-        "name": "Ориф (Филиал Циолковский)",
-        "is_admin": False
-    },
-    "admin": {
-        "password": os.environ.get("ADMIN_PASSWORD", "byd2026"),
-        "name": "Администратор",
-        "is_admin": True
-    }
-}
-
-def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
-    username = credentials.username
-    password = credentials.password
-    
-    if username in USERS:
-        user_info = USERS[username]
-        if secrets.compare_digest(password, user_info["password"]):
-            return {
-                "username": username,
-                "display_name": user_info["name"],
-                "is_admin": user_info["is_admin"]
-            }
-
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Неверный логин или пароль",
-        headers={"WWW-Authenticate": "Basic"},
-    )
-
-def require_admin(user: dict = Depends(get_current_user)):
-    if not user["is_admin"]:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Требуются права администратора",
-            headers={"WWW-Authenticate": "Basic realm='Admin area'"},
-        )
-    return user
-
-class Client(Base):
-    __tablename__ = "clients"
-    id = Column(Integer, primary_key=True, index=True)
-    full_name = Column(String, index=True)
-    phone = Column(String, index=True)
-    cars = relationship("Car", back_populates="owner")
-
-class Car(Base):
-    __tablename__ = "cars"
-    id = Column(Integer, primary_key=True, index=True)
-    owner_id = Column(Integer, ForeignKey("clients.id"))
-    brand_model = Column(String, default="BYD")
-    plate_number = Column(String, index=True)
-    vin_code = Column(String, index=True)
-    engine_type = Column(String)
-    mileage = Column(Integer, default=0)
-    ev_mileage = Column(Integer, default=0)
-    hev_mileage = Column(Integer, default=0)
-    soh_percent = Column(Float, default=100.0)
-    manufacture_year = Column(Integer, default=2023)
-    status = Column(String, default="Принято")
-    filial = Column(String, default="Филиал Сергели")
-    created_by = Column(String, default="Мастер-приёмщик")
-    created_at = Column(DateTime, default=datetime.now)
-    discount_percent = Column(Float, default=0.0)
-    appointment_date = Column(String, nullable=True)
-    time_slot = Column(String, nullable=True)
-    
-    owner = relationship("Client", back_populates="cars")
-    works = relationship("WorkItem", back_populates="car", cascade="all, delete-orphan")
-    parts = relationship("SparePart", back_populates="car", cascade="all, delete-orphan")
-
-class WorkItem(Base):
-    __tablename__ = "work_items"
-    id = Column(Integer, primary_key=True, index=True)
-    car_id = Column(Integer, ForeignKey("cars.id"))
-    description = Column(String, nullable=False)
-    price = Column(Float, default=0.0)
-    car = relationship("Car", back_populates="works")
-
-class SparePart(Base):
-    __tablename__ = "spare_parts"
-    id = Column(Integer, primary_key=True, index=True)
-    car_id = Column(Integer, ForeignKey("cars.id"))
-    name = Column(String, nullable=False)
-    quantity = Column(Integer, default=1)
-    price = Column(Float, default=0.0)
-    car = relationship("Car", back_populates="parts")
-
-class WarehousePart(Base):
-    __tablename__ = "warehouse_parts"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
-    part_code = Column(String, index=True, nullable=True)
-    quantity = Column(Integer, default=0)
-    price = Column(Float, default=0.0)
-    filial = Column(String, default="Филиал Сергели")
-
-class Appointment(Base):
-    __tablename__ = "appointments"
-    id = Column(Integer, primary_key=True, index=True)
-    client_name = Column(String, index=True, nullable=False)
-    phone = Column(String, index=True, nullable=False)
-    car_model = Column(String, default="BYD")
-    plate_number = Column(String, index=True)
-    appointment_date = Column(String, nullable=False)
-    time_slot = Column(String, nullable=False)
-    filial = Column(String, default="Филиал Сергели")
-    status = Column(String, default="Запланировано")
-    comment = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
-
-Base.metadata.create_all(bind=engine)
-
-migrations = [
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS created_by VARCHAR DEFAULT 'Мастер-приёмщик';",
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;",
-    "UPDATE cars SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL;",
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'Принято';",
-    "UPDATE cars SET status = 'Принято' WHERE status IS NULL;",
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS filial VARCHAR DEFAULT 'Филиал Сергели';",
-    "UPDATE cars SET filial = 'Филиал Сергели' WHERE filial IS NULL;",
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS discount_percent FLOAT DEFAULT 0.0;",
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS ev_mileage INTEGER DEFAULT 0;",
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS hev_mileage INTEGER DEFAULT 0;",
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS appointment_date VARCHAR;",
-    "ALTER TABLE cars ADD COLUMN IF NOT EXISTS time_slot VARCHAR;",
-    "UPDATE cars SET filial = 'Филиал Циолковский' WHERE filial = 'Циолковский' OR filial = 'Филиал Савковский';",
-    "UPDATE warehouse_parts SET filial = 'Филиал Циолковский' WHERE filial = 'Циолковский' OR filial = 'Филиал Савковский';"
-]
-
-for statement in migrations:
-    try:
-        with engine.begin() as conn:
-            conn.execute(text(statement))
-    except Exception:
-        if "IF NOT EXISTS" in statement:
-            try:
-                alt_statement = statement.replace(" IF NOT EXISTS", "")
-                with engine.begin() as conn:
-                    conn.execute(text(alt_statement))
-            except Exception:
-                pass
-
-app = FastAPI(title="BYD help CRM")
-
-if os.path.exists("static"):
-    app.mount("/static", StaticFiles(directory="static"), name="static")
-
-templates = Jinja2Templates(directory="templates")
-
-@app.get("/manifest.json")
-def pwa_manifest():
-    manifest_path = os.path.join("templates", "manifest.json")
-    if os.path.exists(manifest_path):
-        try:
-            with open(manifest_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            return JSONResponse(content=data)
-        except Exception:
-            pass
-    
-    return JSONResponse({
-        "name": "BYD help — Система приёмки",
-        "short_name": "BYD CRM",
-        "start_url": "/",
-        "display": "standalone",
-        "background_color": "#121212",
-        "theme_color": "#121212",
-        "icons": [
-            {
-                "src": "/static/icon.png",
-                "sizes": "192x192",
-                "type": "image/png"
-            }
-        ]
-    })
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-@app.get("/admin")
-def admin_login(user: dict = Depends(require_admin)):
-    return RedirectResponse(url="/", status_code=303)
-
-@app.get("/api/admin/daily-sum")
-def get_daily_sum(
-    date_str: str = "",
-    db: Session = Depends(get_db),
-    user: dict = Depends(require_admin)
-):
-    if not date_str:
-        date_str = datetime.now().strftime("%Y-%m-%d")
-
-    cars = db.query(Car).filter(func.date(Car.created_at) == date_str).all()
-    total_works = 0.0
-    total_parts = 0.0
-    total_sum = 0.0
-
-    for car in cars:
-        works_sum = sum(w.price for w in car.works if w.price)
-        parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
-        subtotal = works_sum + parts_sum
-        disc = min(10.0, max(0.0, car.discount_percent or 0.0))
-        
-        if subtotal > 0:
-            ratio = (subtotal - (subtotal * disc / 100.0)) / subtotal
-            total_works += works_sum * ratio
-            total_parts += parts_sum * ratio
-        
-        total_sum += (subtotal - (subtotal * disc / 100.0))
-
-    return {
-        "date": date_str,
-        "total": total_sum,
-        "works_total": total_works,
-        "parts_total": total_parts,
-        "cars_count": len(cars)
-    }
-
-@app.get("/appointments", response_class=HTMLResponse)
-def appointments_page(
-    request: Request, 
-    date_str: str = "",
-    filial: str = "all",
-    db: Session = Depends(get_db), 
-    user: dict = Depends(get_current_user)
-):
-    if not date_str:
-        date_str = datetime.now().strftime("%Y-%m-%d")
-        
-    query = db.query(Appointment).filter(Appointment.appointment_date == date_str)
-    if filial and filial != "all":
-        query = query.filter(Appointment.filial == filial)
-        
-    appointments = query.order_by(Appointment.time_slot.asc()).all()
-    
-    return templates.TemplateResponse(
-        request=request,
-        name="appointments.html",
-        context={
-            "current_user": user,
-            "filials": FILIALS,
-            "appointments": appointments,
-            "current_date": date_str,
-            "current_filial": filial
-        }
-    )
-
-@app.post("/appointments/create")
-def create_appointment(
-    client_name: str = Form(...),
-    phone: str = Form(...),
-    car_model: str = Form(...),
-    plate_number: str = Form(""),
-    appointment_date: str = Form(...),
-    time_slot: str = Form(...),
-    filial: str = Form("Филиал Сергели"),
-    comment: str = Form(""),
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    existing = db.query(Appointment).filter(
-        Appointment.appointment_date == appointment_date,
-        Appointment.time_slot == time_slot,
-        Appointment.filial == filial,
-        Appointment.status != "Отменено"
-    ).first()
-    
-    if existing:
-        raise HTTPException(
-            status_code=400, 
-            detail="Этот временной слот на выбранную дату уже занят! Выберите другое время."
-        )
-
-    appointment = Appointment(
-        client_name=client_name.strip(),
-        phone=phone.strip(),
-        car_model=car_model.strip(),
-        plate_number=plate_number.strip().upper(),
-        appointment_date=appointment_date,
-        time_slot=time_slot,
-        filial=filial,
-        comment=comment.strip()
-    )
-    db.add(appointment)
-    db.commit()
-    
-    return RedirectResponse(url=f"/appointments?date_str={appointment_date}", status_code=303)
-
-@app.post("/appointments/status/{app_id}")
-def update_appointment_status(
-    app_id: int,
-    status: str = Form(...),
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    app_item = db.query(Appointment).filter(Appointment.id == app_id).first()
-    if app_item:
-        app_item.status = status
-        db.commit()
-        return RedirectResponse(url=f"/appointments?date_str={app_item.appointment_date}", status_code=303)
-    return RedirectResponse(url="/appointments", status_code=303)
-
-@app.get("/analytics", response_class=HTMLResponse)
-def analytics_page(
-    request: Request,
-    start_date: str = "",
-    end_date: str = "",
-    filial: str = "all",
-    db: Session = Depends(get_db),
-    user: dict = Depends(require_admin)
-):
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    if not start_date:
-        start_date = datetime.now().strftime("%Y-%m-01")
-    if not end_date:
-        end_date = today_str
-
-    query = db.query(Car).filter(
-        func.date(Car.created_at) >= start_date,
-        func.date(Car.created_at) <= end_date
-    )
-
-    if filial and filial != "all":
-        query = query.filter(Car.filial == filial)
-
-    cars = query.all()
-
-    total_revenue = 0.0
-    total_works_revenue = 0.0
-    total_parts_revenue = 0.0
-    works_stats = {}
-
-    for car in cars:
-        w_sum = sum(w.price for w in car.works if w.price)
-        p_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
-        subt = w_sum + p_sum
-        disc = min(10.0, max(0.0, car.discount_percent or 0.0))
-        
-        final_car_sum = subt - (subt * disc / 100.0)
-        total_revenue += final_car_sum
-
-        w_final = 0.0
-        p_final = 0.0
-        if subt > 0:
-            ratio = final_car_sum / subt
-            w_final = w_sum * ratio
-            p_final = p_sum * ratio
-
-        total_works_revenue += w_final
-        total_parts_revenue += p_final
-
-        for work in car.works:
-            desc = work.description.strip()
-            if desc not in works_stats:
-                works_stats[desc] = {"count": 0, "sum": 0.0}
-            works_stats[desc]["count"] += 1
-            works_stats[desc]["sum"] += (work.price * (w_final / w_sum) if w_sum > 0 else 0)
-
-    sorted_works = sorted(works_stats.items(), key=lambda x: x[1]["count"], reverse=True)
-
-    return templates.TemplateResponse(
-        request=request,
-        name="analytics.html",
-        context={
-            "current_user": user,
-            "filials": FILIALS,
-            "start_date": start_date,
-            "end_date": end_date,
-            "current_filial": filial,
-            "total_cars": len(cars),
-            "total_revenue": total_revenue,
-            "total_works_revenue": total_works_revenue,
-            "total_parts_revenue": total_parts_revenue,
-            "sorted_works": sorted_works
-        }
-    )
-
-@app.get("/warehouse", response_class=HTMLResponse)
-def warehouse_page(
-    request: Request,
-    search: str = "",
-    filial: str = "all",
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    query = db.query(WarehousePart)
-    if filial and filial != "all":
-        query = query.filter(WarehousePart.filial == filial)
-    if search:
-        s = f"%{search}%"
-        query = query.filter(
-            or_(
-                WarehousePart.name.ilike(s),
-                WarehousePart.part_code.ilike(s)
-            )
-        )
-    parts = query.order_by(WarehousePart.id.asc()).all()
-    
-    return templates.TemplateResponse(
-        request=request,
-        name="warehouse.html",
-        context={
-            "parts": parts,
-            "search": search,
-            "current_filial": filial,
-            "filials": FILIALS,
-            "current_user": user
-        }
-    )
-
-@app.post("/warehouse/add")
-def add_warehouse_part(
-    name: str = Form(...),
-    part_code: str = Form(""),
-    quantity: int = Form(0),
-    price: float = Form(0.0),
-    filial: str = Form("Филиал Сергели"),
-    db: Session = Depends(get_db),
-    user: dict = Depends(require_admin)
-):
-    part = WarehousePart(
-        name=name.strip(),
-        part_code=part_code.strip().upper(),
-        quantity=quantity,
-        price=price,
-        filial=filial
-    )
-    db.add(part)
-    db.commit()
-    return RedirectResponse(url="/warehouse", status_code=303)
-
-@app.post("/warehouse/update/{part_id}")
-def update_warehouse_part(
-    part_id: int,
-    quantity: int = Form(...),
-    price: float = Form(...),
-    db: Session = Depends(get_db),
-    user: dict = Depends(require_admin)
-):
-    part = db.query(WarehousePart).filter(WarehousePart.id == part_id).first()
-    if part:
-        part.quantity = quantity
-        part.price = price
-        db.commit()
-    return RedirectResponse(url="/warehouse", status_code=303)
-
-@app.post("/warehouse/delete/{part_id}")
-def delete_warehouse_part(
-    part_id: int,
-    db: Session = Depends(get_db),
-    user: dict = Depends(require_admin)
-):
-    part = db.query(WarehousePart).filter(WarehousePart.id == part_id).first()
-    if part:
-        db.delete(part)
-        db.commit()
-    return RedirectResponse(url="/warehouse", status_code=303)
-
-@app.get("/", response_class=HTMLResponse)
-def index(
-    request: Request, 
-    search: str = "", 
-    filial: str = "all", 
-    db: Session = Depends(get_db), 
-    user: dict = Depends(get_current_user)
-):
-    query = db.query(Car).join(Client)
-    
-    if filial and filial != "all":
-        query = query.filter(Car.filial == filial)
-        
-    if search:
-        s = f"%{search}%"
-        query = query.filter(
-            or_(
-                Car.plate_number.ilike(s),
-                Car.vin_code.ilike(s),
-                Client.full_name.ilike(s),
-                Client.phone.ilike(s)
-            )
-        )
-    cars = query.order_by(Car.id.desc()).all()
-
-    grouped_cars = {}
-    for car in cars:
-        if car.created_at and hasattr(car.created_at, 'strftime'):
-            date_str = car.created_at.strftime("%d.%m.%Y")
-        elif car.created_at:
-            date_str = str(car.created_at)[:10]
-        else:
-            date_str = datetime.now().strftime("%d.%m.%Y")
-        
-        if date_str not in grouped_cars:
-            grouped_cars[date_str] = []
-        grouped_cars[date_str].append(car)
-
-    today_str = datetime.now().strftime("%d.%m.%Y")
-    today_date_iso = datetime.now().strftime("%Y-%m-%d")
-    today_cars = grouped_cars.get(today_str, [])
-    today_count = len(today_cars)
-    total_count = len(cars)
-
-    today_revenue = 0.0
-    today_works_revenue = 0.0
-    today_parts_revenue = 0.0
-
-    if user["is_admin"]:
-        for car in today_cars:
-            w_sum = sum(w.price for w in car.works if w.price)
-            p_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
-            subt = w_sum + p_sum
-            disc = min(10.0, max(0.0, car.discount_percent or 0.0))
-            
-            final_car_sum = subt - (subt * disc / 100.0)
-            today_revenue += final_car_sum
-
-            if subt > 0:
-                ratio = final_car_sum / subt
-                today_works_revenue += w_sum * ratio
-                today_parts_revenue += p_sum * ratio
-
-    accepted_count = sum(1 for c in cars if (c.status == "Принято" or not c.status))
-    in_progress_count = sum(1 for c in cars if c.status == "В работе")
-    ready_count = sum(1 for c in cars if c.status == "Готово")
-    in_service_count = accepted_count + in_progress_count + ready_count
-
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={
-            "grouped_cars": grouped_cars, 
-            "search": search, 
-            "current_filial": filial,
-            "filials": FILIALS,
-            "current_user": user,
-            "today_count": today_count,
-            "today_revenue": today_revenue,
-            "today_works_revenue": today_works_revenue,
-            "today_parts_revenue": today_parts_revenue,
-            "today_date_iso": today_date_iso,
-            "total_count": total_count,
-            "today_str": today_str,
-            "in_service_count": in_service_count,
-            "accepted_count": accepted_count,
-            "in_progress_count": in_progress_count,
-            "ready_count": ready_count
-        }
-    )
-
-@app.get("/new-entry", response_class=HTMLResponse)
-def new_entry_page(request: Request, user: dict = Depends(get_current_user)):
-    return templates.TemplateResponse(
-        request=request,
-        name="new_entry.html",
-        context={"current_user": user, "filials": FILIALS}
-    )
-
-@app.post("/create-entry")
-def create_entry(
-    full_name: str = Form(...),
-    phone: str = Form(...),
-    brand_model: str = Form(...),
-    plate_number: str = Form(...),
-    vin_code: str = Form(...),
-    engine_type: str = Form(...),
-    ev_mileage: int = Form(0),
-    hev_mileage: int = Form(0),
-    mileage: int = Form(0),
-    manufacture_year: int = Form(2023),
-    soh_percent: float = Form(100.0),
-    filial: str = Form("Филиал Сергели"),
-    appointment_date: str = Form(datetime.now().strftime("%Y-%m-%d")),
-    time_slot: str = Form("09:00 - 10:00"),
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    plate_number = plate_number.strip().upper()
-    vin_code = vin_code.strip().upper()
-
-    total_odo = mileage if mileage > 0 else (ev_mileage + hev_mileage)
-
-    client = db.query(Client).filter(Client.phone == phone).first()
-    if not client:
-        client = Client(full_name=full_name, phone=phone)
-        db.add(client)
-        db.commit()
-        db.refresh(client)
-    else:
-        client.full_name = full_name
-        db.commit()
-
-    car = Car(
-        owner_id=client.id,
-        brand_model=brand_model,
-        plate_number=plate_number,
-        vin_code=vin_code,
-        engine_type=engine_type,
-        ev_mileage=ev_mileage,
-        hev_mileage=hev_mileage,
-        mileage=total_odo,
-        manufacture_year=manufacture_year,
-        soh_percent=soh_percent,
-        status="Принято",
-        filial=filial,
-        created_by=user["display_name"],
-        created_at=datetime.now(),
-        appointment_date=appointment_date,
-        time_slot=time_slot
-    )
-    db.add(car)
-    db.commit()
-    db.refresh(car)
-
-    return RedirectResponse(url=f"/act/{car.id}", status_code=303)
-
-@app.post("/update-discount/{car_id}")
-def update_discount(
-    car_id: int,
-    discount_percent: float = Form(0.0),
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    if discount_percent < 0:
-        discount_percent = 0.0
-    if discount_percent > 10.0:
-        discount_percent = 10.0
-
-    car = db.query(Car).filter(Car.id == car_id).first()
-    if car:
-        car.discount_percent = discount_percent
-        db.commit()
-    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
-
-@app.post("/update-status/{car_id}")
-def update_status(
-    car_id: int,
-    status: str = Form(...),
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    car = db.query(Car).filter(Car.id == car_id).first()
-    if car:
-        car.status = status
-        db.commit()
-    return RedirectResponse(url="/", status_code=303)
-
-@app.get("/edit-car/{car_id}", response_class=HTMLResponse)
-def edit_car_page(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    car = db.query(Car).filter(Car.id == car_id).first()
-    if not car:
-        return HTMLResponse(content="Запись не найдена", status_code=404)
-    return templates.TemplateResponse(
-        request=request,
-        name="edit_car.html",
-        context={"car": car, "current_user": user, "filials": FILIALS}
-    )
-
-@app.post("/update-car/{car_id}")
-def update_car(
-    car_id: int,
-    full_name: str = Form(...),
-    phone: str = Form(...),
-    brand_model: str = Form(...),
-    plate_number: str = Form(...),
-    vin_code: str = Form(...),
-    engine_type: str = Form(...),
-    ev_mileage: int = Form(0),
-    hev_mileage: int = Form(0),
-    mileage: int = Form(0),
-    manufacture_year: int = Form(2023),
-    soh_percent: float = Form(100.0),
-    status: str = Form("Принято"),
-    filial: str = Form("Филиал Сергели"),
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    car = db.query(Car).filter(Car.id == car_id).first()
-    if not car:
-        return HTMLResponse(content="Запись не найдена", status_code=404)
-    
-    total_odo = mileage if mileage > 0 else (ev_mileage + hev_mileage)
-
-    car.brand_model = brand_model
-    car.plate_number = plate_number.strip().upper()
-    car.vin_code = vin_code.strip().upper()
-    car.engine_type = engine_type
-    car.ev_mileage = ev_mileage
-    car.hev_mileage = hev_mileage
-    car.mileage = total_odo
-    car.manufacture_year = manufacture_year
-    car.soh_percent = soh_percent
-    car.status = status
-    car.filial = filial
-    
-    if car.owner:
-        car.owner.full_name = full_name
-        car.owner.phone = phone
-
-    db.commit()
-    return RedirectResponse(url="/", status_code=303)
-
-@app.post("/add-work/{car_id}")
-def add_work(
-    car_id: int,
-    description: str = Form(...),
-    price: str = Form("0"),
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    try:
-        parsed_price = float(str(price).replace(",", ".").replace(" ", "")) if price else 0.0
-    except ValueError:
-        parsed_price = 0.0
-
-    work = WorkItem(car_id=car_id, description=description.strip(), price=parsed_price)
-    db.add(work)
-    db.commit()
-    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
-
-@app.post("/add-part/{car_id}")
-def add_part(
-    car_id: int,
-    name: str = Form(...),
-    quantity: int = Form(1),
-    price: str = Form("0"),
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    name_clean = name.strip()
-    
-    try:
-        parsed_price = float(str(price).replace(",", ".").replace(" ", "")) if price else 0.0
-    except ValueError:
-        parsed_price = 0.0
-
-    car = db.query(Car).filter(Car.id == car_id).first()
-    car_filial = car.filial if car else "Филиал Сергели"
-
-    wh_part = db.query(WarehousePart).filter(
-        or_(
-            func.lower(WarehousePart.name) == name_clean.lower(),
-            func.lower(WarehousePart.part_code) == name_clean.lower()
-        ),
-        WarehousePart.filial == car_filial
-    ).first()
-
-    if not wh_part:
-        wh_part = db.query(WarehousePart).filter(
-            or_(
-                func.lower(WarehousePart.name) == name_clean.lower(),
-                func.lower(WarehousePart.part_code) == name_clean.lower()
-            )
-        ).first()
-
-    part_display_name = name_clean
-
-    if wh_part:
-        part_display_name = wh_part.name
-        if parsed_price == 0.0:
-            parsed_price = wh_part.price
-        wh_part.quantity = max(0, wh_part.quantity - quantity)
-
-    part = SparePart(car_id=car_id, name=part_display_name, quantity=quantity, price=parsed_price)
-    db.add(part)
-    db.commit()
-    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
-
-@app.post("/delete-work/{work_id}")
-def delete_work(work_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
-    work = db.query(WorkItem).filter(WorkItem.id == work_id).first()
-    car_id = work.car_id if work else 1
-    if work:
-        db.delete(work)
-        db.commit()
-    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
-
-@app.get("/defect-act", response_class=HTMLResponse)
-def defect_act(request: Request, user: dict = Depends(get_current_user)):
-    return templates.TemplateResponse(
-        request=request,
-        name="inspection_act.html",
-        context={"current_user": user}
-    )
-
-@app.get("/defect-act/{car_id}", response_class=HTMLResponse)
-def defect_act_car(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    car = db.query(Car).filter(Car.id == car_id).first()
-    if not car:
-        return HTMLResponse(content="Запись не найдена", status_code=404)
-    return templates.TemplateResponse(
-        request=request,
-        name="inspection_act.html",
-        context={"car": car, "current_user": user}
-    )
-
-@app.post("/delete-part/{part_id}")
-def delete_part(part_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
-    part = db.query(SparePart).filter(SparePart.id == part_id).first()
-    if part:
-        car_id = part.car_id
-        car = db.query(Car).filter(Car.id == car_id).first()
-        car_filial = car.filial if car else "Филиал Сергели"
-
-        wh_part = db.query(WarehousePart).filter(
-            or_(
-                func.lower(WarehousePart.name) == part.name.lower(),
-                func.lower(WarehousePart.part_code) == part.name.lower()
-            ),
-            WarehousePart.filial == car_filial
-        ).first()
-        if not wh_part:
-            wh_part = db.query(WarehousePart).filter(
-                or_(
-                    func.lower(WarehousePart.name) == part.name.lower(),
-                    func.lower(WarehousePart.part_code) == part.name.lower()
-                )
-            ).first()
-
-        if wh_part:
-            wh_part.quantity += part.quantity
-
-        db.delete(part)
-        db.commit()
-        return RedirectResponse(url=f"/act/{car_id}", status_code=303)
-    return RedirectResponse(url="/", status_code=303)
-
-@app.post("/delete-car/{car_id}")
-def delete_car(car_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
-    car = db.query(Car).filter(Car.id == car_id).first()
-    if car:
-        db.delete(car)
-        db.commit()
-    return RedirectResponse(url="/", status_code=303)
-
-@app.get("/act/{car_id}", response_class=HTMLResponse)
-def print_act(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    car = db.query(Car).filter(Car.id == car_id).first()
-    if not car:
-        return HTMLResponse(content="Запись не найдена", status_code=404)
-    
-    works_sum = sum(w.price for w in car.works if w.price)
-    parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
-    subtotal = works_sum + parts_sum
-    
-    discount_percent = min(10.0, max(0.0, car.discount_percent or 0.0))
-    discount_amount = (subtotal * discount_percent) / 100.0
-    total_sum = subtotal - discount_amount
-    
-    return templates.TemplateResponse(
-        request=request,
-        name="act_print.html",
-        context={
-            "car": car, 
-            "works_sum": works_sum,
-            "parts_sum": parts_sum,
-            "subtotal": subtotal,
-            "discount_percent": discount_percent,
-            "discount_amount": discount_amount,
-            "total_sum": total_sum, 
-            "current_user": user
-        }
-    )
-
 @app.get("/act/pdf/{car_id}")
 def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     car = db.query(Car).filter(Car.id == car_id).first()
@@ -940,96 +17,140 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
 
     styles = getSampleStyleSheet()
     
+    # Кастомные стили
     title_style = ParagraphStyle(
-        'TitleStyle',
+        'ActTitle',
         parent=styles['Heading1'],
+        fontName=font_name,
         fontSize=16,
         leading=20,
-        alignment=1,
-        fontName=font_name
+        alignment=1, # По центру
+        spaceAfter=15
     )
     
     normal_style = ParagraphStyle(
-        'NormalStyle',
+        'ActNormal',
         parent=styles['Normal'],
+        fontName=font_name,
         fontSize=10,
-        leading=14,
-        fontName=font_name
+        leading=14
+    )
+    
+    bold_style = ParagraphStyle(
+        'ActBold',
+        parent=normal_style,
+        fontName=font_name,
+        fontSize=10,
+        leading=14
     )
 
-    elements.append(Paragraph(f"<b>Заказ-наряд № {car.id}</b>", title_style))
-    elements.append(Spacer(1, 15))
-    
+    # Заголовок документа
+    elements.append(Paragraph(f"<b>Акт выполненных работ № {car.id}</b>", title_style))
+    elements.append(Paragraph(f"<b>Филиал:</b> {car.filial or 'Филиал Сергели'}", normal_style))
+    elements.append(Paragraph(f"<b>Дата приёмки:</b> {car.created_at.strftime('%d.%m.%Y %H:%M') if car.created_at else '-'}", normal_style))
+    elements.append(Spacer(1, 10))
+
+    # Информация о клиенте и автомобиле
     client_name = car.owner.full_name if car.owner else "Не указан"
     client_phone = car.owner.phone if car.owner else "Не указан"
-
+    
     info_data = [
         [Paragraph(f"<b>Клиент:</b> {client_name}", normal_style), Paragraph(f"<b>Марка/Модель:</b> {car.brand_model}", normal_style)],
-        [Paragraph(f"<b>Телефон:</b> {client_phone}", normal_style), Paragraph(f"<b>Гос. номер:</b> {car.plate_number}", normal_style)],
-        [Paragraph(f"<b>Филиал:</b> {car.filial}", normal_style), Paragraph(f"<b>VIN-код:</b> {car.vin_code}", normal_style)],
-        [Paragraph(f"<b>Дата приёмки:</b> {car.created_at.strftime('%d.%m.%Y %H:%M') if car.created_at else '-'}", normal_style), Paragraph(f"<b>Пробег:</b> {car.mileage} км", normal_style)]
+        [Paragraph(f"<b>Телефон:</b> {client_phone}", normal_style), Paragraph(f"<b>Гос. номер:</b> {car.plate_number or '-'}", normal_style)],
+        [Paragraph(f"<b>VIN-код:</b> {car.vin_code or '-'}", normal_style), Paragraph(f"<b>Пробег:</b> {car.mileage} км", normal_style)]
     ]
-
-    t_info = Table(info_data, colWidths=[250, 250])
-    t_info.setStyle(TableStyle([
+    
+    info_table = Table(info_data, colWidths=[270, 270])
+    info_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('BOTTOMPADDING', (0,0), (-1,-1), 6),
     ]))
-    elements.append(t_info)
+    elements.append(info_table)
     elements.append(Spacer(1, 15))
 
-    elements.append(Paragraph("<b>Выполненные работы и запчасти:</b>", normal_style))
-    elements.append(Spacer(1, 8))
+    # Таблица работ и запчастей
+    table_data = [
+        ["№", "Наименование работ / Запчастей", "Кол-во", "Цена (сум)", "Сумма (сум)"]
+    ]
+    
+    item_index = 1
+    
+    # Добавляем работы
+    for work in car.works:
+        table_data.append([
+            str(item_index),
+            Paragraph(f"[Работа] {work.description}", normal_style),
+            "1",
+            f"{work.price:,.2f}",
+            f"{work.price:,.2f}"
+        ])
+        item_index += 1
 
-    table_data = [["№", "Наименование", "Кол-во", "Цена (сум)", "Сумма (сум)"]]
-    idx = 1
+    # Добавляем запчасти
+    for part in car.parts:
+        part_total = (part.price or 0) * (part.quantity or 1)
+        table_data.append([
+            str(item_index),
+            Paragraph(f"[Запчасть] {part.name}", normal_style),
+            str(part.quantity),
+            f"{part.price:,.2f}",
+            f"{part_total:,.2f}"
+        ])
+        item_index += 1
 
-    for w in car.works:
-        table_data.append([str(idx), w.description, "1", f"{w.price:,.2f}", f"{w.price:,.2f}"])
-        idx += 1
-
-    for p in car.parts:
-        row_sum = p.price * p.quantity
-        table_data.append([str(idx), f"Запч: {p.name}", str(p.quantity), f"{p.price:,.2f}", f"{row_sum:,.2f}"])
-        idx += 1
-
+    # Если список пуст
     if len(table_data) == 1:
-        table_data.append(["-", "Нет добавленных работ или запчастей", "-", "0.00", "0.00"])
+        table_data.append(["1", Paragraph("Нет добавленных работ или запчастей", normal_style), "0", "0.00", "0.00"])
 
-    t_works = Table(table_data, colWidths=[30, 240, 50, 90, 90])
-    t_works.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('ALIGN', (1,1), (1,-1), 'LEFT'),
-        ('FONTNAME', (0,0), (-1,-1), font_name),
+    items_table = Table(table_data, colWidths=[30, 260, 50, 100, 100])
+    items_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#f0f0f0")),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#333333")),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('ALIGN', (2,0), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), font_name),
+        ('BOTTOMPADDING', (0,0), (-1,0), 8),
+        ('TOPPADDING', (0,0), (-1,0), 8),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#dddddd")),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('FONTSIZE', (0,0), (-1,-1), 9),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-        ('TOPPADDING', (0,0), (-1,-1), 6),
     ]))
-    elements.append(t_works)
-    elements.append(Spacer(1, 20))
+    elements.append(items_table)
+    elements.append(Spacer(1, 15))
 
+    # Расчет итогов
     works_sum = sum(w.price for w in car.works if w.price)
     parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
     subtotal = works_sum + parts_sum
-    disc = min(10.0, max(0.0, car.discount_percent or 0.0))
-    disc_sum = (subtotal * disc) / 100.0
-    total_to_pay = subtotal - disc_sum
+    
+    discount_percent = min(10.0, max(0.0, car.discount_percent or 0.0))
+    discount_amount = (subtotal * discount_percent) / 100.0
+    total_sum = subtotal - discount_amount
 
     totals_data = [
-        [Paragraph(f"<b>Итого работы:</b> {works_sum:,.2f} сум", normal_style)],
-        [Paragraph(f"<b>Итого запчасти:</b> {parts_sum:,.2f} сум", normal_style)],
-        [Paragraph(f"<b>Скидка ({disc}%):</b> -{disc_sum:,.2f} сум", normal_style)],
-        [Paragraph(f"<b>К ОПЛАТЕ ИТОГО:</b> {total_to_pay:,.2f} сум", normal_style)]
+        [Paragraph(f"<b>Итого по работам:</b>", normal_style), Paragraph(f"{works_sum:,.2f} сум", normal_style)],
+        [Paragraph(f"<b>Итого по запчастям:</b>", normal_style), Paragraph(f"{parts_sum:,.2f} сум", normal_style)],
+        [Paragraph(f"<b>Скидка ({discount_percent}%):</b>", normal_style), Paragraph(f"- {discount_amount:,.2f} сум", normal_style)],
+        [Paragraph(f"<b>К оплате ИТОГО:</b>", bold_style), Paragraph(f"<b>{total_sum:,.2f} сум</b>", bold_style)]
     ]
-    t_totals = Table(totals_data, colWidths=[500])
-    t_totals.setStyle(TableStyle([
+
+    totals_table = Table(totals_data, colWidths=[400, 140])
+    totals_table.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
         ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-        ('FONTNAME', (0,0), (-1,-1), font_name),
     ]))
-    elements.append(t_totals)
+    elements.append(totals_table)
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=act_{car.id}.pdf"}
+    )
 
     doc.build(elements)
     buffer.seek(0)
