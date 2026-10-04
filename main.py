@@ -1,23 +1,125 @@
-@app.get("/act/pdf/{car_id}")
+import io
+from datetime import datetime
+from typing import Optional
+
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, relationship, sessionmaker
+
+# ReportLab импорты для генерации PDF
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+
+# Настройка базы данных (SQLite для примера)
+SQLALCHEMY_DATABASE_URL = "sqlite:///./autoservice.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# --- МОДЕЛИ БАЗЫ ДАННЫХ ---
+
+class Client(Base):
+    __tablename__ = "clients"
+
+    id = Column(Integer, primary_key=True, index=True)
+    full_name = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    
+    cars = relationship("Car", back_populates="owner")
+
+class Car(Base):
+    __tablename__ = "cars"
+
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=True)
+    brand_model = Column(String, nullable=False)
+    plate_number = Column(String, nullable=True)
+    vin_code = Column(String, nullable=True)
+    mileage = Column(Integer, default=0)
+    filial = Column(String, default="Филиал Сергели")
+    discount_percent = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    owner = relationship("Client", back_populates="cars")
+    works = relationship("WorkItem", back_populates="car", cascade="all, delete-orphan")
+    parts = relationship("PartItem", back_populates="car", cascade="all, delete-orphan")
+
+class WorkItem(Base):
+    __tablename__ = "work_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    car_id = Column(Integer, ForeignKey("cars.id"), nullable=False)
+    description = Column(String, nullable=False)
+    price = Column(Float, default=0.0)
+
+    car = relationship("Car", back_populates="works")
+
+class PartItem(Base):
+    __tablename__ = "part_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    car_id = Column(Integer, ForeignKey("cars.id"), nullable=False)
+    name = Column(String, nullable=False)
+    quantity = Column(Integer, default=1)
+    price = Column(Float, default=0.0)
+
+    car = relationship("Car", back_populates="parts")
+
+# Создаем таблицы в БД
+Base.metadata.create_all(bind=engine)
+
+# Зависимость для получения сессии БД
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Заглушка для аутентификации (замените на вашу реальную логику)
+def get_current_user():
+    return {"username": "admin", "role": "manager"}
+
+# --- ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ---
+
+app = FastAPI(title="Avtoservis CRM API", version="1.0")
+
+# --- ЭНДПОИНТ ГЕНЕРАЦИИ PDF-АКТА ---
+
+@app.get("/act/pdf/{car_id}", summary="Сгенерировать PDF акт выполненных работ")
 def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
-        raise HTTPException(status_code=404, detail="Запись не найдена")
+        raise HTTPException(status_code=404, detail="Автомобиль/Заказ не найден")
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=A4, 
+        rightMargin=30, 
+        leftMargin=30, 
+        topMargin=30, 
+        bottomMargin=30
+    )
     elements = []
 
+    # Настройка шрифта с поддержкой кириллицы (убедитесь, что файл DejaVuSans.ttf есть в папке с проектом)
     font_name = "Helvetica"
     try:
         pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
         font_name = 'DejaVuSans'
     except Exception:
-        pass
+        pass # Если файл шрифта не найден, используется стандартный латинский Helvetica
 
     styles = getSampleStyleSheet()
     
-    # Кастомные стили
     title_style = ParagraphStyle(
         'ActTitle',
         parent=styles['Heading1'],
@@ -44,7 +146,7 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
         leading=14
     )
 
-    # Заголовок документа
+    # Шапка документа
     elements.append(Paragraph(f"<b>Акт выполненных работ № {car.id}</b>", title_style))
     elements.append(Paragraph(f"<b>Филиал:</b> {car.filial or 'Филиал Сергели'}", normal_style))
     elements.append(Paragraph(f"<b>Дата приёмки:</b> {car.created_at.strftime('%d.%m.%Y %H:%M') if car.created_at else '-'}", normal_style))
@@ -75,7 +177,7 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
     
     item_index = 1
     
-    # Добавляем работы
+    # Добавление выполненных работ
     for work in car.works:
         table_data.append([
             str(item_index),
@@ -86,7 +188,7 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
         ])
         item_index += 1
 
-    # Добавляем запчасти
+    # Добавление использованных запчастей
     for part in car.parts:
         part_total = (part.price or 0) * (part.quantity or 1)
         table_data.append([
@@ -98,7 +200,6 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
         ])
         item_index += 1
 
-    # Если список пуст
     if len(table_data) == 1:
         table_data.append(["1", Paragraph("Нет добавленных работ или запчастей", normal_style), "0", "0.00", "0.00"])
 
@@ -118,12 +219,12 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
     elements.append(items_table)
     elements.append(Spacer(1, 15))
 
-    # Расчет итогов
+    # Финансовый расчет (Итоги)
     works_sum = sum(w.price for w in car.works if w.price)
     parts_sum = sum(p.price * p.quantity for p in car.parts if p.price and p.quantity)
     subtotal = works_sum + parts_sum
     
-    discount_percent = min(10.0, max(0.0, car.discount_percent or 0.0))
+    discount_percent = min(100.0, max(0.0, car.discount_percent or 0.0))
     discount_amount = (subtotal * discount_percent) / 100.0
     total_sum = subtotal - discount_amount
 
@@ -143,6 +244,7 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
     ]))
     elements.append(totals_table)
     
+    # Сборка PDF документа
     doc.build(elements)
     buffer.seek(0)
     
@@ -151,10 +253,3 @@ def generate_act_pdf(car_id: int, db: Session = Depends(get_db), user: dict = De
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=act_{car.id}.pdf"}
     )
-
-    doc.build(elements)
-    buffer.seek(0)
-    return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=zakaz_naryad_{car.id}.pdf"})
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
