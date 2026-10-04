@@ -671,7 +671,7 @@ def create_entry(
     db.commit()
     db.refresh(car)
 
-    return RedirectResponse(url=f"/act/{car.id}", status_code=303)
+    return RedirectResponse(url=f"/print-act/{car.id}", status_code=303)
 
 @app.post("/update-discount/{car_id}")
 def update_discount(
@@ -689,7 +689,7 @@ def update_discount(
     if car:
         car.discount_percent = discount_percent
         db.commit()
-    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+    return RedirectResponse(url=f"/print-act/{car_id}", status_code=303)
 
 @app.post("/update-status/{car_id}")
 def update_status(
@@ -775,7 +775,7 @@ def add_work(
     work = WorkItem(car_id=car_id, description=description.strip(), price=parsed_price)
     db.add(work)
     db.commit()
-    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+    return RedirectResponse(url=f"/print-act/{car_id}", status_code=303)
 
 @app.post("/add-part/{car_id}")
 def add_part(
@@ -823,7 +823,7 @@ def add_part(
     part = SparePart(car_id=car_id, name=part_display_name, quantity=quantity, price=parsed_price)
     db.add(part)
     db.commit()
-    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+    return RedirectResponse(url=f"/print-act/{car_id}", status_code=303)
 
 @app.post("/delete-work/{work_id}")
 def delete_work(work_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
@@ -832,26 +832,7 @@ def delete_work(work_id: int, db: Session = Depends(get_db), user: dict = Depend
     if work:
         db.delete(work)
         db.commit()
-    return RedirectResponse(url=f"/act/{car_id}", status_code=303)
-
-@app.get("/defect-act", response_class=HTMLResponse)
-def defect_act(request: Request, user: dict = Depends(get_current_user)):
-    return templates.TemplateResponse(
-        request=request,
-        name="inspection_act.html",
-        context={"current_user": user}
-    )
-
-@app.get("/defect-act/{car_id}", response_class=HTMLResponse)
-def defect_act_car(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    car = db.query(Car).filter(Car.id == car_id).first()
-    if not car:
-        return HTMLResponse(content="Запись не найдена", status_code=404)
-    return templates.TemplateResponse(
-        request=request,
-        name="inspection_act.html",
-        context={"car": car, "current_user": user}
-    )
+    return RedirectResponse(url=f"/print-act/{car_id}", status_code=303)
 
 @app.post("/delete-part/{part_id}")
 def delete_part(part_id: int, db: Session = Depends(get_db), user: dict = Depends(require_admin)):
@@ -881,7 +862,7 @@ def delete_part(part_id: int, db: Session = Depends(get_db), user: dict = Depend
 
         db.delete(part)
         db.commit()
-        return RedirectResponse(url=f"/act/{car_id}", status_code=303)
+        return RedirectResponse(url=f"/print-act/{car_id}", status_code=303)
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/delete-car/{car_id}")
@@ -892,8 +873,8 @@ def delete_car(car_id: int, db: Session = Depends(get_db), user: dict = Depends(
         db.commit()
     return RedirectResponse(url="/", status_code=303)
 
-@app.get("/act/{car_id}", response_class=HTMLResponse)
-def print_act(request: Request, car_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+@app.get("/print-act/{car_id}", response_class=HTMLResponse)
+def print_acceptance_act(car_id: int, request: Request, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
         return HTMLResponse(content="Запись не найдена", status_code=404)
